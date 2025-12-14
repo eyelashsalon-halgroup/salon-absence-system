@@ -2996,16 +2996,90 @@ def liff_booking():
         
         let calendarData = {{}};
         let currentBookingId = null;
+        let currentBookingMenu = '';
+        let currentBookingDuration = 60;
+        let currentWeek = 0;
         
         async function changeBooking(bookingId) {{
             currentBookingId = bookingId;
+            
+            // 現在の予約情報を取得
+            const bookingCard = document.querySelector(`[data-booking-id="${{bookingId}}"]`) || document.querySelector('.booking-card');
+            if (bookingCard) {{
+                const menuEl = bookingCard.querySelector('.booking-menu');
+                currentBookingMenu = menuEl ? menuEl.innerText.replace('メニュー：', '') : '未設定';
+            }}
+            
+            // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
-                <div id="calendar-view">
-                    <h3 style="margin-bottom:15px;">日時変更</h3>
-                    <p style="font-size:12px;color:#666;">◯をタップして予約変更</p>
+                <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
+                    <div style="background:#f8e0e6;padding:15px;border-radius:8px;margin-bottom:15px;">
+                        <div style="color:#c44d6e;font-weight:bold;margin-bottom:10px;">選択済みクーポン・メニュー</div>
+                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #c44d6e;">
+                            <span style="background:#c44d6e;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">継続</span>
+                            <span style="font-size:14px;">${{currentBookingMenu}}</span>
+                        </div>
+                        <p style="font-size:11px;color:#666;margin-top:8px;">※メニューは変更せず、日時のみ変更します</p>
+                    </div>
+                    
+                    <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:5px;">
+                        <span style="font-size:13px;">所要時間合計（目安）</span>
+                        <select id="duration-select" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;font-size:14px;" onchange="updateDuration()">
+                            <option value="30">30分</option>
+                            <option value="60" selected>1時間</option>
+                            <option value="90">1時間30分</option>
+                            <option value="120">2時間</option>
+                            <option value="150">2時間30分</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom:15px;">
+                        <span style="font-size:13px;margin-right:15px;">スタッフ：</span>
+                        <label style="margin-right:15px;"><input type="radio" name="staff-pref" value="no" checked> 指名しない</label>
+                        <label><input type="radio" name="staff-pref" value="yes" disabled> 指名する</label>
+                    </div>
+                    
+                    <button class="btn btn-change" style="width:100%;padding:12px;font-size:16px;" onclick="showCalendar()">空き状況を確認する</button>
+                    <button class="btn" style="background:#999;color:white;margin-top:10px;width:100%;padding:12px;" onclick="location.reload()">戻る</button>
+                </div>
+            `;
+        }}
+        
+        function updateDuration() {{
+            currentBookingDuration = parseInt(document.getElementById('duration-select').value);
+        }}
+        
+        async function showCalendar() {{
+            document.getElementById('bookings').innerHTML = `
+                <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
+                    <div style="background:#f8e0e6;padding:12px;border-radius:8px;margin-bottom:15px;">
+                        <div style="font-size:12px;color:#666;">選択中のメニュー</div>
+                        <div style="font-size:14px;font-weight:bold;">${{currentBookingMenu}}</div>
+                        <div style="font-size:12px;color:#c44d6e;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
+                    </div>
+                    
+                    <div style="display:flex;border-bottom:2px solid #ddd;margin-bottom:15px;">
+                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #c44d6e;margin-bottom:-2px;font-weight:bold;color:#c44d6e;">サロンの空き状況</div>
+                    </div>
+                    
                     <div id="calendar-loading" style="text-align:center;padding:20px;">読み込み中...</div>
+                    
+                    <div id="week-nav" style="display:none;margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <button onclick="changeWeek(-1)" style="padding:8px 15px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;">< 前の一週間</button>
+                            <span id="month-label" style="font-size:16px;font-weight:bold;"></span>
+                            <button onclick="changeWeek(1)" style="padding:8px 15px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;">次の一週間 ></button>
+                        </div>
+                    </div>
+                    
                     <div id="calendar-table" style="overflow-x:auto;"></div>
-                    <button class="btn" style="background:#999;color:white;margin-top:15px;" onclick="location.reload()">戻る</button>
+                    
+                    <div style="margin-top:15px;padding:10px;background:#f5f5f5;border-radius:5px;font-size:11px;color:#666;">
+                        <p>◯ の日時から施術を開始することが出来ます。</p>
+                        <p>ご希望の来店日時の ◯ を選択してください。</p>
+                    </div>
+                    
+                    <button class="btn" style="background:#999;color:white;margin-top:15px;width:100%;padding:12px;" onclick="location.reload()">戻る</button>
                 </div>
             `;
             await loadCalendarData();
@@ -3023,16 +3097,27 @@ def liff_booking():
                 console.error('空き枠取得エラー', e);
             }}
             document.getElementById('calendar-loading').style.display = 'none';
+            document.getElementById('week-nav').style.display = 'block';
+        }}
+        
+        function changeWeek(delta) {{
+            currentWeek += delta;
+            if (currentWeek < 0) currentWeek = 0;
+            if (currentWeek > 1) currentWeek = 1;
+            renderCalendar();
         }}
         
         function renderCalendar() {{
             const today = new Date();
+            const startIdx = currentWeek * 7;
             const dates = [];
-            for (let i = 0; i < 14; i++) {{
+            for (let i = startIdx; i < startIdx + 7 && i < 14; i++) {{
                 const d = new Date(today);
                 d.setDate(today.getDate() + i);
                 dates.push(d);
             }}
+            
+            document.getElementById('month-label').innerText = `${{today.getFullYear()}}年${{dates[0].getMonth()+1}}月`;
             
             const timeSlots = [];
             for (let h = 9; h < 19; h++) {{
@@ -3043,46 +3128,65 @@ def liff_booking():
             }}
             
             const days = ['日', '月', '火', '水', '木', '金', '土'];
+            const requiredMinutes = currentBookingDuration;
             
-            let html = '<table style="border-collapse:collapse;font-size:11px;width:max-content;">';
-            html += '<thead><tr><th style="border:1px solid #ddd;padding:4px 6px;background:#f5f5f5;position:sticky;left:0;z-index:2;"></th>';
+            let html = '<table style="border-collapse:collapse;font-size:12px;width:100%;">';
+            html += '<thead><tr><th style="border:1px solid #ddd;padding:8px;background:#f5f5f5;width:60px;"></th>';
             
             dates.forEach(d => {{
                 const day = days[d.getDay()];
-                const color = d.getDay() === 0 ? 'red' : d.getDay() === 6 ? 'blue' : 'black';
-                html += `<th style="border:1px solid #ddd;padding:4px;background:#f5f5f5;color:${{color}};white-space:nowrap;">${{d.getMonth()+1}}/${{d.getDate()}}<br><span style="font-size:10px;">(${{day}})</span></th>`;
+                const color = d.getDay() === 0 ? '#e74c3c' : d.getDay() === 6 ? '#3498db' : '#333';
+                html += `<th style="border:1px solid #ddd;padding:8px;background:#f5f5f5;color:${{color}};text-align:center;">
+                    <div style="font-size:16px;font-weight:bold;">${{d.getDate()}}</div>
+                    <div style="font-size:11px;">(${{day}})</div>
+                </th>`;
             }});
             html += '</tr></thead><tbody>';
             
             timeSlots.forEach(time => {{
-                html += `<tr><td style="border:1px solid #ddd;padding:4px 6px;background:#f5f5f5;font-weight:bold;text-align:center;position:sticky;left:0;z-index:1;">${{time}}</td>`;
+                html += `<tr><td style="border:1px solid #ddd;padding:6px 8px;background:#f5f5f5;font-weight:bold;text-align:right;">${{time}}</td>`;
                 
                 dates.forEach(d => {{
                     const dateStr = `${{d.getFullYear()}}${{(d.getMonth()+1).toString().padStart(2,'0')}}${{d.getDate().toString().padStart(2,'0')}}`;
                     const dayData = calendarData[dateStr];
                     let cellContent = '×';
-                    let cellBg = '#fff';
-                    let cellColor = '#ccc';
+                    let cellStyle = 'color:#ccc;';
                     
                     if (dayData && !dayData.error && dayData.staff_schedules) {{
-                        let hasSlot = false;
+                        let hasEnoughSlot = false;
+                        
                         dayData.staff_schedules.forEach(staff => {{
                             if (!staff.is_day_off && staff.available_slots) {{
                                 staff.available_slots.forEach(slot => {{
-                                    if (time >= slot.start && time < slot.end) {{
-                                        hasSlot = true;
+                                    const slotStartParts = slot.start.split(':');
+                                    const slotEndParts = slot.end.split(':');
+                                    const slotStartMin = parseInt(slotStartParts[0]) * 60 + parseInt(slotStartParts[1]);
+                                    const slotEndMin = parseInt(slotEndParts[0]) * 60 + parseInt(slotEndParts[1]);
+                                    const slotDuration = slotEndMin - slotStartMin;
+                                    
+                                    const timeParts = time.split(':');
+                                    const timeMin = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
+                                    
+                                    if (timeMin >= slotStartMin && timeMin + requiredMinutes <= slotEndMin) {{
+                                        hasEnoughSlot = true;
                                     }}
                                 }});
                             }}
                         }});
-                        if (hasSlot) {{
-                            cellContent = `<a href="#" onclick="selectSlot('${{currentBookingId}}','${{dateStr}}','${{time}}','指名なし');return false;" style="color:#06c755;font-weight:bold;text-decoration:none;">◯</a>`;
-                            cellBg = '#e8f5e9';
-                            cellColor = '#06c755';
+                        
+                        if (hasEnoughSlot) {{
+                            cellContent = `<a href="#" onclick="selectSlot('${{currentBookingId}}','${{dateStr}}','${{time}}');return false;" style="color:#e74c3c;font-weight:bold;text-decoration:none;font-size:16px;">◯</a>`;
+                            cellStyle = 'background:#fff;';
+                        }} else {{
+                            cellContent = '×';
+                            cellStyle = 'color:#ccc;background:#f9f9f9;';
                         }}
+                    }} else {{
+                        cellContent = 'ー';
+                        cellStyle = 'color:#999;background:#f0f0f0;';
                     }}
                     
-                    html += `<td style="border:1px solid #ddd;padding:4px;text-align:center;background:${{cellBg}};color:${{cellColor}};">${{cellContent}}</td>`;
+                    html += `<td style="border:1px solid #ddd;padding:8px;text-align:center;${{cellStyle}}">${{cellContent}}</td>`;
                 }});
                 html += '</tr>';
             }});
@@ -3091,10 +3195,10 @@ def liff_booking():
             document.getElementById('calendar-table').innerHTML = html;
         }}
         
-        async function selectSlot(bookingId, dateStr, time, staffName) {{
+        async function selectSlot(bookingId, dateStr, time) {{
             const dateFormatted = `${{dateStr.slice(0,4)}}/${{dateStr.slice(4,6)}}/${{dateStr.slice(6,8)}}`;
             if (confirm(`${{dateFormatted}} ${{time}}〜 に変更しますか？`)) {{
-                document.getElementById('calendar-table').innerHTML = '<p style="text-align:center;">変更処理中...</p>';
+                document.getElementById('calendar-table').innerHTML = '<p style="text-align:center;padding:20px;">変更処理中...</p>';
                 const response = await fetch('/api/liff/execute-change', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
