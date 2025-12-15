@@ -3418,7 +3418,11 @@ def api_liff_get_duration():
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             context = browser.new_context()
-            cookies = get_salonboard_cookies()
+            cookie_file = os.path.join(os.path.dirname(__file__), "session_cookies.json")
+            cookies = None
+            if os.path.exists(cookie_file):
+                with open(cookie_file, "r") as f:
+                    cookies = json.load(f)
             if cookies:
                 context.add_cookies(cookies)
             page = context.new_page()
