@@ -2331,7 +2331,7 @@ def send_reminder_notifications(test_mode=False):
         target_date_str = target_date.strftime("%Y-%m-%d")
         scrape_date_str = today.strftime("%Y-%m-%d")
         
-        # salon_bookingsから該当日の予約を取得
+        # 8weeks_bookingsからD-3/D-7の予約を取得
         book_response = requests.get(
             f'{SUPABASE_URL}/rest/v1/salon_bookings?scrape_date=eq.{scrape_date_str}&days_ahead=eq.{days}&select=booking_data&order=id.desc&limit=1',
             headers=headers
@@ -2339,16 +2339,14 @@ def send_reminder_notifications(test_mode=False):
         if book_response.status_code != 200:
             continue
         
-        result = book_response.json()
-        booking_data = result[0].get('booking_data', {}) if result else {}
-        bookings = booking_data.get('bookings', []) if isinstance(booking_data, dict) else []
-        
+        bookings = book_response.json()        
         for booking in bookings:
-            customer_name = booking.get('お客様名', '').split('\n')[0].replace('★', '').strip()
-            phone = booking.get('電話番号', '')
-            visit_dt = booking.get('来店日時', '')
-            time = re.sub(r'^\d{1,2}/\d{1,2}', '', visit_dt) if visit_dt else ''
-            menu = booking.get('メニュー', '')
+            customer_name = booking.get('customer_name', '').split('\n')[0].replace('★', '').strip()
+            phone = booking.get('phone', '')
+            visit_dt = booking.get('visit_datetime', '')
+            # visit_datetime形式: 2025-12-16 11:30:00
+            time = visit_dt.split(' ')[1][:5] if visit_dt and ' ' in visit_dt else ''
+            menu = booking.get('menu', '')
             
             # 顧客を検索
             customer = None
@@ -2366,6 +2364,17 @@ def send_reminder_notifications(test_mode=False):
             # メッセージ作成
             # 日時フォーマット
             def format_dt(dt_str):
+                # 新形式: 2025-12-16 11:30:00
+                if " " in dt_str and "-" in dt_str:
+                    parts = dt_str.split(" ")
+                    date_part = parts[0]  # 2025-12-16
+                    time_part = parts[1][:5]  # 11:30
+                    y, month, day = date_part.split("-")
+                    from datetime import date
+                    weekdays = ["月", "火", "水", "木", "金", "土", "日"]
+                    d = date(int(y), int(month), int(day))
+                    return f"{int(month)}月{int(day)}日({weekdays[d.weekday()]}){time_part}〜"
+                # 旧形式: 12/16 11:30
                 m = re.match(r'(\d+)/(\d+)(\d{2}:\d{2})', dt_str)
                 if m:
                     month, day, tm = m.groups()
@@ -3009,6 +3018,20 @@ def liff_booking():
                 const menuEl = bookingCard.querySelector('.booking-menu');
                 currentBookingMenu = menuEl ? menuEl.innerText.replace('メニュー：', '') : '未設定';
             }}
+
+            // 所要時間をSalonBoardから取得
+            try {{
+                const durationRes = await fetch('/api/liff/get-duration', {{
+                    method: 'POST',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify({{booking_id: bookingId}})
+                }});
+                const durationData = await durationRes.json();
+                currentBookingDuration = durationData.duration || 60;
+            }} catch (e) {{
+                currentBookingDuration = 60;
+            }}
+            }}
             
             // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
@@ -3379,6 +3402,40 @@ def api_liff_cancel_request():
     print(f"[キャンセルリクエスト] booking_id={booking_id}, line_user_id={line_user_id}")
     
     return jsonify({'success': True, 'message': 'キャンセルリクエストを受け付けました。サロンからご連絡いたします。'})
+
+@app.route("/api/liff/get-duration", methods=["POST"])
+def api_liff_get_duration():
+    """SalonBoardから予約の所要時間を取得"""
+    from playwright.sync_api import sync_playwright
+    
+    data = request.get_json()
+    booking_id = data.get("booking_id")
+    
+    if not booking_id:
+        return jsonify({"error": "booking_id required"}), 400
+    
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            cookies = get_salonboard_cookies()
+            if cookies:
+                context.add_cookies(cookies)
+            page = context.new_page()
+            url = f"https://salonboard.com/KLP/reserve/ext/extReserveChange/?reserveId={booking_id}"
+            page.goto(url, timeout=60000)
+            page.wait_for_timeout(3000)
+            hour_select = page.query_selector("#jsiRsvTermHour")
+            min_select = page.query_selector("#jsiRsvTermMin")
+            duration = 60
+            if hour_select and min_select:
+                hour_val = hour_select.evaluate("el => el.value")
+                min_val = min_select.evaluate("el => el.value")
+                duration = int(hour_val) + int(min_val)
+            browser.close()
+            return jsonify({"duration": duration})
+    except Exception as e:
+        return jsonify({"error": str(e), "duration": 60}), 200
 
 @app.route('/api/liff/execute-change', methods=['POST'])
 def api_liff_execute_change():
