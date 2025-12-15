@@ -131,17 +131,19 @@ def load_mapping():
 
 
 def find_phone_from_bookings(name):
-    """bookingsテーブルから電話番号を検索"""
+    """8weeks_bookingsテーブルから電話番号を検索（名前完全一致）"""
     try:
         headers = {
             'apikey': SUPABASE_KEY,
             'Authorization': f'Bearer {SUPABASE_KEY}'
         }
-        response = requests.get(f'{SUPABASE_URL}/rest/v1/bookings?select=*', headers=headers)
+        response = requests.get(f'{SUPABASE_URL}/rest/v1/8weeks_bookings?select=customer_name,phone,customer_number', headers=headers)
         if response.status_code == 200:
+            norm_name = name.replace(' ','').replace('　','').strip()
             for booking in response.json():
                 booking_name = booking.get('customer_name', '')
-                if name in booking_name or booking_name in name:
+                norm_booking = booking_name.replace(' ','').replace('　','').strip()
+                if norm_name == norm_booking:
                     phone = booking.get('phone')
                     customer_number = booking.get('customer_number')
                     if phone:
