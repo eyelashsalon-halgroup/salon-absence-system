@@ -1600,6 +1600,13 @@ def line_webhook():
                 user_id = event['source']['userId']
                 message_text = event.get('message', {}).get('text', '')
                 
+                # 既存ユーザーは処理しない（名前上書き防止）
+                check_headers = {"apikey": SUPABASE_KEY}
+                check_res = requests.get(f"{SUPABASE_URL}/rest/v1/customers?line_user_id=eq.{user_id}", headers=check_headers)
+                if check_res.status_code == 200 and len(check_res.json()) > 0:
+                    print(f"既存ユーザー: {user_id} → スキップ")
+                    continue
+                
                 # メッセージ本文が名前っぽい場合は名前として処理
                 if message_text and 2 <= len(message_text) <= 20 and not any(c in message_text for c in ['http', '予約', '確認', 'キャンセル']):
                     # メッセージを名前として登録/更新

@@ -272,6 +272,18 @@ def main():
                                     menu_el = page.query_selector('td:has-text("【")')
                                 if menu_el:
                                     menu = menu_el.inner_text().strip()[:100]
+                                # 所要時間取得
+                                duration = 60
+                                try:
+                                    hour_el = page.query_selector('#jsiRsvTermHour')
+                                    min_el = page.query_selector('#jsiRsvTermMinute')
+                                    if hour_el and min_el:
+                                        h = int(hour_el.evaluate('el => el.value') or 0)
+                                        m = int(min_el.evaluate('el => el.value') or 0)
+                                        duration = h * 60 + m
+                                        print(f'[DURATION] {item["customer_name"]} → {duration}分', flush=True)
+                                except:
+                                    pass
                                     print(f"[MENU] {item['customer_name']} → {menu[:30]}", flush=True)
                             except Exception as e:
                                 print(f"[MENU] 取得スキップ: {item['customer_name']}", flush=True)
@@ -286,7 +298,8 @@ def main():
                             'menu': menu,
                             'staff': item['staff'],
                             'status': 'confirmed',
-                            'booking_source': item['source']
+                            'booking_source': item['source'],
+                            'duration': duration
                         }
                         
                         res = requests.post(
