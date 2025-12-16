@@ -80,9 +80,12 @@ def login_to_salonboard(page):
     except Exception as e:
         print(f"[LOGIN] ページ遷移タイムアウト: {e}", flush=True)
         # エラーメッセージを確認
-        error_msg = page.query_selector('.error, .errorMessage, .mod_error')
+        error_msg = page.query_selector('.error, .errorMessage, .mod_error, .errMsg, #errMsg')
         if error_msg:
             print(f"[LOGIN] エラーメッセージ: {error_msg.inner_text()}", flush=True)
+        # ページ内容を確認
+        body_text = page.inner_text('body')[:500]
+        print(f"[LOGIN] ページ内容: {body_text}", flush=True)
         print(f"[LOGIN] 現在のURL: {page.url}", flush=True)
         return False
     
