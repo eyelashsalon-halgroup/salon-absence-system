@@ -257,6 +257,7 @@ def main():
                         scraped_booking_ids.append(item['booking_id'])
                         
                         # キャッシュにメニューがあればスキップ
+                        duration = 60  # デフォルト値
                         cached_menu = existing_cache.get(item['booking_id'], '')
                         if cached_menu:
                             menu = cached_menu
@@ -273,7 +274,7 @@ def main():
                                 if menu_el:
                                     menu = menu_el.inner_text().strip()[:100]
                                 # 所要時間取得
-                                duration = 60
+
                                 try:
                                     hour_el = page.query_selector('#jsiRsvTermHour')
                                     min_el = page.query_selector('#jsiRsvTermMinute')
