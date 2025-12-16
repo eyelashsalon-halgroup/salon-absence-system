@@ -258,6 +258,7 @@ def main():
                         
                         # キャッシュにメニューがあればスキップ
                         duration = 60  # デフォルト値
+                        phone = ''  # 電話番号初期化
                         cached_menu = existing_cache.get(item['booking_id'], '')
                         if cached_menu:
                             menu = cached_menu
@@ -273,6 +274,15 @@ def main():
                                     menu_el = page.query_selector('td:has-text("【")')
                                 if menu_el:
                                     menu = menu_el.inner_text().strip()[:100]
+                                # 電話番号取得
+                                phone = ''
+                                try:
+                                    phone_el = page.query_selector('th:has-text("電話番号") + td a')
+                                    if phone_el:
+                                        phone = phone_el.inner_text().strip()
+                                        print(f"[PHONE] {item['customer_name']} → {phone}", flush=True)
+                                except:
+                                    pass
                                 # 所要時間取得
 
                                 try:
@@ -294,7 +304,7 @@ def main():
                         data = {
                             'booking_id': item['booking_id'],
                             'customer_name': item['customer_name'],
-                            'phone': get_phone_for_customer(item['customer_name'], item['booking_id']),
+                            'phone': phone if phone else get_phone_for_customer(item['customer_name'], item['booking_id']),
                             'visit_datetime': item['visit_datetime'],
                             'menu': menu,
                             'staff': item['staff'],
@@ -493,4 +503,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
