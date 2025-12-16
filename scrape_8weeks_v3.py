@@ -20,9 +20,11 @@ def get_phone_for_customer(customer_name, booking_id):
     """顧客の電話番号を取得（customersテーブルから検索）"""
     if not SUPABASE_KEY:
         return ''
+    # スペース除去（半角・全角両方）
+    normalized_name = customer_name.replace(' ', '').replace('　', '')
     headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
     res = requests.get(
-        f'{SUPABASE_URL}/rest/v1/customers?name=ilike.*{customer_name}*&select=phone',
+        f'{SUPABASE_URL}/rest/v1/customers?name=ilike.*{normalized_name}*&select=phone',
         headers=headers
     )
     if res.status_code == 200 and res.json():
@@ -117,12 +119,12 @@ def main():
     existing_cache = {}
     try:
         cache_res = requests.get(
-            f"{SUPABASE_URL}/rest/v1/8weeks_bookings?select=booking_id,menu",
+            f"{SUPABASE_URL}/rest/v1/8weeks_bookings?select=booking_id,menu,phone",
             headers=headers
         )
         if cache_res.status_code == 200:
             for item in cache_res.json():
-                existing_cache[item['booking_id']] = item.get('menu', '')
+                existing_cache[item['booking_id']] = {'menu': item.get('menu', ''), 'phone': item.get('phone', '')}
             print(f"[CACHE] 既存データ: {len(existing_cache)}件", flush=True)
     except Exception as e:
         print(f"[CACHE] キャッシュ取得エラー: {e}", flush=True)
@@ -259,9 +261,12 @@ def main():
                         # キャッシュにメニューがあればスキップ
                         duration = 60  # デフォルト値
                         phone = ''  # 電話番号初期化
-                        cached_menu = existing_cache.get(item['booking_id'], '')
-                        if cached_menu:
+                        cached_data = existing_cache.get(item['booking_id'], {})
+                        cached_menu = cached_data.get('menu', '') if isinstance(cached_data, dict) else cached_data
+                        cached_phone = cached_data.get('phone', '') if isinstance(cached_data, dict) else ''
+                        if cached_menu and cached_phone:
                             menu = cached_menu
+                            phone = cached_phone
                             print(f"[CACHE] {item['customer_name']} → {menu[:30]}", flush=True)
                         elif item['href']:
                             menu = ''
