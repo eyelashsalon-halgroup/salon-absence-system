@@ -61,13 +61,13 @@ def login_to_salonboard(page):
         print(f"[LOGIN] パスワード入力失敗: {e}", flush=True)
         return False
     
-    # ログインボタンクリック（JavaScript実行）
+    # ログインボタンクリック
     try:
-        print(f"[LOGIN] JavaScriptでdologin()を実行...", flush=True)
-        page.evaluate("dologin(new Event('click'))")
-        print(f"[LOGIN] dologin()実行成功", flush=True)
+        print(f"[LOGIN] ログインボタンをクリック...", flush=True)
+        page.click('input[type="submit"], button[type="submit"], .loginBtn, #loginBtn')
+        print(f"[LOGIN] ボタンクリック成功", flush=True)
     except Exception as e:
-        print(f"[LOGIN] dologin()失敗: {e}", flush=True)
+        print(f"[LOGIN] ボタンクリック失敗: {e}", flush=True)
         return False
     
     # ページ遷移を待つ
