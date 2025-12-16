@@ -445,6 +445,52 @@ def main():
         return
     
     print(f"\n[完了] {total_saved}件の予約を保存", flush=True)
+    
+    # 電話番号補完処理
+    try:
+        print("\n[電話番号補完] 開始...", flush=True)
+        
+        # customersテーブルから電話番号がNULLの人を取得
+        customers_response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/customers?phone=is.null&line_user_id=not.is.null&select=id,name,line_user_id",
+            headers=headers
+        )
+        customers_without_phone = customers_response.json() if customers_response.status_code == 200 else []
+        
+        updated_count = 0
+        for customer in customers_without_phone:
+            customer_name = customer.get('name', '')
+            customer_id = customer.get('id')
+            
+            if not customer_name or not customer_id:
+                continue
+            
+            # 8weeks_bookingsから電話番号を検索
+            booking_response = requests.get(
+                f"{SUPABASE_URL}/rest/v1/8weeks_bookings?customer_name=eq.{customer_name}&phone=not.is.null&select=phone&limit=1",
+                headers=headers
+            )
+            
+            if booking_response.status_code == 200:
+                bookings = booking_response.json()
+                if bookings and bookings[0].get('phone'):
+                    phone = bookings[0]['phone']
+                    
+                    # customersテーブルを更新
+                    update_response = requests.patch(
+                        f"{SUPABASE_URL}/rest/v1/customers?id=eq.{customer_id}",
+                        headers={**headers, 'Prefer': 'return=minimal'},
+                        json={'phone': phone}
+                    )
+                    
+                    if update_response.status_code in [200, 204]:
+                        print(f"[電話番号補完] {customer_name} → {phone}", flush=True)
+                        updated_count += 1
+        
+        print(f"[電話番号補完] {updated_count}件更新完了", flush=True)
+    except Exception as e:
+        print(f"[電話番号補完] エラー: {e}", flush=True)
 
 if __name__ == "__main__":
     main()
+    
