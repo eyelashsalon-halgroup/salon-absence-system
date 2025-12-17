@@ -256,6 +256,9 @@ def main():
                         print(f"[ERROR] 抽出例外: {e}", flush=True)
                         continue
                 
+                # デバッグ: 取得した予約一覧を出力
+                print(f"[DEBUG] 取得予約: {[b['customer_name'] for b in bookings_data]}", flush=True)
+                
                 # フェーズ2: 詳細ページからメニュー取得 → DB保存
                 for item in bookings_data:
                     try:
