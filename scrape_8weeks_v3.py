@@ -278,6 +278,7 @@ def main():
                             menu = ''
                             try:
                                 detail_url = f"https://salonboard.com{item['href']}"
+                                print(f"[DEBUG] 詳細ページアクセス: {detail_url}", flush=True)
                                 page.goto(detail_url, timeout=15000)
                                 page.wait_for_timeout(500)
                                 menu_el = page.query_selector('th:has-text("メニュー") + td')
