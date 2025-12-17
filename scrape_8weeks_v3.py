@@ -160,9 +160,12 @@ def main():
                 print(f"[WARN] クッキー読み込み失敗: {e}", flush=True)
             
             page = context.new_page()
-            
-            # 8週間分（56日）をループ
-            for day_offset in range(56):
+              
+              # リトライ用リスト
+              retry_list = []
+              
+              # 8週間分（56日）をループ
+              for day_offset in range(56):
                 target_date = today + timedelta(days=day_offset)
                 date_str = target_date.strftime('%Y%m%d')
                 url = f'https://salonboard.com/KLP/reserve/reserveList/searchDate?date={date_str}'
@@ -311,6 +314,7 @@ def main():
                             except Exception as e:
                                 current_url = page.url
                                 print(f"[MENU] 取得スキップ: {item['customer_name']} - {e} (現在URL: {current_url})", flush=True)
+                                retry_list.append(item)
                         else:
                             menu = ''
                         
@@ -342,6 +346,53 @@ def main():
                         continue
                 
                 print(f"[{target_date.strftime('%Y-%m-%d')}] {day_saved}件保存", flush=True)
+            
+            # === リトライ処理 ===
+            if retry_list:
+                print(f"\n[RETRY] {len(retry_list)}件のリトライ開始", flush=True)
+                for item in retry_list:
+                    if not item.get('href'):
+                        continue
+                    try:
+                        detail_url = f"https://salonboard.com{item['href']}"
+                        print(f"[RETRY] {item['customer_name']}", flush=True)
+                        page.goto(detail_url, timeout=30000)
+                        page.wait_for_timeout(1000)
+                        
+                        menu = ''
+                        menu_el = page.query_selector('th:has-text("メニュー") + td')
+                        if not menu_el:
+                            menu_el = page.query_selector('td:has-text("【")')
+                        if menu_el:
+                            menu = menu_el.inner_text().strip()[:100]
+                        
+                        phone = ''
+                        phone_el = page.query_selector('th:has-text("電話番号") + td a')
+                        if phone_el:
+                            phone = phone_el.inner_text().strip()
+                            print(f"[RETRY][PHONE] {item['customer_name']} → {phone}", flush=True)
+                        
+                        if menu or phone:
+                            data = {
+                                'booking_id': item['booking_id'],
+                                'customer_name': item['customer_name'],
+                                'phone': phone if phone else get_phone_for_customer(item['customer_name'], item['booking_id']),
+                                'visit_datetime': item['visit_datetime'],
+                                'menu': menu,
+                                'staff': item['staff'],
+                                'status': 'confirmed',
+                                'booking_source': item['source'],
+                                'duration': 60
+                            }
+                            res = requests.post(
+                                f'{SUPABASE_URL}/rest/v1/8weeks_bookings?on_conflict=booking_id',
+                                headers=headers,
+                                json=data
+                            )
+                            if res.status_code in [200, 201]:
+                                print(f"[RETRY][OK] {item['customer_name']}", flush=True)
+                    except Exception as e:
+                        print(f"[RETRY][FAIL] {item['customer_name']} - {e}", flush=True)
             
             # === 空き枠をSupabaseに保存 ===
             print("\n[空き枠] 14日分の空き枠を取得・保存中...", flush=True)
