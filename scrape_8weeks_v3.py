@@ -161,11 +161,11 @@ def main():
             
             page = context.new_page()
               
-              # リトライ用リスト
-              retry_list = []
-              
-              # 8週間分（56日）をループ
-              for day_offset in range(56):
+            # リトライ用リスト
+            retry_list = []
+            
+            # 8週間分（56日）をループ
+            for day_offset in range(56):
                 target_date = today + timedelta(days=day_offset)
                 date_str = target_date.strftime('%Y%m%d')
                 url = f'https://salonboard.com/KLP/reserve/reserveList/searchDate?date={date_str}'
