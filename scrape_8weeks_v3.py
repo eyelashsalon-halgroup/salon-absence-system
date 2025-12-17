@@ -308,7 +308,7 @@ def main():
                                     pass
                                     print(f"[MENU] {item['customer_name']} → {menu[:30]}", flush=True)
                             except Exception as e:
-                                print(f"[MENU] 取得スキップ: {item['customer_name']}", flush=True)
+                                print(f"[MENU] 取得スキップ: {item['customer_name']} - {e}", flush=True)
                         else:
                             menu = ''
                         
