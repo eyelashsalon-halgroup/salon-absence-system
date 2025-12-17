@@ -309,7 +309,8 @@ def main():
                                     pass
                                     print(f"[MENU] {item['customer_name']} → {menu[:30]}", flush=True)
                             except Exception as e:
-                                print(f"[MENU] 取得スキップ: {item['customer_name']} - {e}", flush=True)
+                                current_url = page.url
+                                print(f"[MENU] 取得スキップ: {item['customer_name']} - {e} (現在URL: {current_url})", flush=True)
                         else:
                             menu = ''
                         
