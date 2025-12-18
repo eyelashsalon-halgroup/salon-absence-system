@@ -293,11 +293,17 @@ def main():
                                 phone = ''
                                 try:
                                     phone_el = page.query_selector('th:has-text("電話番号") + td a')
+                                    if not phone_el:
+                                        phone_el = page.query_selector('a[href^="tel:"]')
                                     if phone_el:
                                         phone = phone_el.inner_text().strip()
+                                        if not phone:
+                                            phone = phone_el.get_attribute('href').replace('tel:', '').strip()
                                         print(f"[PHONE] {item['customer_name']} → {phone}", flush=True)
-                                except:
-                                    pass
+                                    else:
+                                        print(f"[PHONE] {item['customer_name']} → 電話番号なし", flush=True)
+                                except Exception as e:
+                                    print(f"[PHONE] {item['customer_name']} → エラー: {e}", flush=True)
                                 # 所要時間取得
 
                                 try:
