@@ -131,7 +131,7 @@ def load_mapping():
 
 
 def find_phone_from_bookings(name):
-    """8weeks_bookingsテーブルから電話番号を検索（名前完全一致）"""
+    """8weeks_bookingsテーブルから電話番号と正規化名を検索（名前完全一致）"""
     try:
         headers = {
             'apikey': SUPABASE_KEY,
@@ -139,19 +139,18 @@ def find_phone_from_bookings(name):
         }
         response = requests.get(f'{SUPABASE_URL}/rest/v1/8weeks_bookings?select=customer_name,phone,customer_number', headers=headers)
         if response.status_code == 200:
-            norm_name = name.replace(' ','').replace('　','').strip()
+            norm_name = ''.join(name.split())
             for booking in response.json():
                 booking_name = booking.get('customer_name', '')
-                norm_booking = booking_name.replace(' ','').replace('　','').strip()
+                norm_booking = ''.join(booking_name.split())
                 if norm_name == norm_booking:
                     phone = booking.get('phone')
                     customer_number = booking.get('customer_number')
-                    if phone:
-                        return phone, customer_number
-        return None, None
+                    return phone, customer_number, booking_name
+        return None, None, None
     except Exception as e:
         print(f"電話番号検索エラー: {e}")
-        return None, None
+        return None, None, None
 
 def save_mapping(customer_name, user_id):
     customer_name = clean_customer_name(customer_name)
@@ -172,7 +171,9 @@ def save_mapping(customer_name, user_id):
             existing_data = check_response.json()
             if len(existing_data) == 0:
                 # 電話番号を検索
-                phone, customer_number = find_phone_from_bookings(customer_name)
+                phone, customer_number, normalized_name = find_phone_from_bookings(customer_name)
+                if normalized_name:
+                    customer_name = normalized_name
                 # 新規登録
                 data = {
                     'name': customer_name,
