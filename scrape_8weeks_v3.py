@@ -66,6 +66,18 @@ def login_to_salonboard(page):
         print(f"[LOGIN] JavaScriptでdologin()を実行...", flush=True)
         page.evaluate("dologin(new Event('click'))")
         print(f"[LOGIN] dologin()実行成功", flush=True)
+        
+        # dologin()直後のエラーメッセージを確認
+        page.wait_for_timeout(500)
+        try:
+            error_elem = page.query_selector('.error, .errorMessage, .mod_error, .errMsg, #errMsg, .alert-danger')
+            if error_elem:
+                print(f"[LOGIN] エラーメッセージ発見: {error_elem.inner_text()}", flush=True)
+            # ページ全体のテキストも確認
+            body_text = page.inner_text('body')[:300]
+            print(f"[LOGIN] ページ内容: {body_text}", flush=True)
+        except Exception as e:
+            print(f"[LOGIN] エラー確認失敗: {e}", flush=True)
     except Exception as e:
         print(f"[LOGIN] dologin()失敗: {e}", flush=True)
         return False
