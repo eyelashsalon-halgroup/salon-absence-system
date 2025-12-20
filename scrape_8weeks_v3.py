@@ -77,6 +77,8 @@ def login_to_salonboard(page):
             # クリック後の状態を確認
             page.wait_for_timeout(2000)
             print(f"[LOGIN] クリック後URL: {page.url}", flush=True)
+            if js_errors:
+                print(f"[LOGIN] JSエラー: {js_errors}", flush=True)
             try:
                 body = page.inner_text('body')[:500]
                 print(f"[LOGIN] クリック後ページ: {body}", flush=True)
