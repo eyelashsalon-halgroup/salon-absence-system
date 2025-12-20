@@ -9,7 +9,6 @@ import os
 import requests
 from datetime import datetime, timedelta, timezone
 
-from playwright_stealth import stealth_sync
 print(f"[STARTUP] scrape_8weeks_v3.py 開始", flush=True)
 
 JST = timezone(timedelta(hours=9))
@@ -222,7 +221,6 @@ def main():
                 print(f"[WARN] クッキー読み込み失敗: {e}", flush=True)
             
             page = context.new_page()
-            stealth_sync(page)
               
             # リトライ用リスト
             retry_list = []
