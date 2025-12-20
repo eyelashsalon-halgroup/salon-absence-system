@@ -70,22 +70,25 @@ def login_to_salonboard(page):
         print(f"[LOGIN] dologin()失敗: {e}", flush=True)
         return False
     
-    # ページ遷移を待つ
+    # ページ遷移を待つ（デバッグ強化版）
     try:
-        page.wait_for_timeout(3000)  # 3秒待機
-        print(f"[LOGIN] 3秒後のURL: {page.url}", flush=True)
-        print(f"[LOGIN] 3秒後のタイトル: {page.title()}", flush=True)
-        page.wait_for_url("**/KLP/**", timeout=27000)
-        print(f"[LOGIN] ページ遷移成功", flush=True)
+        for i in range(30):
+            page.wait_for_timeout(1000)
+            current_url = page.url
+            print(f"[LOGIN] {i+1}秒後URL: {current_url}", flush=True)
+            if '/KLP/' in current_url:
+                print(f"[LOGIN] KLP到達成功！", flush=True)
+                break
+        else:
+            print(f"[LOGIN] 30秒タイムアウト", flush=True)
+            try:
+                body = page.inner_text('body')[:500]
+                print(f"[LOGIN] ページ内容: {body}", flush=True)
+            except Exception as e2:
+                print(f"[LOGIN] ページ内容取得失敗: {e2}", flush=True)
+            return False
     except Exception as e:
-        print(f"[LOGIN] ページ遷移タイムアウト: {e}", flush=True)
-        # エラーメッセージを確認
-        error_msg = page.query_selector('.error, .errorMessage, .mod_error, .errMsg, #errMsg')
-        if error_msg:
-            print(f"[LOGIN] エラーメッセージ: {error_msg.inner_text()}", flush=True)
-        # ページ内容を確認
-        body_text = page.inner_text('body')[:500]
-        print(f"[LOGIN] ページ内容: {body_text}", flush=True)
+        print(f"[LOGIN] エラー: {e}", flush=True)
         print(f"[LOGIN] 現在のURL: {page.url}", flush=True)
         return False
     
