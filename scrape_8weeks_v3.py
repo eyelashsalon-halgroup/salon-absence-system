@@ -144,15 +144,37 @@ def main():
     try:
         with sync_playwright() as p:
             print("[OK] Playwright起動", flush=True)
-            browser = p.chromium.launch(headless=True, args=['--disable-blink-features=AutomationControlled'])
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-dev-shm-usage',
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-infobars',
+                    '--window-position=0,0',
+                    '--ignore-certifcate-errors',
+                    '--ignore-certifcate-errors-spki-list',
+                ]
+            )
             print("[OK] ブラウザ起動", flush=True)
             
             context = browser.new_context(
-                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 viewport={'width': 1920, 'height': 1080},
                 locale='ja-JP',
-                timezone_id='Asia/Tokyo'
+                timezone_id='Asia/Tokyo',
+                java_script_enabled=True,
+                bypass_csp=True,
             )
+            
+            # Stealth: navigator.webdriverを隠す
+            context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+                Object.defineProperty(navigator, 'languages', {get: () => ['ja-JP', 'ja', 'en-US', 'en']});
+                window.chrome = {runtime: {}};
+            """)
             
             try:
                 with open('session_cookies.json', 'r') as f:
