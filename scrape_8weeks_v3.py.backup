@@ -61,70 +61,31 @@ def login_to_salonboard(page):
         print(f"[LOGIN] パスワード入力失敗: {e}", flush=True)
         return False
     
-    # ログインボタンクリック
+    # ログインボタンクリック（JavaScript実行）
     try:
-        print(f"[LOGIN] ログインボタンを探索中...", flush=True)
-        # ボタン要素を確認
-        btn = page.query_selector('a.common-CNCcommon__primaryBtn')
-        if btn:
-            print(f"[LOGIN] ボタン発見、クリック実行", flush=True)
-            # JavaScriptエラーを監視
-            js_errors = []
-            page.on('console', lambda msg: js_errors.append(f"[{msg.type}] {msg.text}") if msg.type == 'error' else None)
-            page.on('pageerror', lambda err: js_errors.append(f"[PAGE_ERROR] {err}"))
-            
-            btn.click(force=True, no_wait_after=True, timeout=5000)
-            # クリック後の状態を確認
-            page.wait_for_timeout(2000)
-            print(f"[LOGIN] クリック後URL: {page.url}", flush=True)
-            if js_errors:
-                print(f"[LOGIN] JSエラー: {js_errors}", flush=True)
-            try:
-                body = page.inner_text('body')[:500]
-                print(f"[LOGIN] クリック後ページ: {body}", flush=True)
-            except Exception as e:
-                print(f"[LOGIN] ページ取得エラー: {e}", flush=True)
-        else:
-            # フォールバック：テキストで探す
-            print(f"[LOGIN] セレクタで見つからず、テキストで探索", flush=True)
-            btn = page.get_by_text('ログイン', exact=True)
-            btn.click(force=True, no_wait_after=True, timeout=5000)
-        print(f"[LOGIN] クリック成功", flush=True)
-        
-        # dologin()直後のエラーメッセージを確認
-        page.wait_for_timeout(500)
-        try:
-            error_elem = page.query_selector('.error, .errorMessage, .mod_error, .errMsg, #errMsg, .alert-danger')
-            if error_elem:
-                print(f"[LOGIN] エラーメッセージ発見: {error_elem.inner_text()}", flush=True)
-            # ページ全体のテキストも確認
-            body_text = page.inner_text('body')[:300]
-            print(f"[LOGIN] ページ内容: {body_text}", flush=True)
-        except Exception as e:
-            print(f"[LOGIN] エラー確認失敗: {e}", flush=True)
+        print(f"[LOGIN] JavaScriptでdologin()を実行...", flush=True)
+        page.evaluate("dologin(new Event('click'))")
+        print(f"[LOGIN] dologin()実行成功", flush=True)
     except Exception as e:
         print(f"[LOGIN] dologin()失敗: {e}", flush=True)
         return False
     
-    # ページ遷移を待つ（デバッグ強化版）
+    # ページ遷移を待つ
     try:
-        for i in range(30):
-            page.wait_for_timeout(1000)
-            current_url = page.url
-            print(f"[LOGIN] {i+1}秒後URL: {current_url}", flush=True)
-            if '/KLP/' in current_url:
-                print(f"[LOGIN] KLP到達成功！", flush=True)
-                break
-        else:
-            print(f"[LOGIN] 30秒タイムアウト", flush=True)
-            try:
-                body = page.inner_text('body')[:500]
-                print(f"[LOGIN] ページ内容: {body}", flush=True)
-            except Exception as e2:
-                print(f"[LOGIN] ページ内容取得失敗: {e2}", flush=True)
-            return False
+        page.wait_for_timeout(3000)  # 3秒待機
+        print(f"[LOGIN] 3秒後のURL: {page.url}", flush=True)
+        print(f"[LOGIN] 3秒後のタイトル: {page.title()}", flush=True)
+        page.wait_for_url("**/KLP/**", timeout=27000)
+        print(f"[LOGIN] ページ遷移成功", flush=True)
     except Exception as e:
-        print(f"[LOGIN] エラー: {e}", flush=True)
+        print(f"[LOGIN] ページ遷移タイムアウト: {e}", flush=True)
+        # エラーメッセージを確認
+        error_msg = page.query_selector('.error, .errorMessage, .mod_error, .errMsg, #errMsg')
+        if error_msg:
+            print(f"[LOGIN] エラーメッセージ: {error_msg.inner_text()}", flush=True)
+        # ページ内容を確認
+        body_text = page.inner_text('body')[:500]
+        print(f"[LOGIN] ページ内容: {body_text}", flush=True)
         print(f"[LOGIN] 現在のURL: {page.url}", flush=True)
         return False
     
@@ -180,37 +141,15 @@ def main():
     try:
         with sync_playwright() as p:
             print("[OK] Playwright起動", flush=True)
-            browser = p.chromium.launch(
-                headless=False,
-                args=[
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-dev-shm-usage',
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-infobars',
-                    '--window-position=0,0',
-                    '--ignore-certifcate-errors',
-                    '--ignore-certifcate-errors-spki-list',
-                ]
-            )
+            browser = p.chromium.launch(headless=True, args=['--disable-blink-features=AutomationControlled'])
             print("[OK] ブラウザ起動", flush=True)
             
             context = browser.new_context(
-                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
                 viewport={'width': 1920, 'height': 1080},
                 locale='ja-JP',
-                timezone_id='Asia/Tokyo',
-                java_script_enabled=True,
-                bypass_csp=True,
+                timezone_id='Asia/Tokyo'
             )
-            
-            # Stealth: navigator.webdriverを隠す
-            context.add_init_script("""
-                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
-                Object.defineProperty(navigator, 'languages', {get: () => ['ja-JP', 'ja', 'en-US', 'en']});
-                window.chrome = {runtime: {}};
-            """)
             
             try:
                 with open('session_cookies.json', 'r') as f:
@@ -355,7 +294,7 @@ def main():
                                 try:
                                     phone_el = page.query_selector('th:has-text("電話番号") + td')
                                     if phone_el:
-                                        phone = phone_el.inner_text().strip().split("\n")[0].strip()
+                                        phone = phone_el.inner_text().strip()
                                     if phone:
                                         print(f"[PHONE] {item['customer_name']} → {phone}", flush=True)
                                     else:
@@ -433,7 +372,7 @@ def main():
                         phone = ''
                         phone_el = page.query_selector('th:has-text("電話番号") + td a')
                         if phone_el:
-                            phone = phone_el.inner_text().strip().split("\n")[0].strip()
+                            phone = phone_el.inner_text().strip()
                             print(f"[RETRY][PHONE] {item['customer_name']} → {phone}", flush=True)
                         
                         if menu or phone:
