@@ -68,6 +68,11 @@ def login_to_salonboard(page):
         btn = page.query_selector('a.common-CNCcommon__primaryBtn')
         if btn:
             print(f"[LOGIN] ボタン発見、クリック実行", flush=True)
+            # JavaScriptエラーを監視
+            js_errors = []
+            page.on('console', lambda msg: js_errors.append(f"[{msg.type}] {msg.text}") if msg.type == 'error' else None)
+            page.on('pageerror', lambda err: js_errors.append(f"[PAGE_ERROR] {err}"))
+            
             btn.click(force=True, no_wait_after=True, timeout=5000)
             # クリック後の状態を確認
             page.wait_for_timeout(2000)
