@@ -69,6 +69,14 @@ def login_to_salonboard(page):
         if btn:
             print(f"[LOGIN] ボタン発見、クリック実行", flush=True)
             btn.click()
+            # クリック後の状態を確認
+            page.wait_for_timeout(2000)
+            print(f"[LOGIN] クリック後URL: {page.url}", flush=True)
+            try:
+                body = page.inner_text('body')[:500]
+                print(f"[LOGIN] クリック後ページ: {body}", flush=True)
+            except Exception as e:
+                print(f"[LOGIN] ページ取得エラー: {e}", flush=True)
         else:
             # フォールバック：テキストで探す
             print(f"[LOGIN] セレクタで見つからず、テキストで探索", flush=True)
