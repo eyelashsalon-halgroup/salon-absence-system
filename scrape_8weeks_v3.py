@@ -63,8 +63,17 @@ def login_to_salonboard(page):
     
     # ログインボタンクリック
     try:
-        print(f"[LOGIN] ログインボタンをクリック...", flush=True)
-        page.click('a.common-CNCcommon__primaryBtn', timeout=10000)
+        print(f"[LOGIN] ログインボタンを探索中...", flush=True)
+        # ボタン要素を確認
+        btn = page.query_selector('a.common-CNCcommon__primaryBtn')
+        if btn:
+            print(f"[LOGIN] ボタン発見、クリック実行", flush=True)
+            btn.click()
+        else:
+            # フォールバック：テキストで探す
+            print(f"[LOGIN] セレクタで見つからず、テキストで探索", flush=True)
+            btn = page.get_by_text('ログイン', exact=True)
+            btn.click()
         print(f"[LOGIN] クリック成功", flush=True)
         
         # dologin()直後のエラーメッセージを確認
