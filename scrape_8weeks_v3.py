@@ -157,7 +157,7 @@ def main():
         with sync_playwright() as p:
             print("[OK] Playwright起動", flush=True)
             browser = p.chromium.launch(
-                headless="new",
+                headless=True,
                 args=[
                     '--disable-blink-features=AutomationControlled',
                     '--disable-dev-shm-usage',
