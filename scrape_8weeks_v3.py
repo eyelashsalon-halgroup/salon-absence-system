@@ -61,11 +61,11 @@ def login_to_salonboard(page):
         print(f"[LOGIN] パスワード入力失敗: {e}", flush=True)
         return False
     
-    # ログインボタンクリック（JavaScript実行）
+    # ログインボタンクリック
     try:
-        print(f"[LOGIN] JavaScriptでdologin()を実行...", flush=True)
-        page.evaluate("dologin(new Event('click'))")
-        print(f"[LOGIN] dologin()実行成功", flush=True)
+        print(f"[LOGIN] ログインボタンをクリック...", flush=True)
+        page.click('a.common-CNCcommon__primaryBtn', timeout=10000)
+        print(f"[LOGIN] クリック成功", flush=True)
         
         # dologin()直後のエラーメッセージを確認
         page.wait_for_timeout(500)
