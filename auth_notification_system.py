@@ -2899,6 +2899,7 @@ def liff_booking():
     </div>
     <script>
         const LIFF_ID = "{liff_id}";
+        const API_BASE = "https://salon-absence-system-production.up.railway.app";
         
         function formatDate(dateStr) {{
     const match = dateStr.match(/(\d{{4}})[-\/](\d{{2}})[-\/](\d{{2}}).*?(\d{{2}}):(\d{{2}})/);
@@ -3022,7 +3023,6 @@ def liff_booking():
         let currentBookingMenu = '';
         let currentBookingDuration = 60;
         let currentWeek = 0;
-        const API_BASE = 'https://salon-absence-system-production.up.railway.app';
         
         async function changeBooking(bookingId) {{
             currentBookingId = bookingId;
