@@ -3046,7 +3046,6 @@ def liff_booking():
             }} catch (e) {{
                 currentBookingDuration = 60;
             }}
-            }}
             
             // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
