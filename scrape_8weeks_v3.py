@@ -8,6 +8,14 @@ import re
 import os
 import requests
 from datetime import datetime, timedelta, timezone
+# 仮想ディスプレイ（Railway用）
+try:
+    from pyvirtualdisplay import Display
+    display = Display(visible=0, size=(1920, 1080))
+    display.start()
+    print("[OK] Xvfb仮想ディスプレイ起動", flush=True)
+except Exception as e:
+    print(f"[WARN] Xvfb起動スキップ: {e}", flush=True)
 
 print(f"[STARTUP] scrape_8weeks_v3.py 開始", flush=True)
 
@@ -181,7 +189,7 @@ def main():
         with sync_playwright() as p:
             print("[OK] Playwright起動", flush=True)
             browser = p.chromium.launch(
-                headless=True,
+                headless=False,
                 args=[
                     '--disable-blink-features=AutomationControlled',
                     '--disable-dev-shm-usage',
