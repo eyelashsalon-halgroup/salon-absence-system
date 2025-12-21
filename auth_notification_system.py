@@ -2972,7 +2972,7 @@ def liff_booking():
             
             try {{
                 // 電話番号をLINE IDと紐付けて保存
-                const response = await fetch('/api/liff/register-phone', {{
+                const response = await fetch(API_BASE + '/api/liff/register-phone', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
                     body: JSON.stringify({{ line_user_id: lineUserId, phone: phone }})
@@ -3022,6 +3022,7 @@ def liff_booking():
         let currentBookingMenu = '';
         let currentBookingDuration = 60;
         let currentWeek = 0;
+        const API_BASE = 'https://salon-absence-system-production.up.railway.app';
         
         async function changeBooking(bookingId) {{
             currentBookingId = bookingId;
@@ -3035,7 +3036,7 @@ def liff_booking():
 
             // 所要時間をSalonBoardから取得
             try {{
-                const durationRes = await fetch('/api/liff/get-duration', {{
+                const durationRes = await fetch(API_BASE + '/api/liff/get-duration', {{
                     method: 'POST',
                     headers: {{'Content-Type': 'application/json'}},
                     body: JSON.stringify({{booking_id: bookingId}})
@@ -3125,7 +3126,7 @@ def liff_booking():
         
         async function loadCalendarData() {{
             try {{
-                const res = await fetch('/api/liff/available-slots-range');
+                const res = await fetch(API_BASE + '/api/liff/available-slots-range');
                 const data = await res.json();
                 if (data.dates) {{
                     calendarData = data.dates;
@@ -3236,7 +3237,7 @@ def liff_booking():
             const dateFormatted = `${{dateStr.slice(0,4)}}/${{dateStr.slice(4,6)}}/${{dateStr.slice(6,8)}}`;
             if (confirm(`${{dateFormatted}} ${{time}}〜 に変更しますか？`)) {{
                 document.getElementById('calendar-table').innerHTML = '<p style="text-align:center;padding:20px;">変更処理中...</p>';
-                const response = await fetch('/api/liff/execute-change', {{
+                const response = await fetch(API_BASE + '/api/liff/execute-change', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
                     body: JSON.stringify({{ booking_id: bookingId, new_date: dateStr, new_time: time, line_user_id: lineUserId }})
@@ -3249,7 +3250,7 @@ def liff_booking():
         
         async function cancelBooking(bookingId) {{
             if (confirm('本当にキャンセルしますか？')) {{
-                const response = await fetch('/api/liff/cancel-request', {{
+                const response = await fetch(API_BASE + '/api/liff/cancel-request', {{
                     method: 'POST',
                     headers: {{ 'Content-Type': 'application/json' }},
                     body: JSON.stringify({{ booking_id: bookingId, line_user_id: lineUserId }})
