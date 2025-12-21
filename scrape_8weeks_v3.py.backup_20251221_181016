@@ -322,8 +322,7 @@ def main():
                                 'visit_datetime': visit_datetime,
                                 'staff': staff,
                                 'source': source,
-                                'href': href,
-                                'day_offset': day_offset
+                                'href': href
                             })
                     except Exception as e:
                         print(f"[ERROR] 抽出例外: {e}", flush=True)
@@ -343,7 +342,7 @@ def main():
                         cached_data = existing_cache.get(item['booking_id'], {})
                         cached_menu = cached_data.get('menu', '') if isinstance(cached_data, dict) else cached_data
                         cached_phone = cached_data.get('phone', '') if isinstance(cached_data, dict) else ''
-                        if cached_menu and cached_phone and item.get('day_offset', 0) >= 7:
+                        if cached_menu and cached_phone:
                             menu = cached_menu
                             phone = cached_phone
                             print(f"[CACHE] {item['customer_name']} → {menu[:30]}", flush=True)
