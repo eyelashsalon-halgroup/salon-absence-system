@@ -83,7 +83,7 @@ def login_to_salonboard(page):
             
             page.keyboard.press('Enter')
             # クリック後の状態を確認
-            page.wait_for_timeout(2000)
+            page.wait_for_timeout(500)
             print(f"[LOGIN] クリック後URL: {page.url}", flush=True)
             if js_errors:
                 print(f"[LOGIN] JSエラー: {js_errors}", flush=True)
@@ -243,7 +243,7 @@ def main():
                 
                 try:
                     page.goto(url, timeout=60000)
-                    page.wait_for_timeout(2000)
+                    page.wait_for_timeout(500)
                 except Exception as e:
                     print(f"[{target_date.strftime('%Y-%m-%d')}] アクセスエラー、スキップ: {e}", flush=True)
                     continue
@@ -262,7 +262,7 @@ def main():
                     print("[OK] ログイン成功、クッキー保存", flush=True)
                     
                     page.goto(url, timeout=60000)
-                    page.wait_for_timeout(2000)
+                    page.wait_for_timeout(500)
                 
                 # 予約一覧テーブルを特定
                 reservation_table = None
