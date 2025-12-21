@@ -1356,6 +1356,7 @@ def update():
 
 @app.route('/webhook/line', methods=['POST'])
 def webhook():
+    print(f"[WEBHOOK] リクエスト受信: {request.json}")
     try:
         # メッセージを動的に読み込む
         MESSAGES = load_messages()
@@ -1399,6 +1400,9 @@ def webhook():
                         
         return 'OK', 200
     except Exception as e:
+        print(f"[WEBHOOK] エラー: {e}")
+        import traceback
+        traceback.print_exc()
         return 'Error', 500
 
 @app.route("/api/scrape-hotpepper", methods=["POST"])
