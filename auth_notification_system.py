@@ -2933,7 +2933,6 @@ def liff_booking():
                 document.getElementById('loading').innerHTML = 'プロフィール取得中...';
                 userProfile = await liff.getProfile();
                 lineUserId = userProfile.userId;
-                alert('LINE ID: ' + lineUserId);
                 document.getElementById('user-info').innerHTML = `<strong>${{userProfile.displayName}}</strong> 様`;
                 document.getElementById('user-info').style.display = 'block';
                 
