@@ -672,8 +672,16 @@ def main():
             if not customer_name or not customer_id:
                 continue
             
-            # 8weeks_bookingsから電話番号を検索（スペース除去して比較）
-            normalized_name = ''.join(customer_name.split())
+            # 8weeks_bookingsから電話番号を検索（スペース・全角半角を正規化して比較）
+            import unicodedata
+            def normalize_name(name):
+                if not name:
+                    return ''
+                # 全角→半角変換、スペース除去
+                name = unicodedata.normalize('NFKC', name)
+                return ''.join(name.split())
+            
+            normalized_name = normalize_name(customer_name)
             booking_response = requests.get(
                 f"{SUPABASE_URL}/rest/v1/8weeks_bookings?phone=not.is.null&select=customer_name,phone",
                 headers=headers
@@ -682,7 +690,7 @@ def main():
             if booking_response.status_code == 200:
                 phone = None
                 for booking in booking_response.json():
-                    booking_name = ''.join(booking.get('customer_name', '').split())
+                    booking_name = normalize_name(booking.get('customer_name', ''))
                     if normalized_name == booking_name:
                         phone = booking.get('phone')
                         break

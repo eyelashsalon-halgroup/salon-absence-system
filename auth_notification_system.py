@@ -222,15 +222,18 @@ def run_scheduler():
         schedule.run_pending()
         time.sleep(3600)
 
-def save_absence(staff_name, reason, details, alternative_date):
+def save_absence(staff_name, reason, details, alternative_date, absence_date=None):
     absences = load_absences()
     
     absences.append({
+        "id": str(len(absences) + 1),
         "staff_name": staff_name,
         "reason": reason,
         "details": details,
         "alternative_date": alternative_date,
-        "submitted_at": datetime.now().isoformat()
+        "absence_date": absence_date or datetime.now().strftime("%Y-%m-%d"),
+        "submitted_at": datetime.now().isoformat(),
+        "status": "pending"
     })
     
     with open(ABSENCE_FILE, 'w', encoding='utf-8') as f:
@@ -564,6 +567,10 @@ def staff_absence():
             <div class="content">
                 <form method="POST" action="{{ url_for('confirm_absence') }}">
                     <div class="form-group">
+                        <label>欠勤日 <span style="color: #d32f2f;">*</span></label>
+                        <input type="date" name="absence_date" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; margin-bottom: 20px;">
+                    </div>
+                    <div class="form-group">
                         <label>欠勤理由 <span style="color: #d32f2f;">*</span></label>
                         <select name="reason" required>
                             <option value="">選択してください</option>
@@ -719,12 +726,19 @@ def submit_absence():
     details = request.form.get('details')
     alternative_date = request.form.get('alternative_date', '')
     
-    save_absence(staff_name, reason, details, alternative_date)
+    absence_date = request.form.get('absence_date', datetime.now().strftime("%Y-%m-%d"))
+    save_absence(staff_name, reason, details, alternative_date, absence_date)
     
     # メッセージを動的に読み込む
     MESSAGES = load_messages()
     
     full_name = get_full_name(staff_name)
+    
+    # 管理者（神原）にLINE通知（承認待ち）
+    LINE_USER_ID_HAL = os.getenv('LINE_USER_ID_HAL')
+    if LINE_USER_ID_HAL:
+        admin_message = f"【欠勤申請】\n{full_name}から欠勤申請がありました。\n\n欠勤日: {absence_date}\n理由: {reason}\n詳細: {details}\n\n管理画面で承認してください。\nhttps://salon-absence-system-production.up.railway.app/admin/absences"
+        send_line_message(LINE_USER_ID_HAL, admin_message, LINE_BOT_TOKEN_STAFF)
     
     # 他のスタッフへの通知
     absence_message = MESSAGES["absence_request"].format(staff_name=full_name)
@@ -908,6 +922,122 @@ def staff_my_absences():
     </html>
     '''
     return render_template_string(template, my_absences=my_absences)
+
+
+@app.route('/admin/absences')
+@admin_required
+def admin_absences():
+    absences = load_absences()
+    pending = [a for a in absences if a.get('status') == 'pending']
+    
+    template = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>欠勤承認</title>
+        <style>
+            body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+            .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .card h3 { margin: 0 0 10px 0; color: #333; }
+            .card p { margin: 5px 0; color: #666; }
+            .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+            .btn-approve { background: #4caf50; color: white; }
+            .btn-approve:hover { background: #45a049; }
+            .btn-back { background: #6b5b47; color: white; text-decoration: none; }
+            .empty { text-align: center; color: #999; padding: 40px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>欠勤承認待ち</h1>
+                <a href="/admin" class="btn btn-back">管理画面に戻る</a>
+            </div>
+            {% if pending %}
+                {% for absence in pending %}
+                <div class="card">
+                    <h3>{{ absence.staff_name }}</h3>
+                    <p><strong>欠勤日:</strong> {{ absence.absence_date }}</p>
+                    <p><strong>理由:</strong> {{ absence.reason }}</p>
+                    <p><strong>詳細:</strong> {{ absence.details }}</p>
+                    <p><strong>申請日時:</strong> {{ absence.submitted_at }}</p>
+                    <form method="POST" action="/admin/approve_absence" style="margin-top: 15px;">
+                        <input type="hidden" name="absence_id" value="{{ absence.id }}">
+                        <button type="submit" class="btn btn-approve">承認して顧客にLINE通知</button>
+                    </form>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card empty">承認待ちの欠勤申請はありません</div>
+            {% endif %}
+        </div>
+    </body>
+    </html>
+    """
+    return render_template_string(template, pending=pending)
+
+@app.route('/admin/approve_absence', methods=['POST'])
+@admin_required
+def approve_absence():
+    absence_id = request.form.get('absence_id')
+    absences = load_absences()
+    
+    target_absence = None
+    for absence in absences:
+        if absence.get('id') == absence_id:
+            absence['status'] = 'approved'
+            target_absence = absence
+            break
+    
+    with open(ABSENCE_FILE, 'w', encoding='utf-8') as f:
+        json.dump(absences, f, ensure_ascii=False, indent=2)
+    
+    if target_absence:
+        absence_date = target_absence.get('absence_date')
+        staff_name = target_absence.get('staff_name')
+        
+        # 該当日の予約顧客を8weeks_bookingsから取得
+        try:
+            headers = {
+                'apikey': os.getenv('SUPABASE_KEY'),
+                'Authorization': f"Bearer {os.getenv('SUPABASE_KEY')}"
+            }
+            response = requests.get(
+                f"{os.getenv('SUPABASE_URL')}/rest/v1/8weeks_bookings?visit_datetime=like.{absence_date}*&select=customer_name,phone,visit_datetime,menu",
+                headers=headers
+            )
+            bookings = response.json() if response.status_code == 200 else []
+            
+            # 顧客にLINE通知
+            notified_count = 0
+            for booking in bookings:
+                customer_name = booking.get('customer_name', '').replace(' ', '')
+                
+                # customersテーブルからline_user_idを取得
+                cust_response = requests.get(
+                    f"{os.getenv('SUPABASE_URL')}/rest/v1/customers?select=line_user_id,name",
+                    headers=headers
+                )
+                customers = cust_response.json() if cust_response.status_code == 200 else []
+                
+                for cust in customers:
+                    cust_name = cust.get('name', '').replace(' ', '')
+                    if cust_name == customer_name and cust.get('line_user_id'):
+                        message = f"【重要】ご予約日程変更のお願い\n\n{booking.get('visit_datetime', '')[:10]}のご予約について、担当スタッフの都合により日程変更をお願いしたくご連絡いたしました。\n\n大変申し訳ございませんが、ご都合の良い日時をお知らせください。\n\neyelashsalon HAL"
+                        send_line_message(cust.get('line_user_id'), message, LINE_BOT_TOKEN_STAFF)
+                        notified_count += 1
+                        break
+            
+            flash(f'承認完了。{notified_count}名の顧客にLINE通知を送信しました。', 'success')
+        except Exception as e:
+            flash(f'承認完了。顧客通知でエラー: {str(e)}', 'warning')
+    
+    return redirect('/admin/absences')
+
 
 @app.route('/admin')
 @admin_required
