@@ -19,6 +19,10 @@ except Exception as e:
 
 print(f"[STARTUP] scrape_8weeks_v3.py 開始", flush=True)
 
+# アラート用グローバル変数
+scrape_failure_count = 0
+FAILURE_THRESHOLD = 5
+
 JST = timezone(timedelta(hours=9))
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://lsrbeugmqqqklywmvjjs.supabase.co')
@@ -139,6 +143,60 @@ def login_to_salonboard(page):
     print(f"[LOGIN] ログイン後URL: {page.url}", flush=True)
     return 'login' not in page.url.lower()
 
+def send_scrape_alert(failure_count, error_message=""):
+    """スクレイピング連続失敗時にLINE通知を送信"""
+    LINE_CHANNEL_ACCESS_TOKEN_STAFF = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN_STAFF')
+    LINE_USER_ID_HAL = os.environ.get('LINE_USER_ID_HAL')
+    
+    if not LINE_CHANNEL_ACCESS_TOKEN_STAFF or not LINE_USER_ID_HAL:
+        print("[ALERT] LINE環境変数が未設定", flush=True)
+        return False
+    
+    message = f"""⚠️ スクレイピング連続失敗
+
+連続失敗: {failure_count}回
+エラー: {error_message[:100] if error_message else '不明'}
+
+Railwayログを確認してください"""
+    
+    alert_headers = {
+        'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN_STAFF}',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'to': LINE_USER_ID_HAL,
+        'messages': [{'type': 'text', 'text': message}]
+    }
+    
+    try:
+        response = requests.post(
+            'https://api.line.me/v2/bot/message/push',
+            headers=alert_headers,
+            json=data,
+            timeout=10
+        )
+        print(f"[ALERT] LINE送信: {response.status_code}", flush=True)
+        return response.status_code == 200
+    except Exception as e:
+        print(f"[ALERT] エラー: {e}", flush=True)
+        return False
+
+def reset_failure_count():
+    global scrape_failure_count
+    if scrape_failure_count > 0:
+        print(f"[ALERT] 失敗カウンターリセット（前回: {scrape_failure_count}回）", flush=True)
+    scrape_failure_count = 0
+
+def increment_failure_count(error_message=""):
+    global scrape_failure_count
+    scrape_failure_count += 1
+    print(f"[ALERT] 失敗カウンター: {scrape_failure_count}回", flush=True)
+    
+    if scrape_failure_count == FAILURE_THRESHOLD:
+        send_scrape_alert(scrape_failure_count, error_message)
+    elif scrape_failure_count > FAILURE_THRESHOLD and scrape_failure_count % 10 == 0:
+        send_scrape_alert(scrape_failure_count, error_message)
+
 def main():
     print(f"[{datetime.now(JST)}] 8週間予約スクレイピング開始", flush=True)
     
@@ -253,6 +311,7 @@ def main():
                     print("[WARN] ログインが必要", flush=True)
                     if not login_to_salonboard(page):
                         print("[ERROR] ログイン失敗", flush=True)
+                        increment_failure_count("ログイン失敗")
                         browser.close()
                         return
                     
@@ -591,6 +650,7 @@ def main():
         traceback.print_exc()
         return
     
+    reset_failure_count()
     print(f"\n[完了] {total_saved}件の予約を保存", flush=True)
     
     # 電話番号補完処理
@@ -612,27 +672,32 @@ def main():
             if not customer_name or not customer_id:
                 continue
             
-            # 8weeks_bookingsから電話番号を検索
+            # 8weeks_bookingsから電話番号を検索（スペース除去して比較）
+            normalized_name = ''.join(customer_name.split())
             booking_response = requests.get(
-                f"{SUPABASE_URL}/rest/v1/8weeks_bookings?customer_name=eq.{customer_name}&phone=not.is.null&select=phone&limit=1",
+                f"{SUPABASE_URL}/rest/v1/8weeks_bookings?phone=not.is.null&select=customer_name,phone",
                 headers=headers
             )
             
             if booking_response.status_code == 200:
-                bookings = booking_response.json()
-                if bookings and bookings[0].get('phone'):
-                    phone = bookings[0]['phone']
-                    
-                    # customersテーブルを更新
-                    update_response = requests.patch(
-                        f"{SUPABASE_URL}/rest/v1/customers?id=eq.{customer_id}",
-                        headers={**headers, 'Prefer': 'return=minimal'},
-                        json={'phone': phone}
-                    )
-                    
-                    if update_response.status_code in [200, 204]:
-                        print(f"[電話番号補完] {customer_name} → {phone}", flush=True)
-                        updated_count += 1
+                phone = None
+                for booking in booking_response.json():
+                    booking_name = ''.join(booking.get('customer_name', '').split())
+                    if normalized_name == booking_name:
+                        phone = booking.get('phone')
+                        break
+            
+            if phone:
+                # customersテーブルを更新
+                update_response = requests.patch(
+                    f"{SUPABASE_URL}/rest/v1/customers?id=eq.{customer_id}",
+                    headers={**headers, 'Prefer': 'return=minimal'},
+                    json={'phone': phone}
+                )
+                
+                if update_response.status_code in [200, 204]:
+                    print(f"[電話番号補完] {customer_name} → {phone}", flush=True)
+                    updated_count += 1
         
         print(f"[電話番号補完] {updated_count}件更新完了", flush=True)
     except Exception as e:
