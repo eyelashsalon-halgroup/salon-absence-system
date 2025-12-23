@@ -4,34 +4,44 @@
     "reason": "体調不良",
     "details": "あ",
     "alternative_date": "",
-    "submitted_at": "2025-09-27T14:49:40.215190"
+    "submitted_at": "2025-09-27T14:49:40.215190",
+    "status": "pending",
+    "id": "1"
   },
   {
     "staff_name": "kambara",
     "reason": "体調不良",
     "details": "あ",
     "alternative_date": "あ",
-    "submitted_at": "2025-09-27T19:40:08.151023"
+    "submitted_at": "2025-09-27T19:40:08.151023",
+    "status": "pending",
+    "id": "2"
   },
   {
     "staff_name": "kambara",
     "reason": "体調不良",
     "details": "a\r\n",
     "alternative_date": "",
-    "submitted_at": "2025-10-11T14:12:34.083010"
+    "submitted_at": "2025-10-11T14:12:34.083010",
+    "status": "pending",
+    "id": "3"
   },
   {
     "staff_name": "kambara",
     "reason": "体調不良",
     "details": "テスト配信",
     "alternative_date": "あ",
-    "submitted_at": "2025-10-11T16:21:30.355433"
+    "submitted_at": "2025-10-11T16:21:30.355433",
+    "status": "pending",
+    "id": "4"
   },
   {
     "staff_name": "kambara",
     "reason": "体調不良",
     "details": "実機テスト",
     "alternative_date": "あ",
-    "submitted_at": "2025-10-11T20:49:45.215837"
+    "submitted_at": "2025-10-11T20:49:45.215837",
+    "status": "pending",
+    "id": "5"
   }
 ]

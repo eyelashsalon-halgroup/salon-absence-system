@@ -1443,6 +1443,7 @@ def absence_list():
                                 <th>状況説明</th>
                                 <th>代替可能日時</th>
                                 <th>申請日時</th>
+                                <th>操作</th>
                             </tr>
                             {% for absence in month_absences|reverse %}
                             <tr>
@@ -1451,6 +1452,16 @@ def absence_list():
                                 <td>{{ absence.details }}</td>
                                 <td>{{ absence.alternative_date if absence.alternative_date else '-' }}</td>
                                 <td>{{ absence.submitted_at[:10] }} {{ absence.submitted_at[11:16] }}</td>
+                                <td>
+                                    {% if absence.status == 'pending' %}
+                                    <form method="POST" action="/admin/approve_absence" style="margin: 0;">
+                                        <input type="hidden" name="absence_id" value="{{ absence.id }}">
+                                        <button type="submit" style="padding: 6px 12px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">承認</button>
+                                    </form>
+                                    {% else %}
+                                    <span style="color: #4caf50; font-size: 12px;">✓ 承認済</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </table>
