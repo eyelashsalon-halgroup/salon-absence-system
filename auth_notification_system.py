@@ -72,10 +72,22 @@ staff_mapping = {
 }
 
 def load_messages():
-    """メッセージをJSONファイルから読み込む（即時反映用）"""
-    if os.path.exists(MESSAGES_FILE):
-        with open(MESSAGES_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+    """メッセージをSupabaseから読み込む"""
+    try:
+        headers = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': f'Bearer {SUPABASE_KEY}'
+        }
+        response = requests.get(
+            f'{SUPABASE_URL}/rest/v1/message_templates?select=key,message',
+            headers=headers
+        )
+        if response.status_code == 200:
+            templates = response.json()
+            return {t['key']: t['message'] for t in templates}
+    except Exception as e:
+        print(f"[ERROR] load_messages: {e}")
+    # フォールバック
     return {
         "absence_request": "{staff_name}が本日欠勤となりました。",
         "substitute_confirmed": "{substitute_name}が出勤してくれることになりました。",
