@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template_string, redirect, url_for, session, jsonify, make_response
+from flask import Flask, request, render_template_string, redirect, url_for, session, jsonify, make_response, flash
+import threading
 import requests
 import os
 import json
@@ -746,24 +747,22 @@ def submit_absence():
     
     full_name = get_full_name(staff_name)
     
-    # 管理者（神原）にLINE通知（承認待ち）
-    LINE_USER_ID_HAL = os.getenv('LINE_USER_ID_HAL')
-    if LINE_USER_ID_HAL:
-        admin_message = f"【欠勤申請】\n{full_name}から欠勤申請がありました。\n\n欠勤日: {absence_date}\n理由: {reason}\n詳細: {details}\n\n管理画面で承認してください。\nhttps://salon-absence-system-production.up.railway.app/admin/absences"
-        send_line_message(LINE_USER_ID_HAL, admin_message, LINE_BOT_TOKEN_STAFF)
+    # LINE通知を非同期で送信（高速化）
+    def send_notifications():
+        LINE_USER_ID_HAL = os.getenv('LINE_USER_ID_HAL')
+        if LINE_USER_ID_HAL:
+            admin_message = f"【欠勤申請】\n{full_name}から欠勤申請がありました。\n\n欠勤日: {absence_date}\n理由: {reason}\n詳細: {details}\n\n管理画面で承認してください。\nhttps://salon-absence-system-production.up.railway.app/admin/absences"
+            send_line_message(LINE_USER_ID_HAL, admin_message, LINE_BOT_TOKEN_STAFF)
+        
+        absence_message = MESSAGES["absence_request"].format(staff_name=full_name)
+        for username, info in STAFF_USERS.items():
+            if username != staff_name:
+                send_line_message(info['line_id'], absence_message, LINE_BOT_TOKEN_STAFF)
+        
+        confirmation_message = MESSAGES["absence_confirmed"].format(reason=reason, details=details)
+        send_line_message(STAFF_USERS[staff_name]['line_id'], confirmation_message, LINE_BOT_TOKEN_STAFF)
     
-    # 他のスタッフへの通知
-    absence_message = MESSAGES["absence_request"].format(staff_name=full_name)
-    for username, info in STAFF_USERS.items():
-        if username != staff_name:
-            send_line_message(info['line_id'], absence_message, LINE_BOT_TOKEN_STAFF)
-    
-    # 欠勤スタッフ本人への確認通知
-    confirmation_message = MESSAGES["absence_confirmed"].format(
-        reason=reason,
-        details=details
-    )
-    send_line_message(STAFF_USERS[staff_name]['line_id'], confirmation_message, LINE_BOT_TOKEN_STAFF)
+    threading.Thread(target=send_notifications).start()
     
     return redirect(url_for('absence_success'))
 
