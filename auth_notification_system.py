@@ -964,6 +964,18 @@ def admin_absences():
     </head>
     <body>
         <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div style="padding: 15px; margin-bottom: 20px; border-radius: 8px; 
+                            {% if category == 'success' %}background: #d4edda; color: #155724;
+                            {% elif category == 'warning' %}background: #fff3cd; color: #856404;
+                            {% else %}background: #f8d7da; color: #721c24;{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <div class="header">
                 <h1>欠勤承認待ち</h1>
                 <a href="/admin" class="btn btn-back">管理画面に戻る</a>
