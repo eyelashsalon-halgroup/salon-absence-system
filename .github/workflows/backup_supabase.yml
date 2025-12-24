@@ -1,0 +1,41 @@
+name: Daily Supabase Backup
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 毎日UTC 0:00 (JST 9:00)
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create backup directory
+        run: mkdir -p backups
+      
+      - name: Backup customers
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/customers?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/customers_$(date +%Y%m%d).json
+      
+      - name: Backup 8weeks_bookings
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/8weeks_bookings?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/8weeks_bookings_$(date +%Y%m%d).json
+      
+      - name: Backup reminder_logs
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/reminder_logs?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/reminder_logs_$(date +%Y%m%d).json
+      
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add backups/
+          git commit -m "Daily backup $(date +%Y-%m-%d)" || exit 0
+          git push
