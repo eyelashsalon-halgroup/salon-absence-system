@@ -23,7 +23,14 @@ def login_to_salonboard(page):
     page.wait_for_timeout(500)
     
     print("[LOGIN] ログインボタンクリック...")
-    page.click('a:has-text("ログイン")')
+    try:
+        btn = page.query_selector('a.common-CNCcommon__primaryBtn')
+        if btn:
+            btn.click()
+        else:
+            page.click('a:has-text("ログイン")')
+    except:
+        page.click('a:has-text("ログイン")')
     page.wait_for_timeout(5000)
     
     if 'login' in page.url.lower():

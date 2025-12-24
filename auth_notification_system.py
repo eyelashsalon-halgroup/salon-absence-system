@@ -2619,7 +2619,6 @@ def send_reminder_notifications(test_mode=False):
 
 ■ 遅刻について
 スタッフ判断でメニュー変更や日時変更となる場合があり
-当日中の時間変更であれば、【次回予約特典】はそのまま適用可能
 
 ＜次回予約特典が失効＞
 ◉予約日から3日前まで
@@ -3222,18 +3221,8 @@ def liff_booking():
                 currentBookingMenu = menuEl ? menuEl.innerText.replace('メニュー：', '') : '未設定';
             }}
 
-            // 所要時間をSalonBoardから取得
-            try {{
-                const durationRes = await fetch(API_BASE + '/api/liff/get-duration', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'application/json'}},
-                    body: JSON.stringify({{booking_id: bookingId}})
-                }});
-                const durationData = await durationRes.json();
-                currentBookingDuration = durationData.duration || 60;
-            }} catch (e) {{
-                currentBookingDuration = 60;
-            }}
+            // 所要時間は固定値（高速化のためSalonBoard取得をスキップ）
+            currentBookingDuration = 60;
             
             // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
