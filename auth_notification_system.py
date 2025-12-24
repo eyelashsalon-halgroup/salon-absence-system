@@ -2522,7 +2522,7 @@ def send_reminder_notifications(test_mode=False):
         
         # 8weeks_bookingsからD-3/D-7の予約を取得
         book_response = requests.get(
-            f'{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{target_date_str}T00:00:00&visit_datetime=lt.{target_date_str}T23:59:59&select=*',
+            f'{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=like.{target_date_str}*&select=*',
             headers=headers
         )
         if book_response.status_code != 200:
