@@ -1056,7 +1056,7 @@ def approve_absence():
                         TEST_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
                         test_message = f"[テスト通知]\n顧客: {cust_name}\n予約日: {booking.get('visit_datetime', '')[:10]}\n\n※実際の顧客には送信されていません"
                         send_line_message(TEST_LINE_ID, test_message, LINE_BOT_TOKEN_STAFF)
-                        print(f"[TEST] 神原にテスト送信: {cust_name}", flush=True)
+                        print(f"[TEST] 神原良祐にテスト送信: {cust_name}", flush=True)
                         notified_count += 1
                         break
             
@@ -2665,7 +2665,7 @@ def send_reminder_notifications(test_mode=False):
                 continue  # 既に今日送信済み
             
             # テストモード: 神原良祐以外はスキップ
-            # テストモード: 神原とtest沙織のみ
+            # テストモード: 神原良祐とtest沙織のみ
 
             TEST_PHONES = ["09015992055", "09012345678"]
 
@@ -2687,7 +2687,7 @@ def send_reminder_notifications(test_mode=False):
                 json={'phone': phone, 'customer_name': customer_name, 'days_ahead': days, 'status': status}
             )
             
-            # 神原に送信通知
+            # 神原良祐に送信通知
             if status == "sent":
                 notify_message = f"✅ リマインド送信完了\n{customer_name}様（{days}日前）"
                 send_line_message("U9022782f05526cf7632902acaed0cb08", notify_message)
