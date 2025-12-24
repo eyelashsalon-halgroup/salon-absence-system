@@ -68,7 +68,7 @@ STAFF_USERS = {
 }
 
 staff_mapping = {
-    "U9022782f05526cf7632902acaed0cb08": {"name": "神原良祐"},
+    "U9022782f05526cf7632902acaed0cb08": {"name": "神原良祐さん"},
     "U1ad150fa84a287c095eb98186a8cdc45": {"name": "Saoriさん"}
 }
 
