@@ -2174,6 +2174,26 @@ def get_result(task_id):
     with login_lock:
         return jsonify(login_results.get(task_id, {'status': 'processing'}))
 
+# リマインド自動送信スケジューラー（毎朝9:00 JST、テストモード：神原良祐とtest沙織のみ）
+
+scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
+
+scheduler.add_job(
+
+    func=lambda: send_reminder_notifications(test_mode=True),
+
+    trigger=CronTrigger(hour=9, minute=0),
+
+    id='daily_reminder',
+
+    name='毎朝9時リマインド送信（テスト）'
+
+)
+
+scheduler.start()
+
+print("[SCHEDULER] リマインド自動送信スケジューラー開始（毎朝9:00 JST、神原良祐とtest沙織のみ）", flush=True)
+
 if __name__ == '__main__':
     # 初期ファイル作成
     if not os.path.exists(MAPPING_FILE):
