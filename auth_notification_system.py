@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 import schedule
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 # from supabase import create_client の行は削除
 
 load_dotenv()
