@@ -2460,7 +2460,7 @@ def scrape_daily():
         )
         scrape_output = result.stdout
         
-        # 2. リマインド送信（テストモード：神原のみ）
+        # 2. リマインド送信（テストモード：神原良祐のみ）
         reminder_results = send_reminder_notifications(test_mode=True)
         
         return jsonify({
@@ -2479,7 +2479,7 @@ def scrape_daily():
 
 @app.route('/api/reminder_test', methods=['GET'])
 def api_reminder_test():
-    """リマインド送信テスト（神原のみ、スクレイピングなし）"""
+    """リマインド送信テスト（神原良祐のみ、スクレイピングなし）"""
     results = send_reminder_notifications(test_mode=True)
     return jsonify({"success": True, "results": results})
 
@@ -2492,7 +2492,7 @@ def send_reminder_notifications(test_mode=False):
     today = datetime.now(JST)
     results = {"3days": {"sent": 0, "failed": 0, "no_match": 0}, "7days": {"sent": 0, "failed": 0, "no_match": 0}}
     
-    # テストモード: 神原のみに送信
+    # テストモード: 神原良祐のみに送信
     KAMBARA_PHONE = "09015992055"
     
     headers = {
@@ -2604,8 +2604,8 @@ def send_reminder_notifications(test_mode=False):
             cleaned_menu = clean_menu(menu)
             
             if days == 3:
-                # テストモード: 神原のみに送信
-                KANBARA_PHONE = "09015992055"
+                # テストモード: 神原良祐のみに送信
+                KAMBARA_RYOSUKE_PHONE = "09015992055"
                 message = f"""{customer_name} 様
 
 ご予約【3日前】のお知らせ🕊️
@@ -2664,7 +2664,7 @@ def send_reminder_notifications(test_mode=False):
             if dup_check.json():
                 continue  # 既に今日送信済み
             
-            # テストモード: 神原以外はスキップ
+            # テストモード: 神原良祐以外はスキップ
             # テストモード: 神原とtest沙織のみ
 
             TEST_PHONES = ["09015992055", "09012345678"]
