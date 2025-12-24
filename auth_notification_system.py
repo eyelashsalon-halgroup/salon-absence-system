@@ -2666,7 +2666,11 @@ def send_reminder_notifications(test_mode=False):
                 continue  # 既に今日送信済み
             
             # テストモード: 神原以外はスキップ
-            if test_mode and phone != KAMBARA_PHONE:
+            # テストモード: 神原とtest沙織のみ
+
+            TEST_PHONES = ["09015992055", "09012345678"]
+
+            if test_mode and phone not in TEST_PHONES:
                 continue
             
             # LINE送信
