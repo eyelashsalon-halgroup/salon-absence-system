@@ -63,12 +63,12 @@ ADMIN_USERS = {
 }
 
 STAFF_USERS = {
-    'kambara': {'password': 'kambara123', 'full_name': '神原', 'line_id': 'U3dafc1648cc64b066ca1c5b3f4a67f8e'},
+    'kambara': {'password': 'kambara123', 'full_name': '神原良祐', 'line_id': 'U9022782f05526cf7632902acaed0cb08'},
     'saori': {'password': 'saori123', 'full_name': 'Saori', 'line_id': 'U1ad150fa84a287c095eb98186a8cdc45'}
 }
 
 staff_mapping = {
-    "U3dafc1648cc64b066ca1c5b3f4a67f8e": {"name": "神原さん"},
+    "U9022782f05526cf7632902acaed0cb08": {"name": "神原良祐"},
     "U1ad150fa84a287c095eb98186a8cdc45": {"name": "Saoriさん"}
 }
 
