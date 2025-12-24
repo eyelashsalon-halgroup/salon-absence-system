@@ -2445,38 +2445,6 @@ def scrape_daily_test():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/api/scrape_daily_DISABLED', methods=['GET'])
-def scrape_daily():
-    """毎日のスクレイピング実行 + リマインド送信"""
-    try:
-        import subprocess
-        
-        # 1. スクレイピング実行
-        result = subprocess.run(
-            ['python3', 'scrape_and_upload.py'],
-            capture_output=True,
-            text=True,
-            timeout=300
-        )
-        scrape_output = result.stdout
-        
-        # 2. リマインド送信（テストモード：神原良祐のみ）
-        reminder_results = send_reminder_notifications(test_mode=True)
-        
-        return jsonify({
-            "success": True,
-            "scrape_stdout": scrape_output,
-            "scrape_stderr": result.stderr,
-            "scrape_returncode": result.returncode,
-            "reminder_results": reminder_results
-        })
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-
 @app.route('/api/reminder_test', methods=['GET'])
 def api_reminder_test():
     """リマインド送信テスト（神原良祐のみ、スクレイピングなし）"""
