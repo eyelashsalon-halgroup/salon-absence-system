@@ -3111,10 +3111,10 @@ def liff_booking():
             }}
         }}
         
-        function logoutLiff() {
+        function logoutLiff() {{
             liff.logout();
             location.reload();
-        }
+        }}
         
         async function checkRegistration(lineUserId) {{
             try {{
