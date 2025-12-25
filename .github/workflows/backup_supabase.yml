@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * *'  # 毎日UTC 0:00 (JST 9:00)
   workflow_dispatch:  # 手動実行も可能
 
+permissions:
+  contents: write  # リポジトリへの書き込み権限
+
 jobs:
   backup:
     runs-on: ubuntu-latest
