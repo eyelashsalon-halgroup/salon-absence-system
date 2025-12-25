@@ -1,9 +1,0 @@
-name: Daily Scrape (DISABLED)
-on:
-  workflow_dispatch:
-jobs:
-  disabled:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Disabled
-        run: echo "無効化中"
