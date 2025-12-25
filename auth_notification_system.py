@@ -3927,9 +3927,8 @@ def run_scrape_job():
     except Exception as e:
         print(f"[SCHEDULER] エラー: {e}", flush=True)
 
-# APScheduler一時停止（ログイン失敗調査中）
-# スクレイピングジョブは別のスケジューラーに統合済み
-# scheduler = BackgroundScheduler(timezone='UTC')
-# scheduler.add_job(run_scrape_job, 'interval', minutes=1, id='scrape_8weeks', next_run_time=datetime.now() + timedelta(seconds=60))
-# scheduler.start()
-# print("[SCHEDULER] APScheduler開始（毎分実行）", flush=True)
+# スクレイピング用スケジューラー（毎分実行）
+scrape_scheduler = BackgroundScheduler(timezone='UTC')
+scrape_scheduler.add_job(run_scrape_job, 'interval', minutes=1, id='scrape_8weeks', next_run_time=datetime.now() + timedelta(seconds=60))
+scrape_scheduler.start()
+print("[SCHEDULER] スクレイピングスケジューラー開始（毎分実行）", flush=True)
