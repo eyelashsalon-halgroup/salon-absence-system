@@ -1,0 +1,12 @@
+[{"id":1,"phone":"09074874881","customer_name":"井川 みのり","days_ahead":3,"status":"sent","sent_at":"2025-12-01T15:17:02.841012"}, 
+ {"id":2,"phone":"09068271489","customer_name":"大西 敦子","days_ahead":7,"status":"sent","sent_at":"2025-12-01T15:17:03.627978"}, 
+ {"id":3,"phone":"08037746313","customer_name":"芦名 友紀","days_ahead":7,"status":"sent","sent_at":"2025-12-01T15:17:04.372822"}, 
+ {"id":4,"phone":"09069660587","customer_name":"横山 美恵子","days_ahead":7,"status":"sent","sent_at":"2025-12-01T15:17:04.877571"}, 
+ {"id":5,"phone":"09074874881","customer_name":"井川 みのり","days_ahead":3,"status":"sent","sent_at":"2025-12-02T01:40:11.72298"}, 
+ {"id":7,"phone":"09068271489","customer_name":"大西 敦子","days_ahead":7,"status":"sent","sent_at":"2025-12-02T01:40:13.527465"}, 
+ {"id":8,"phone":"08037746313","customer_name":"芦名 友紀","days_ahead":7,"status":"sent","sent_at":"2025-12-02T01:40:14.086319"}, 
+ {"id":9,"phone":"09069660587","customer_name":"横山 美恵子","days_ahead":7,"status":"sent","sent_at":"2025-12-02T01:40:14.59137"}, 
+ {"id":12,"phone":"09015992055","customer_name":"神原 良祐","days_ahead":3,"status":"sent","sent_at":"2025-12-24T12:56:05.383664"}, 
+ {"id":13,"phone":"09012345678","customer_name":"test 沙織","days_ahead":3,"status":"sent","sent_at":"2025-12-24T12:56:06.453929"}, 
+ {"id":14,"phone":"09015992055","customer_name":"神原 良祐","days_ahead":3,"status":"sent","sent_at":"2025-12-25T02:19:35.447602"}, 
+ {"id":15,"phone":"09015992055","customer_name":"神原 良祐","days_ahead":7,"status":"sent","sent_at":"2025-12-25T02:19:36.962553"}]
