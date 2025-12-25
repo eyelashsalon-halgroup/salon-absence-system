@@ -3113,7 +3113,7 @@ def liff_booking():
         async function checkRegistration(lineUserId) {{
             try {{
                 document.getElementById('loading').innerHTML = '確認中...';
-                const response = await fetch(`/api/liff/check-registration?line_user_id=${{lineUserId}}`);
+                const response = await fetch(h(`/api/liff/check-registration?line_user_id=${{lineUserId}}`);
                 const data = await response.json();
                 
                 document.getElementById('loading').style.display = 'none';
@@ -3160,7 +3160,7 @@ def liff_booking():
         
         async function loadBookings(phone) {{
             try {{
-                const response = await fetch(`/api/liff/bookings-by-phone?phone=${{phone}}`);
+                const response = await fetch(h(`/api/liff/bookings-by-phone?phone=${{phone}}`);
                 const data = await response.json();
                 
                 if (data.bookings && data.bookings.length > 0) {{
