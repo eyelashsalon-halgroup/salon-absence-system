@@ -3102,6 +3102,7 @@ def liff_booking():
                 lineUserId = userProfile.userId;
                 document.getElementById('user-info').innerHTML = `<strong>${{userProfile.displayName}}</strong> 様`;
                 document.getElementById('user-info').style.display = 'block';
+                document.getElementById('user-info').innerHTML += ' <button onclick="logoutLiff()" style="margin-left:10px;padding:5px 10px;font-size:12px;background:#ff6b6b;color:white;border:none;border-radius:3px;">ログアウト</button>';
                 
                 await checkRegistration(lineUserId);
             }} catch (error) {{
@@ -3109,6 +3110,11 @@ def liff_booking():
                 console.error('LIFF init error:', error);
             }}
         }}
+        
+        function logoutLiff() {
+            liff.logout();
+            location.reload();
+        }
         
         async function checkRegistration(lineUserId) {{
             try {{
