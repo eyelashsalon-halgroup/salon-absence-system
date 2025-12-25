@@ -2183,7 +2183,7 @@ scheduler.add_job(
 
     func=lambda: send_reminder_notifications(test_mode=True),
 
-    trigger=CronTrigger(hour=9, minute=0),
+    trigger=CronTrigger(hour=0, minute=0, timezone='UTC'),  # JST 9:00 = UTC 0:00
 
     id='daily_reminder',
 
