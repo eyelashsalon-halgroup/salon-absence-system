@@ -1533,6 +1533,19 @@ def webhook():
         
         events = request.json.get('events', [])
         for event in events:
+            # 友だち追加時の処理
+            if event['type'] == 'follow':
+                user_id = event['source']['userId']
+                print(f"[FOLLOW] 新規友だち追加: {user_id}", flush=True)
+                headers = {'Authorization': f'Bearer {LINE_BOT_TOKEN}'}
+                profile_res = requests.get(f'https://api.line.me/v2/bot/profile/{user_id}', headers=headers)
+                if profile_res.status_code == 200:
+                    display_name = profile_res.json().get('displayName', 'Unknown')
+                    result = save_mapping(display_name, user_id)
+                    if result:
+                        print(f"[FOLLOW] 新規顧客登録: {display_name} ({user_id})", flush=True)
+                continue
+
             if event['type'] == 'message':
                 user_id = event['source']['userId']
                 text = event['message']['text']
