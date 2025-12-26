@@ -2181,7 +2181,7 @@ scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
 
 scheduler.add_job(
 
-    func=lambda: send_reminder_notifications(test_mode=True),
+    func=lambda: send_reminder_notifications(test_mode=False),
 
     trigger=CronTrigger(hour=0, minute=0, timezone='UTC'),  # JST 9:00 = UTC 0:00
 
@@ -2469,7 +2469,7 @@ def scrape_daily_test():
 @app.route('/api/reminder_test', methods=['GET'])
 def api_reminder_test():
     """リマインド送信テスト（神原良祐のみ、スクレイピングなし）"""
-    results = send_reminder_notifications(test_mode=True)
+    results = send_reminder_notifications(test_mode=False)
     return jsonify({"success": True, "results": results})
 
 def send_reminder_notifications(test_mode=False):
