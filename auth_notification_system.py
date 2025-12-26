@@ -3029,18 +3029,18 @@ def liff_booking():
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }}
         .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: #06c755; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .header {{ background: #c44d6e; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
         .content {{ background: white; padding: 20px; border-radius: 0 0 10px 10px; }}
         .booking-card {{ border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }}
         .booking-date {{ font-size: 18px; font-weight: bold; color: #333; }}
         .booking-menu {{ font-size: 14px; color: #666; margin: 5px 0; }}
         .btn {{ display: block; width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }}
-        .btn-change {{ background: #06c755; color: white; }}
-        .btn-cancel {{ background: #ff6b6b; color: white; }}
-        .btn-submit {{ background: #06c755; color: white; }}
+        .btn-change {{ background: #c44d6e; color: white; }}
+        .btn-cancel {{ background: #666666; color: white; }}
+        .btn-submit {{ background: #c44d6e; color: white; }}
         .loading {{ text-align: center; padding: 40px; }}
         .no-booking {{ text-align: center; padding: 40px; color: #666; }}
-        .user-info {{ background: #e8f5e9; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
+        .user-info {{ background: #f8e0e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
         .phone-form {{ padding: 20px 0; }}
         .phone-form input {{ width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; margin: 10px 0; }}
         .phone-form label {{ font-size: 14px; color: #666; }}
