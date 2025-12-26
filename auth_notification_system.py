@@ -1157,7 +1157,7 @@ def admin():
                 background: #b71c1c;
             }
             .success-message {
-                background: #e8f5e9;
+                background: #f8e0e6;
                 color: #2e7d32;
                 padding: 12px;
                 border-radius: 6px;
@@ -1714,7 +1714,7 @@ def scrape_page():
             });
             const data = await response.json();
             if (data.success) {
-    result.style.background = "#e8f5e9";
+    result.style.background = "#f8e0e6";
     result.style.border = "1px solid #4caf50";
     let html = '<h3>✅ 成功！</h3>';
     html += '<p>' + data.message + '</p>';
@@ -3102,7 +3102,7 @@ def liff_booking():
                 lineUserId = userProfile.userId;
                 document.getElementById('user-info').innerHTML = `<strong>${{userProfile.displayName}}</strong> 様`;
                 document.getElementById('user-info').style.display = 'block';
-                document.getElementById('user-info').innerHTML += ' <button onclick="logoutLiff()" style="margin-left:10px;padding:5px 10px;font-size:12px;background:#ff6b6b;color:white;border:none;border-radius:3px;">ログアウト</button>';
+                document.getElementById('user-info').innerHTML += ' <button onclick="logoutLiff()" style="margin-left:10px;padding:5px 10px;font-size:12px;background:#666666;color:white;border:none;border-radius:3px;">ログアウト</button>';
                 
                 await checkRegistration(lineUserId);
             }} catch (error) {{
