@@ -3111,7 +3111,12 @@ def liff_booking():
             }}
         }}
         
-        function logoutLiff() {{
+        async function logoutLiff() {{
+            await fetch(API_BASE + '/api/liff/unlink', {{
+                method: 'POST',
+                headers: {{ 'Content-Type': 'application/json' }},
+                body: JSON.stringify({{ line_user_id: lineUserId }})
+            }});
             liff.logout();
             location.reload();
         }}
@@ -3501,6 +3506,29 @@ def api_liff_register_phone():
             headers=headers,
             json={'line_user_id': line_user_id, 'phone': phone}
         )
+    
+    return jsonify({'success': True})
+
+@app.route('/api/liff/unlink', methods=['POST'])
+def api_liff_unlink():
+    """LINE IDと電話番号の紐付けを解除"""
+    data = request.json
+    line_user_id = data.get('line_user_id')
+    
+    if not line_user_id:
+        return jsonify({'success': False, 'message': 'line_user_id required'})
+    
+    headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'Content-Type': 'application/json'
+    }
+    
+    requests.patch(
+        f'{SUPABASE_URL}/rest/v1/customers?line_user_id=eq.{line_user_id}',
+        headers=headers,
+        json={'line_user_id': None}
+    )
     
     return jsonify({'success': True})
 
