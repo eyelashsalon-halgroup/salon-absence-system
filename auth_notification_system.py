@@ -3608,14 +3608,68 @@ def api_liff_change_request():
 
 @app.route('/api/liff/cancel-request', methods=['POST'])
 def api_liff_cancel_request():
-    """キャンセルリクエスト"""
+    """予約キャンセルを自動実行"""
+    from playwright.sync_api import sync_playwright
+    
     data = request.get_json()
     booking_id = data.get('booking_id')
     line_user_id = data.get('line_user_id')
     
-    print(f"[キャンセルリクエスト] booking_id={booking_id}, line_user_id={line_user_id}")
+    if not booking_id:
+        return jsonify({{'success': False, 'message': '予約IDが必要です'}}), 400
     
-    return jsonify({'success': True, 'message': 'キャンセルリクエストを受け付けました。サロンからご連絡いたします。'})
+    try:
+        # 予約情報を取得
+        headers = {{'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {{SUPABASE_KEY}}'}}
+        res = requests.get(f'{{SUPABASE_URL}}/rest/v1/8weeks_bookings?booking_id=eq.{{booking_id}}', headers=headers)
+        bookings = res.json()
+        if not bookings:
+            return jsonify({{'success': False, 'message': '予約が見つかりません'}}), 404
+        
+        booking = bookings[0]
+        customer_name = booking.get('customer_name', '')
+        visit_datetime = booking.get('visit_datetime', '')
+        
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            
+            with open('session_cookies.json', 'r') as f:
+                cookies = json.load(f)
+                context.add_cookies(cookies)
+            
+            page = context.new_page()
+            url = f'https://salonboard.com/KLP/reserve/ext/extReserveChange/?reserveId={{booking_id}}'
+            page.goto(url, timeout=60000)
+            page.wait_for_timeout(3000)
+            
+            # キャンセルボタンをクリック
+            cancel_btn = page.query_selector('a:has-text("キャンセル"), button:has-text("キャンセル"), a:has-text("予約取消"), button:has-text("予約取消")')
+            if cancel_btn:
+                cancel_btn.click()
+                page.wait_for_timeout(2000)
+                
+                # 確認ダイアログのOKボタン
+                ok_btn = page.query_selector('button:has-text("OK"), a:has-text("OK"), button:has-text("はい"), a:has-text("はい")')
+                if ok_btn:
+                    ok_btn.click()
+                    page.wait_for_timeout(3000)
+            
+            browser.close()
+        
+        # 8weeks_bookingsから削除
+        requests.delete(f'{{SUPABASE_URL}}/rest/v1/8weeks_bookings?booking_id=eq.{{booking_id}}', headers=headers)
+        
+        # 店舗に通知
+        print(f'[キャンセル完了] {{customer_name}} {{visit_datetime}}')
+        
+        return jsonify({{'success': True, 'message': '予約をキャンセルしました'}})
+        
+    except Exception as e:
+        print(f'[キャンセルエラー] {{e}}')
+        import traceback
+        traceback.print_exc()
+        return jsonify({{'success': False, 'message': 'キャンセル処理中にエラーが発生しました'}}), 500
 
 @app.route("/api/liff/get-duration", methods=["POST"])
 def api_liff_get_duration():
