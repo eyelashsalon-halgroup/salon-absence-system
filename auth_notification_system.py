@@ -3709,38 +3709,26 @@ def api_liff_get_duration():
     except Exception as e:
         return jsonify({"error": str(e), "duration": 60}), 200
 
-@app.route('/api/liff/execute-change', methods=['POST'])
-def api_liff_execute_change():
-    """予約日時を自動変更"""
+def execute_change_background(booking_id, new_date, new_time, line_user_id):
+    """バックグラウンドで予約変更を実行"""
     from playwright.sync_api import sync_playwright
-    import re
-    
-    data = request.get_json()
-    booking_id = data.get('booking_id')
-    new_date = data.get('new_date')  # YYYYMMDD
-    new_time = data.get('new_time')  # HH:MM
-    line_user_id = data.get('line_user_id')
-    
-    if not all([booking_id, new_date, new_time]):
-        return jsonify({'error': 'booking_id, new_date, new_time required'}), 400
     
     try:
-        # 予約IDからSalonBoard用IDを取得
         supabase_url = os.getenv('SUPABASE_URL')
         supabase_key = os.getenv('SUPABASE_KEY')
         headers = {'apikey': supabase_key, 'Authorization': f'Bearer {supabase_key}'}
         
-        # 8weeks_bookingsから予約情報取得
         res = requests.get(
             f'{supabase_url}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}',
             headers=headers
         )
         bookings = res.json()
         if not bookings:
-            return jsonify({'error': 'Booking not found'}), 404
+            print(f'[予約変更エラー] 予約が見つかりません: {booking_id}')
+            return
         
         booking = bookings[0]
-        old_datetime = booking.get('date_time', '')
+        old_datetime = booking.get('visit_datetime', '')
         customer_name = booking.get('customer_name', '')
         
         with sync_playwright() as p:
@@ -3756,18 +3744,15 @@ def api_liff_execute_change():
             page.goto(url, timeout=60000)
             page.wait_for_timeout(5000)
             
-            # 1. 日付変更
             current_date = page.query_selector('input[name="rsvDate"]').get_attribute('value')
             if current_date != new_date:
                 cal_input = page.query_selector('.calendar_readonly')
                 if cal_input:
                     cal_input.click()
                     page.wait_for_timeout(1000)
-                    
-                    target_day = new_date[-2:]  # 日だけ取得
+                    target_day = new_date[-2:]
                     if target_day.startswith('0'):
                         target_day = target_day[1:]
-                    
                     calendar = page.query_selector('.mod_popup_02.js_calendar')
                     if calendar:
                         tds = calendar.query_selector_all('td')
@@ -3777,13 +3762,11 @@ def api_liff_execute_change():
                                 page.wait_for_timeout(1000)
                                 break
             
-            # 2. 時間変更
             hour, minute = new_time.split(':')
             page.select_option('#rsvHour', hour)
             page.select_option('#rsvMinute', minute)
             page.wait_for_timeout(500)
             
-            # 3. 確定ボタンクリック
             confirm_btn = page.query_selector('button:has-text("確定する"), a:has-text("確定する")')
             if confirm_btn:
                 confirm_btn.click()
@@ -3791,20 +3774,40 @@ def api_liff_execute_change():
             
             browser.close()
         
-        # 新しい日時文字列
         new_datetime = f'{new_date[:4]}/{new_date[4:6]}/{new_date[6:]} {new_time}'
-        
-        # 店舗に通知
         notify_shop_booking_change(customer_name, old_datetime, new_datetime)
         
-        return jsonify({'success': True, 'message': f'予約を{new_datetime}に変更しました'})
+        # 顧客にLINE通知
+        if line_user_id:
+            send_line_message(line_user_id, f'予約変更が完了しました。\n新しい日時: {new_datetime}')
+        
+        print(f'[予約変更完了] {customer_name} -> {new_datetime}')
         
     except Exception as e:
         print(f'[予約変更エラー] {e}')
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        if line_user_id:
+            send_line_message(line_user_id, '予約変更中にエラーが発生しました。サロンにお問い合わせください。')
 
+@app.route('/api/liff/execute-change', methods=['POST'])
+def api_liff_execute_change():
+    """予約日時変更（非同期）"""
+    import threading
+    
+    data = request.get_json()
+    booking_id = data.get('booking_id')
+    new_date = data.get('new_date')
+    new_time = data.get('new_time')
+    line_user_id = data.get('line_user_id')
+    
+    if not all([booking_id, new_date, new_time]):
+        return jsonify({'error': 'booking_id, new_date, new_time required'}), 400
+    
+    thread = threading.Thread(target=execute_change_background, args=(booking_id, new_date, new_time, line_user_id))
+    thread.start()
+    
+    return jsonify({'success': True, 'message': '変更リクエストを受け付けました。完了後LINEでお知らせします。'})
 
 # === 空き枠取得API ===
 @app.route('/api/liff/available-slots-range', methods=['GET'])
