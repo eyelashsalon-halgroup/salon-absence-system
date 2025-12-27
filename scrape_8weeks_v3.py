@@ -8,6 +8,8 @@ import re
 import os
 import requests
 from datetime import datetime, timedelta, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 # 仮想ディスプレイ（Railway用）
 try:
     from pyvirtualdisplay import Display
@@ -45,6 +47,153 @@ def get_phone_for_customer(customer_name, booking_id):
             print(f"[PHONE] {customer_name} → {phone}")
             return phone
     return ''
+
+
+# スレッドセーフなロック
+db_lock = threading.Lock()
+result_lock = threading.Lock()
+
+def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, today):
+    """指定範囲の日付をスクレイピング（1ワーカー）"""
+    from playwright.sync_api import sync_playwright
+    
+    print(f"[W{worker_id}] 開始: {start_day}〜{end_day-1}日目", flush=True)
+    
+    bookings_list = []
+    slots_list = []
+    
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=False,
+                args=['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-dev-shm-usage']
+            )
+            
+            context = browser.new_context(
+                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                viewport={'width': 1920, 'height': 1080},
+                locale='ja-JP',
+                timezone_id='Asia/Tokyo'
+            )
+            
+            context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            """)
+            
+            try:
+                with open('session_cookies.json', 'r') as f:
+                    cookies = json.load(f)
+                context.add_cookies(cookies)
+            except:
+                pass
+            
+            page = context.new_page()
+            
+            for day_offset in range(start_day, end_day):
+                target_date = today + timedelta(days=day_offset)
+                date_str = target_date.strftime('%Y%m%d')
+                url = f'https://salonboard.com/KLP/reserve/reserveList/searchDate?date={date_str}'
+                
+                try:
+                    page.goto(url, timeout=60000)
+                    page.wait_for_timeout(500)
+                except Exception as e:
+                    print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー: {e}", flush=True)
+                    continue
+                
+                # 初回のみログイン確認
+                if day_offset == start_day and ('login' in page.url.lower() or len(page.query_selector_all('table')) == 0):
+                    if not login_to_salonboard(page):
+                        print(f"[W{worker_id}] ログイン失敗", flush=True)
+                        browser.close()
+                        return [], []
+                    
+                    with db_lock:
+                        new_cookies = context.cookies()
+                        with open('session_cookies.json', 'w') as f:
+                            json.dump(new_cookies, f, indent=2, ensure_ascii=False)
+                    
+                    page.goto(url, timeout=60000)
+                    page.wait_for_timeout(500)
+                
+                # 予約テーブル取得
+                reservation_table = None
+                for table in page.query_selector_all("table"):
+                    if table.query_selector("th#comingDate"):
+                        reservation_table = table
+                        break
+                
+                if not reservation_table:
+                    continue
+                
+                rows = reservation_table.query_selector_all('tbody tr')
+                
+                for row in rows:
+                    try:
+                        cells = row.query_selector_all('td')
+                        if len(cells) < 4:
+                            continue
+                        
+                        # 受付待ちフィルター
+                        status_text = cells[1].text_content().strip()
+                        if "受付待ち" not in status_text:
+                            continue
+                        
+                        # リンク取得（v3形式: cells[2]から）
+                        reserve_link = cells[2].query_selector("a[href*='reserveId=']")
+                        if not reserve_link:
+                            continue
+                        
+                        href = reserve_link.get_attribute('href')
+                        id_match = re.search(r'reserveId=([A-Z]{2}\d+)', href)
+                        if not id_match:
+                            continue
+                        
+                        booking_id = id_match.group(1)
+                        
+                        # 名前取得（v3形式）
+                        name_elem = cells[2].query_selector("p.wordBreak")
+                        customer_name = name_elem.text_content().strip() if name_elem else ""
+                        customer_name = re.sub(r'[★☆♪♡⭐️🦁]', '', customer_name).strip()
+                        
+                        # 時間取得（v3形式）
+                        time_cell = cells[0].text_content().strip()
+                        time_match = re.search(r'(\d{1,2}:\d{2})', time_cell)
+                        time_only = time_match.group(1) if time_match else "00:00"
+                        visit_datetime = f"{target_date.strftime('%Y-%m-%d')} {time_only}:00"
+                        
+                        # スタッフ取得（v3形式）
+                        staff_text = cells[3].text_content().strip() if len(cells) > 3 else ''
+                        staff_name = re.sub(r'^\(指\)', '', staff_text).strip() if staff_text.startswith('(指)') else ''
+                        
+                        cached = existing_cache.get(booking_id, {})
+                        menu = cached.get('menu', '')
+                        phone = cached.get('phone', '')
+                        
+                        if not phone:
+                            phone = get_phone_for_customer(customer_name, booking_id)
+                        
+                        bookings_list.append({
+                            'booking_id': booking_id,
+                            'customer_name': customer_name,
+                            'visit_datetime': visit_datetime,
+                            'staff': staff_name,
+                            'menu': menu,
+                            'phone': phone,
+                            'status': '予約確定'
+                        })
+                    except:
+                        continue
+                
+                print(f"[W{worker_id}] {target_date.strftime('%m/%d')} 完了", flush=True)
+            
+            browser.close()
+    except Exception as e:
+        print(f"[W{worker_id}] 例外: {e}", flush=True)
+    
+    print(f"[W{worker_id}] 終了: {len(bookings_list)}件", flush=True)
+    return bookings_list, slots_list
+
 
 def login_to_salonboard(page):
     login_id = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
