@@ -1157,7 +1157,7 @@ def admin():
                 background: #b71c1c;
             }
             .success-message {
-                background: #f8e0e6;
+                background: #fff0f3;
                 color: #2e7d32;
                 padding: 12px;
                 border-radius: 6px;
@@ -1727,7 +1727,7 @@ def scrape_page():
             });
             const data = await response.json();
             if (data.success) {
-    result.style.background = "#f8e0e6";
+    result.style.background = "#fff0f3";
     result.style.border = "1px solid #4caf50";
     let html = '<h3>✅ 成功！</h3>';
     html += '<p>' + data.message + '</p>';
@@ -2580,7 +2580,7 @@ def send_reminder_notifications(test_mode=False):
                 has_off_shampoo = 'オフあり+アイシャンプー' in m or 'オフあり＋アイシャンプー' in m
                 exclude = ['【全員】', '【次回】', '【リピーター様】', '【4週間以内】', '【ご新規】',
                     'オフあり+アイシャンプー', 'オフあり＋アイシャンプー', '次世代まつ毛パーマ', 'ダメージレス',
-                    '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(SP・TR付)',
+                    '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(アイシャンプー・トリートメント付)', '(SP・TR付)',
                     '(コーティング・シャンプー・オフ込)', '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
                     '指名料', 'カラー変更', '束感★']
                 for w in exclude:
@@ -3042,18 +3042,18 @@ def liff_booking():
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }}
         .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: #c44d6e; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .header {{ background: #e60012; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
         .content {{ background: white; padding: 20px; border-radius: 0 0 10px 10px; }}
         .booking-card {{ border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }}
         .booking-date {{ font-size: 18px; font-weight: bold; color: #333; }}
         .booking-menu {{ font-size: 14px; color: #666; margin: 5px 0; }}
         .btn {{ display: block; width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }}
-        .btn-change {{ background: #c44d6e; color: white; }}
+        .btn-change {{ background: #e60012; color: white; }}
         .btn-cancel {{ background: #666666; color: white; }}
-        .btn-submit {{ background: #c44d6e; color: white; }}
+        .btn-submit {{ background: #e60012; color: white; }}
         .loading {{ text-align: center; padding: 40px; }}
         .no-booking {{ text-align: center; padding: 40px; color: #666; }}
-        .user-info {{ background: #f8e0e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
+        .user-info {{ background: #fff0f3; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
         .phone-form {{ padding: 20px 0; }}
         .phone-form input {{ width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; margin: 10px 0; }}
         .phone-form label {{ font-size: 14px; color: #666; }}
@@ -3191,7 +3191,7 @@ def liff_booking():
                     let html = '';
                     data.bookings.forEach(booking => {{
                         html += `
-                            <div class="booking-card">
+                            <div class="booking-card" data-booking-id="${{booking.booking_id}}">
                                 <div class="booking-date">${{formatDate(booking.visit_datetime)}}</div>
                                 <div class="booking-menu">メニュー：${{booking.menu || '未設定'}}</div>
                                 <div class="booking-menu">指名：${{booking.staff || 'なし'}}</div>
@@ -3221,7 +3221,7 @@ def liff_booking():
             // ローディング表示
             document.getElementById('bookings').innerHTML = `
                 <div style="text-align:center;padding:60px 20px;">
-                    <div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #c44d6e;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+                    <div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #e60012;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
                     <p style="color:#666;font-size:14px;">読み込み中...</p>
                 </div>
                 <style>@keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style>
@@ -3240,10 +3240,10 @@ def liff_booking():
             // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
                 <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <div style="background:#f8e0e6;padding:15px;border-radius:8px;margin-bottom:15px;">
-                        <div style="color:#c44d6e;font-weight:bold;margin-bottom:10px;">選択済みクーポン・メニュー</div>
-                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #c44d6e;">
-                            <span style="background:#c44d6e;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">継続</span>
+                    <div style="background:#fff0f3;padding:15px;border-radius:8px;margin-bottom:15px;">
+                        <div style="color:#e60012;font-weight:bold;margin-bottom:10px;">選択済みクーポン・メニュー</div>
+                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #e60012;">
+                            <span style="background:#e60012;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">継続</span>
                             <span style="font-size:14px;">${{currentBookingMenu}}</span>
                         </div>
                         <p style="font-size:11px;color:#666;margin-top:8px;">※メニューは変更せず、日時のみ変更します</p>
@@ -3279,14 +3279,14 @@ def liff_booking():
         async function showCalendar() {{
             document.getElementById('bookings').innerHTML = `
                 <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <div style="background:#f8e0e6;padding:12px;border-radius:8px;margin-bottom:15px;">
+                    <div style="background:#fff0f3;padding:12px;border-radius:8px;margin-bottom:15px;">
                         <div style="font-size:12px;color:#666;">選択中のメニュー</div>
                         <div style="font-size:14px;font-weight:bold;">${{currentBookingMenu}}</div>
-                        <div style="font-size:12px;color:#c44d6e;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
+                        <div style="font-size:12px;color:#e60012;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
                     </div>
                     
                     <div style="display:flex;border-bottom:2px solid #ddd;margin-bottom:15px;">
-                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #c44d6e;margin-bottom:-2px;font-weight:bold;color:#c44d6e;">サロンの空き状況</div>
+                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #e60012;margin-bottom:-2px;font-weight:bold;color:#e60012;">サロンの空き状況</div>
                     </div>
                     
                     <div id="calendar-loading" style="text-align:center;padding:20px;">読み込み中...</div>
@@ -3581,7 +3581,7 @@ def api_liff_bookings_by_phone():
         has_off_shampoo = 'オフあり+アイシャンプー' in m or 'オフあり＋アイシャンプー' in m
         exclude = ['【全員】', '【次回】', '【リピーター様】', '【4週間以内】', '【ご新規】',
             'オフあり+アイシャンプー', 'オフあり＋アイシャンプー', '次世代まつ毛パーマ', 'ダメージレス',
-            '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(SP・TR付)',
+            '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(アイシャンプー・トリートメント付)', '(SP・TR付)',
             '(コーティング・シャンプー・オフ込)', '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
             '指名料', 'カラー変更', '束感★']
         for w in exclude:
