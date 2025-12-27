@@ -335,13 +335,17 @@ def main():
     if all_bookings:
         for booking in all_bookings:
             try:
+                upsert_headers = headers.copy()
+                upsert_headers["Prefer"] = "resolution=merge-duplicates"
                 res = requests.post(
                     f"{SUPABASE_URL}/rest/v1/8weeks_bookings",
-                    headers=headers,
+                    headers=upsert_headers,
                     json=booking
                 )
-                if res.status_code in [200, 201]:
+                if res.status_code in [200, 201, 409]:
                     total_saved += 1
+                else:
+                    print(f"[DB] エラー: {res.status_code} - {res.text[:100]}", flush=True)
             except Exception as e:
                 print(f"[DB] 保存エラー: {e}", flush=True)
         print(f"[DB] {total_saved}件保存完了", flush=True)
