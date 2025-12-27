@@ -2949,8 +2949,8 @@ def api_scrape_8weeks_v2():
 # 8週間スクレイピング実行中フラグ
 scrape_8weeks_running = False
 
-@app.route('/api/scrape_8weeks_v3', methods=['GET', 'POST'])
-def api_scrape_8weeks_v3():
+@app.route('/api/scrape_8weeks_v4', methods=['GET', 'POST'])
+def api_scrape_8weeks_v4():
     """8週間分の予約をスクレイピング（二重実行防止付き）"""
     global scrape_8weeks_running
     
@@ -2965,7 +2965,7 @@ def api_scrape_8weeks_v3():
         global scrape_8weeks_running
         scrape_8weeks_running = True
         try:
-            subprocess.run(['python3', 'scrape_8weeks_v3.py'], timeout=1800)
+            subprocess.run(['python3', 'scrape_8weeks_v4.py'], timeout=1800)
         except Exception as e:
             print(f"スクレイピングエラー: {e}")
         finally:
@@ -4026,7 +4026,7 @@ def run_scrape_job():
     try:
         import requests as req
         print(f"[SCHEDULER] スクレイピング開始: {datetime.now()}", flush=True)
-        res = req.post('http://localhost:10000/api/scrape_8weeks_v3', timeout=30)
+        res = req.post('http://localhost:10000/api/scrape_8weeks_v4', timeout=30)
         print(f"[SCHEDULER] スクレイピング結果: {res.status_code}", flush=True)
     except Exception as e:
         print(f"[SCHEDULER] エラー: {e}", flush=True)
