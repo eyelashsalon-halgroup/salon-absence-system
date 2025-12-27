@@ -305,12 +305,12 @@ def main():
     all_bookings = []
     
     # 4分割で並列実行
-    ranges = [(0, 14), (14, 28), (28, 42), (42, 56)]
+    ranges = [(0, 10), (10, 19), (19, 28), (28, 37), (37, 46), (46, 56)]
     
-    print("[PARALLEL] 4ワーカーで並列実行開始", flush=True)
+    print("[PARALLEL] 6ワーカーで並列実行開始", flush=True)
     start_time = datetime.now(JST)
     
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {
             executor.submit(scrape_date_range, i+1, start, end, existing_cache, headers, today): i
             for i, (start, end) in enumerate(ranges)
@@ -330,25 +330,28 @@ def main():
     elapsed = (end_time - start_time).total_seconds()
     print(f"[PARALLEL] 全ワーカー完了: 合計{len(all_bookings)}件 ({elapsed:.1f}秒)", flush=True)
     
-    # DBに保存
+    # DBに一括保存（バッチ）
     total_saved = 0
     if all_bookings:
-        for booking in all_bookings:
-            try:
-                upsert_headers = headers.copy()
-                upsert_headers["Prefer"] = "resolution=merge-duplicates"
+        try:
+            upsert_headers = headers.copy()
+            upsert_headers["Prefer"] = "resolution=merge-duplicates"
+            # 50件ずつバッチ処理
+            batch_size = 50
+            for i in range(0, len(all_bookings), batch_size):
+                batch = all_bookings[i:i+batch_size]
                 res = requests.post(
-                    f"{SUPABASE_URL}/rest/v1/8weeks_bookings",
+                    f"{SUPABASE_URL}/rest/v1/8weeks_bookings?on_conflict=booking_id",
                     headers=upsert_headers,
-                    json=booking
+                    json=batch
                 )
-                if res.status_code in [200, 201, 409]:
-                    total_saved += 1
+                if res.status_code in [200, 201]:
+                    total_saved += len(batch)
                 else:
-                    print(f"[DB] エラー: {res.status_code} - {res.text[:100]}", flush=True)
-            except Exception as e:
-                print(f"[DB] 保存エラー: {e}", flush=True)
-        print(f"[DB] {total_saved}件保存完了", flush=True)
+                    print(f"[DB] バッチエラー: {res.status_code} - {res.text[:100]}", flush=True)
+            print(f"[DB] {total_saved}件一括保存完了", flush=True)
+        except Exception as e:
+            print(f"[DB] 保存エラー: {e}", flush=True)
     
     # 成功したのでカウンターリセット
     reset_failure_count()
