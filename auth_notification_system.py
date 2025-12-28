@@ -2961,9 +2961,10 @@ def api_scrape_8weeks_v4():
     import threading
     import subprocess
     
+    scrape_8weeks_running = True
+    
     def run_scrape():
         global scrape_8weeks_running
-        scrape_8weeks_running = True
         try:
             subprocess.run(['python3', 'scrape_8weeks_v4.py'], timeout=1800)
         except Exception as e:
