@@ -3043,15 +3043,15 @@ def liff_booking():
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }}
         .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: #e60012; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .header {{ background: #E68899; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
         .content {{ background: white; padding: 20px; border-radius: 0 0 10px 10px; }}
         .booking-card {{ border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }}
         .booking-date {{ font-size: 18px; font-weight: bold; color: #333; }}
         .booking-menu {{ font-size: 14px; color: #666; margin: 5px 0; }}
         .btn {{ display: block; width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }}
-        .btn-change {{ background: #e60012; color: white; }}
+        .btn-change {{ background: #E68899; color: white; }}
         .btn-cancel {{ background: #666666; color: white; }}
-        .btn-submit {{ background: #e60012; color: white; }}
+        .btn-submit {{ background: #E68899; color: white; }}
         .loading {{ text-align: center; padding: 40px; }}
         .no-booking {{ text-align: center; padding: 40px; color: #666; }}
         .user-info {{ background: #fff0f3; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
@@ -3222,7 +3222,7 @@ def liff_booking():
             // ローディング表示
             document.getElementById('bookings').innerHTML = `
                 <div style="text-align:center;padding:60px 20px;">
-                    <div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #e60012;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+                    <div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #E68899;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
                     <p style="color:#666;font-size:14px;">読み込み中...</p>
                 </div>
                 <style>@keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style>
@@ -3242,12 +3242,15 @@ def liff_booking():
             document.getElementById('bookings').innerHTML = `
                 <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
                     <div style="background:#fff0f3;padding:15px;border-radius:8px;margin-bottom:15px;">
-                        <div style="color:#e60012;font-weight:bold;margin-bottom:10px;">選択済みクーポン・メニュー</div>
-                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #e60012;">
-                            <span style="background:#e60012;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">継続</span>
+                        <div style="color:#E68899;font-weight:bold;margin-bottom:10px;">クーポン・メニュー選択</div>
+                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #E68899;margin-bottom:10px;">
+                            <span style="background:#E68899;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">現在</span>
                             <span style="font-size:14px;">${{currentBookingMenu}}</span>
                         </div>
-                        <p style="font-size:11px;color:#666;margin-top:8px;">※メニューは変更せず、日時のみ変更します</p>
+                        <select id="menu-select" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;font-size:14px;" onchange="updateSelectedMenu()">
+                            <option value="">メニューを変更する場合は選択</option>
+                        </select>
+                        <p style="font-size:11px;color:#666;margin-top:8px;">※変更しない場合はそのまま進んでください</p>
                     </div>
                     
                     <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:5px;">
@@ -3273,6 +3276,34 @@ def liff_booking():
             `;
         }}
         
+        let selectedMenuCouponId = null;
+        
+        async function loadMenus() {{
+            try {{
+                const res = await fetch(API_BASE + '/api/liff/menus');
+                const data = await res.json();
+                if (data.success && data.menus) {{
+                    const select = document.getElementById('menu-select');
+                    data.menus.forEach(m => {{
+                        const opt = document.createElement('option');
+                        opt.value = m.coupon_id;
+                        opt.textContent = m.name + ' ' + m.price;
+                        select.appendChild(opt);
+                    }});
+                }}
+            }} catch (e) {{
+                console.error('メニュー取得エラー', e);
+            }}
+        }}
+        
+        function updateSelectedMenu() {{
+            const select = document.getElementById('menu-select');
+            selectedMenuCouponId = select.value || null;
+            if (select.value) {{
+                currentBookingMenu = select.options[select.selectedIndex].textContent;
+            }}
+        }}
+        
         function updateDuration() {{
             currentBookingDuration = parseInt(document.getElementById('duration-select').value);
         }}
@@ -3283,11 +3314,11 @@ def liff_booking():
                     <div style="background:#fff0f3;padding:12px;border-radius:8px;margin-bottom:15px;">
                         <div style="font-size:12px;color:#666;">選択中のメニュー</div>
                         <div style="font-size:14px;font-weight:bold;">${{currentBookingMenu}}</div>
-                        <div style="font-size:12px;color:#e60012;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
+                        <div style="font-size:12px;color:#E68899;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
                     </div>
                     
                     <div style="display:flex;border-bottom:2px solid #ddd;margin-bottom:15px;">
-                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #e60012;margin-bottom:-2px;font-weight:bold;color:#e60012;">サロンの空き状況</div>
+                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #E68899;margin-bottom:-2px;font-weight:bold;color:#E68899;">サロンの空き状況</div>
                     </div>
                     
                     <div id="calendar-loading" style="text-align:center;padding:20px;">読み込み中...</div>
@@ -3822,6 +3853,20 @@ def api_liff_execute_change():
     thread.start()
     
     return jsonify({'success': True, 'message': '変更リクエストを受け付けました。完了後LINEでお知らせします。'})
+
+
+# === メニュー取得API ===
+@app.route('/api/liff/menus', methods=['GET'])
+def api_liff_menus():
+    """salon_menusテーブルからメニュー一覧を取得"""
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salon_menus?select=coupon_id,name,price,categories,coupon_type&order=id.asc', headers=headers)
+        if res.status_code == 200:
+            return jsonify({'success': True, 'menus': res.json()})
+        return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # === 空き枠取得API ===
 @app.route('/api/liff/available-slots-range', methods=['GET'])
