@@ -3339,7 +3339,7 @@ def liff_booking():
             const today = new Date();
             const startIdx = currentWeek * 7;
             const dates = [];
-            for (let i = startIdx; i < startIdx + 7 && i < 14; i++) {{
+            for (let i = startIdx; i < startIdx + 7 && i < 56; i++) {{
                 const d = new Date(today);
                 d.setDate(today.getDate() + i);
                 dates.push(d);
