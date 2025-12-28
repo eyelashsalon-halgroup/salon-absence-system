@@ -3274,6 +3274,7 @@ def liff_booking():
                     <button class="btn" style="background:#999;color:white;margin-top:10px;width:100%;padding:12px;" onclick="location.reload()">戻る</button>
                 </div>
             `;
+            loadMenus();
         }}
         
         let selectedMenuCouponId = null;
