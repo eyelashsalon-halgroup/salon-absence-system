@@ -68,15 +68,32 @@ def clean_name(name):
     return name
 
 def login_to_salonboard(page):
-    """SalonBoardにログイン"""
+    """SalonBoardにログイン（scrape_8weeks_v4.pyと同じ方法）"""
+    login_id = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
+    login_password = os.environ.get('SALONBOARD_LOGIN_PASSWORD', 'Ne8T2Hhi!')
+    
     print("[1/4] SalonBoardにログイン中...")
-    page.goto("https://salonboard.com/login/")
-    page.wait_for_timeout(2000)
-    page.fill('input[name="loginId"]', SALONBOARD_LOGIN_ID)
-    page.fill('input[name="password"]', SALONBOARD_LOGIN_PASSWORD)
-    page.click('button[type="submit"]')
-    page.wait_for_timeout(3000)
-    print("  ✓ ログイン完了")
+    page.goto('https://salonboard.com/login/', timeout=60000)
+    page.wait_for_timeout(5000)
+    
+    page.fill('input[name="userId"]', login_id)
+    page.fill('input[name="password"]', login_password)
+    print("  ID/PW入力完了")
+    
+    btn = page.query_selector('a.common-CNCcommon__primaryBtn')
+    if btn:
+        btn.click()
+        print("  ボタンクリック")
+    else:
+        page.keyboard.press('Enter')
+        print("  Enter押下")
+    
+    for i in range(30):
+        page.wait_for_timeout(1000)
+        current_url = page.url
+        if '/KLP/' in current_url or 'doLogin' not in current_url:
+            print("  ✓ ログイン完了")
+            return
 
 def scrape_menus(page):
     """メニュー一覧をスクレイピング"""
@@ -130,7 +147,7 @@ def save_to_supabase(menus):
     success = 0
     for m in menus:
         res = requests.post(
-            f'{SUPABASE_URL}/rest/v1/salonboard_menus',
+            f'{SUPABASE_URL}/rest/v1/salonboard_menus?on_conflict=name',
             headers=headers,
             json={'name': m['name'], 'duration': m['duration']}
         )
@@ -147,7 +164,7 @@ def main():
     print(f"{'='*50}\n")
     
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
         
