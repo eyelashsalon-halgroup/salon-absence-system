@@ -3297,7 +3297,7 @@ def liff_booking():
                                 <input type="radio" name="staff-pref" value="no" checked style="margin-right:5px;"> 指名しない
                             </label>
                             <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#f5f5f5;color:#999;">
-                                <input type="radio" name="staff-pref" value="yes" disabled style="margin-right:5px;"> 指名する
+                                <input type="radio" name="staff-pref" value="yes" style="margin-right:5px;"> 指名する
                             </label>
                         </div>
                     </div>
