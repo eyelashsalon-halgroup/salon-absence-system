@@ -3260,22 +3260,28 @@ def liff_booking():
             
             // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
-                <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <div style="background:#F5F3F1;padding:15px;border-radius:8px;margin-bottom:15px;">
-                        <div style="color:#C43357;font-weight:bold;margin-bottom:10px;">クーポン・メニュー選択</div>
-                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #C43357;margin-bottom:10px;">
-                            <span style="background:#C43357;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">現在</span>
-                            <span style="font-size:14px;">${{currentBookingMenu}}</span>
+                <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;padding:15px;">
+                    <div class="section-header" style="margin:-15px -15px 15px;padding:12px 15px;background:#F5F5F5;border-bottom:1px solid #E0E0E0;">選択済みクーポン・メニュー</div>
+                    <div style="background:#fff;padding:15px;border:1px solid #E0E0E0;border-radius:5px;margin-bottom:20px;">
+                        <div style="display:flex;align-items:center;margin-bottom:10px;">
+                            <span style="background:#E4007F;color:#fff;font-size:11px;padding:3px 8px;border-radius:3px;margin-right:10px;">新規</span>
+                            <span style="font-size:14px;color:#333;">${{currentBookingMenu}}</span>
                         </div>
-                        <select id="menu-select" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;font-size:14px;" onchange="updateSelectedMenu()">
-                            <option value="">メニューを変更する場合は選択</option>
-                        </select>
-                        <p style="font-size:11px;color:#666;margin-top:8px;">※変更しない場合はそのまま進んでください</p>
+                        <div style="font-size:12px;color:#666;border-top:1px solid #E0E0E0;padding-top:10px;margin-top:10px;">
+                            所要時間合計（目安）：<span id="duration-display">1時間</span>
+                        </div>
                     </div>
                     
-                    <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:5px;">
-                        <span style="font-size:13px;">所要時間合計（目安）</span>
-                        <select id="duration-select" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;font-size:14px;" onchange="updateDuration()">
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">メニューを変更する</label>
+                        <select id="menu-select" style="width:100%;padding:12px;border:1px solid #E0E0E0;border-radius:5px;font-size:14px;background:#fff;" onchange="updateSelectedMenu()">
+                            <option value="">変更しない</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">所要時間合計（目安）</label>
+                        <select id="duration-select" style="width:100%;padding:12px;border:1px solid #E0E0E0;border-radius:5px;font-size:14px;background:#fff;" onchange="updateDuration()">
                             <option value="30">30分</option>
                             <option value="60" selected>1時間</option>
                             <option value="90">1時間30分</option>
@@ -3284,14 +3290,22 @@ def liff_booking():
                         </select>
                     </div>
                     
-                    <div style="margin-bottom:15px;">
-                        <span style="font-size:13px;margin-right:15px;">スタッフ：</span>
-                        <label style="margin-right:15px;"><input type="radio" name="staff-pref" value="no" checked> 指名しない</label>
-                        <label><input type="radio" name="staff-pref" value="yes" disabled> 指名する</label>
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">スタッフ</label>
+                        <div style="display:flex;gap:10px;">
+                            <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#fff;">
+                                <input type="radio" name="staff-pref" value="no" checked style="margin-right:5px;"> 指名しない
+                            </label>
+                            <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#f5f5f5;color:#999;">
+                                <input type="radio" name="staff-pref" value="yes" disabled style="margin-right:5px;"> 指名する
+                            </label>
+                        </div>
                     </div>
                     
-                    <button class="btn btn-change" style="width:100%;padding:12px;font-size:16px;" onclick="showCalendar()">空き状況を確認する</button>
-                    <button class="btn" style="background:#999;color:white;margin-top:10px;width:100%;padding:12px;" onclick="location.reload()">戻る</button>
+                    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;border-radius:5px;" onclick="showCalendar()">空き状況を確認する</button>
+                    <div style="text-align:center;margin-top:15px;">
+                        <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
+                    </div>
                 </div>
             `;
             loadMenus();
