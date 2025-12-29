@@ -1157,7 +1157,7 @@ def admin():
                 background: #b71c1c;
             }
             .success-message {
-                background: #fff0f3;
+                background: #F5F3F1;
                 color: #2e7d32;
                 padding: 12px;
                 border-radius: 6px;
@@ -1727,7 +1727,7 @@ def scrape_page():
             });
             const data = await response.json();
             if (data.success) {
-    result.style.background = "#fff0f3";
+    result.style.background = "#F5F3F1";
     result.style.border = "1px solid #4caf50";
     let html = '<h3>✅ 成功！</h3>';
     html += '<p>' + data.message + '</p>';
@@ -3043,18 +3043,18 @@ def liff_booking():
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }}
         .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: #E68899; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .header {{ background: #C43357; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
         .content {{ background: white; padding: 20px; border-radius: 0 0 10px 10px; }}
         .booking-card {{ border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }}
         .booking-date {{ font-size: 18px; font-weight: bold; color: #333; }}
         .booking-menu {{ font-size: 14px; color: #666; margin: 5px 0; }}
         .btn {{ display: block; width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }}
-        .btn-change {{ background: #E68899; color: white; }}
+        .btn-change {{ background: #C43357; color: white; }}
         .btn-cancel {{ background: #666666; color: white; }}
-        .btn-submit {{ background: #E68899; color: white; }}
+        .btn-submit {{ background: #C43357; color: white; }}
         .loading {{ text-align: center; padding: 40px; }}
         .no-booking {{ text-align: center; padding: 40px; color: #666; }}
-        .user-info {{ background: #fff0f3; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
+        .user-info {{ background: #F5F3F1; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
         .phone-form {{ padding: 20px 0; }}
         .phone-form input {{ width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; margin: 10px 0; }}
         .phone-form label {{ font-size: 14px; color: #666; }}
@@ -3196,7 +3196,7 @@ def liff_booking():
                                 <div class="booking-date">${{formatDate(booking.visit_datetime)}}</div>
                                 <div class="booking-menu">メニュー：${{booking.menu || '未設定'}}</div>
                                 <div class="booking-menu">指名：${{booking.staff || 'なし'}}</div>
-                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}')">日時変更</button>
+                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時変更</button>
                                 <button class="btn btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">キャンセル</button>
                             </div>
                         `;
@@ -3213,16 +3213,19 @@ def liff_booking():
         let calendarData = {{}};
         let currentBookingId = null;
         let currentBookingMenu = '';
+        let currentBookingStaff = '';
         let currentBookingDuration = 60;
         let currentWeek = 0;
         
-        async function changeBooking(bookingId) {{
+        async function changeBooking(bookingId, menu, staff) {{
             currentBookingId = bookingId;
+            currentBookingMenu = menu || '未設定';
+            currentBookingStaff = staff || 'なし';
             
             // ローディング表示
             document.getElementById('bookings').innerHTML = `
                 <div style="text-align:center;padding:60px 20px;">
-                    <div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #E68899;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+                    <div style="width:50px;height:50px;border:4px solid #f3f3f3;border-top:4px solid #C43357;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
                     <p style="color:#666;font-size:14px;">読み込み中...</p>
                 </div>
                 <style>@keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}</style>
@@ -3241,10 +3244,10 @@ def liff_booking():
             // メニュー選択画面を表示
             document.getElementById('bookings').innerHTML = `
                 <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <div style="background:#fff0f3;padding:15px;border-radius:8px;margin-bottom:15px;">
-                        <div style="color:#E68899;font-weight:bold;margin-bottom:10px;">クーポン・メニュー選択</div>
-                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #E68899;margin-bottom:10px;">
-                            <span style="background:#E68899;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">現在</span>
+                    <div style="background:#F5F3F1;padding:15px;border-radius:8px;margin-bottom:15px;">
+                        <div style="color:#C43357;font-weight:bold;margin-bottom:10px;">クーポン・メニュー選択</div>
+                        <div style="background:#fff;padding:12px;border-radius:5px;border-left:4px solid #C43357;margin-bottom:10px;">
+                            <span style="background:#C43357;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;margin-right:8px;">現在</span>
                             <span style="font-size:14px;">${{currentBookingMenu}}</span>
                         </div>
                         <select id="menu-select" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:5px;font-size:14px;" onchange="updateSelectedMenu()">
@@ -3312,14 +3315,14 @@ def liff_booking():
         async function showCalendar() {{
             document.getElementById('bookings').innerHTML = `
                 <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <div style="background:#fff0f3;padding:12px;border-radius:8px;margin-bottom:15px;">
+                    <div style="background:#F5F3F1;padding:12px;border-radius:8px;margin-bottom:15px;">
                         <div style="font-size:12px;color:#666;">選択中のメニュー</div>
                         <div style="font-size:14px;font-weight:bold;">${{currentBookingMenu}}</div>
-                        <div style="font-size:12px;color:#E68899;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
+                        <div style="font-size:12px;color:#C43357;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
                     </div>
                     
                     <div style="display:flex;border-bottom:2px solid #ddd;margin-bottom:15px;">
-                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #E68899;margin-bottom:-2px;font-weight:bold;color:#E68899;">サロンの空き状況</div>
+                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #C43357;margin-bottom:-2px;font-weight:bold;color:#C43357;">サロンの空き状況</div>
                     </div>
                     
                     <div id="calendar-loading" style="text-align:center;padding:20px;">読み込み中...</div>
