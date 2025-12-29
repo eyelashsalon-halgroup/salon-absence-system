@@ -3345,35 +3345,38 @@ def liff_booking():
         
         async function showCalendar() {{
             document.getElementById('bookings').innerHTML = `
-                <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <div style="background:#F5F3F1;padding:12px;border-radius:8px;margin-bottom:15px;">
-                        <div style="font-size:12px;color:#666;">選択中のメニュー</div>
-                        <div style="font-size:14px;font-weight:bold;">${{currentBookingMenu}}</div>
-                        <div style="font-size:12px;color:#C43357;margin-top:5px;">所要時間: ${{currentBookingDuration}}分</div>
+                <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;">
+                    <div style="background:#F5F5F5;padding:12px 15px;border-bottom:1px solid #E0E0E0;margin:-15px -15px 15px;">
+                        <div style="font-size:12px;color:#999;margin-bottom:5px;">選択済みクーポン・メニュー</div>
+                        <div style="font-size:14px;color:#333;">${{currentBookingMenu}}</div>
+                        <div style="font-size:12px;color:#E4007F;margin-top:8px;">所要時間合計（目安）：${{currentBookingDuration}}分</div>
                     </div>
                     
-                    <div style="display:flex;border-bottom:2px solid #ddd;margin-bottom:15px;">
-                        <div style="flex:1;text-align:center;padding:10px;border-bottom:2px solid #C43357;margin-bottom:-2px;font-weight:bold;color:#C43357;">サロンの空き状況</div>
+                    <div style="display:flex;border-bottom:1px solid #E0E0E0;margin:0 -15px 15px;">
+                        <div style="flex:1;text-align:center;padding:12px;border-bottom:2px solid #7030A0;margin-bottom:-1px;font-weight:bold;color:#7030A0;font-size:14px;">サロンの空き状況</div>
+                        <div style="flex:1;text-align:center;padding:12px;color:#999;font-size:14px;">スタッフ別の空き状況</div>
                     </div>
                     
-                    <div id="calendar-loading" style="text-align:center;padding:20px;">読み込み中...</div>
+                    <div id="calendar-loading" style="text-align:center;padding:30px;color:#666;">読み込み中...</div>
                     
-                    <div id="week-nav" style="display:none;margin-bottom:10px;">
+                    <div id="week-nav" style="display:none;margin-bottom:15px;padding:0 5px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <button onclick="changeWeek(-1)" style="padding:8px 15px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;">< 前の一週間</button>
-                            <span id="month-label" style="font-size:16px;font-weight:bold;"></span>
-                            <button onclick="changeWeek(1)" style="padding:8px 15px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;">次の一週間 ></button>
+                            <span onclick="changeWeek(-1)" style="color:#7030A0;font-size:13px;cursor:pointer;">< 前の一週間</span>
+                            <span id="month-label" style="font-size:15px;font-weight:bold;color:#333;"></span>
+                            <span onclick="changeWeek(1)" style="color:#7030A0;font-size:13px;cursor:pointer;">次の一週間 ></span>
                         </div>
                     </div>
                     
-                    <div id="calendar-table" style="overflow-x:auto;"></div>
+                    <div id="calendar-table" style="overflow-x:auto;margin:0 -10px;"></div>
                     
-                    <div style="margin-top:15px;padding:10px;background:#f5f5f5;border-radius:5px;font-size:11px;color:#666;">
-                        <p>◯ の日時から施術を開始することが出来ます。</p>
+                    <div style="margin-top:20px;padding:12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:5px;font-size:11px;color:#666;">
+                        <p style="margin-bottom:5px;">◯ の日時から施術を開始することが出来ます。</p>
                         <p>ご希望の来店日時の ◯ を選択してください。</p>
                     </div>
                     
-                    <button class="btn" style="background:#999;color:white;margin-top:15px;width:100%;padding:12px;" onclick="location.reload()">戻る</button>
+                    <div style="text-align:center;margin-top:20px;">
+                        <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
+                    </div>
                 </div>
             `;
             await loadCalendarData();
