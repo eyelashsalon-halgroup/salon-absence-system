@@ -3041,23 +3041,35 @@ def liff_booking():
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }}
-        .container {{ max-width: 500px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: #C43357; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
-        .content {{ background: white; padding: 20px; border-radius: 0 0 10px 10px; }}
-        .booking-card {{ border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }}
-        .booking-date {{ font-size: 18px; font-weight: bold; color: #333; }}
-        .booking-menu {{ font-size: 14px; color: #666; margin: 5px 0; }}
-        .btn {{ display: block; width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; }}
-        .btn-change {{ background: #C43357; color: white; }}
-        .btn-cancel {{ background: #666666; color: white; }}
-        .btn-submit {{ background: #C43357; color: white; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #FFFFFF; color: #333; }}
+        .container {{ max-width: 500px; margin: 0 auto; padding: 0; }}
+        .header {{ background: #FFFFFF; color: #333; padding: 15px 20px; text-align: center; border-bottom: 1px solid #E0E0E0; font-size: 16px; font-weight: bold; }}
+        .content {{ background: white; padding: 0; }}
+        .section-header {{ background: #F5F5F5; padding: 12px 15px; font-size: 14px; font-weight: bold; color: #333; border-top: 1px solid #E0E0E0; border-bottom: 1px solid #E0E0E0; }}
+        .booking-card {{ background: #fff; border: 1px solid #E0E0E0; border-radius: 8px; padding: 15px; margin: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }}
+        .booking-status {{ display: inline-block; background: #E4007F; color: white; font-size: 12px; padding: 4px 12px; border-radius: 3px; margin-bottom: 10px; }}
+        .booking-date {{ font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }}
+        .booking-menu {{ font-size: 13px; color: #666; margin: 8px 0; padding: 12px; background: #FAFAFA; border-radius: 5px; border: 1px solid #E0E0E0; }}
+        .booking-menu-label {{ font-size: 12px; color: #999; margin-bottom: 5px; }}
+        .booking-menu-text {{ font-size: 14px; color: #333; }}
+        .booking-time {{ font-size: 12px; color: #666; margin-top: 5px; }}
+        .btn-row {{ display: flex; gap: 10px; margin: 15px 0; }}
+        .btn {{ flex: 1; padding: 12px; border-radius: 5px; font-size: 14px; cursor: pointer; text-align: center; }}
+        .btn-outline {{ background: #fff; color: #333; border: 1px solid #E0E0E0; }}
+        .btn-primary {{ background: #7030A0; color: white; border: none; }}
+        .btn-change {{ background: #7030A0; color: white; border: none; display: block; width: 100%; margin: 10px 0; }}
+        .btn-cancel {{ background: transparent; color: #666; border: none; font-size: 13px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px; }}
+        .btn-cancel:before {{ content: "×"; font-size: 16px; }}
+        .btn-submit {{ background: #7030A0; color: white; border: none; }}
         .loading {{ text-align: center; padding: 40px; }}
         .no-booking {{ text-align: center; padding: 40px; color: #666; }}
-        .user-info {{ background: #F5F3F1; padding: 10px; border-radius: 5px; margin-bottom: 15px; }}
-        .phone-form {{ padding: 20px 0; }}
-        .phone-form input {{ width: 100%; padding: 15px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; margin: 10px 0; }}
-        .phone-form label {{ font-size: 14px; color: #666; }}
+        .user-info {{ background: #F5F5F5; padding: 12px 15px; margin: 0; font-size: 14px; }}
+        .user-name {{ font-weight: bold; }}
+        .phone-form {{ padding: 20px; }}
+        .phone-form input {{ width: 100%; padding: 15px; font-size: 16px; border: 1px solid #E0E0E0; border-radius: 5px; margin: 10px 0; }}
+        .phone-form label {{ font-size: 13px; color: #666; }}
+        .past-section {{ margin-top: 20px; }}
+        .past-note {{ font-size: 11px; color: #999; padding: 0 15px; margin-bottom: 10px; }}
         .phone-note {{ font-size: 12px; color: #999; margin-top: 10px; }}
     </style>
 </head>
@@ -3193,11 +3205,16 @@ def liff_booking():
                     data.bookings.forEach(booking => {{
                         html += `
                             <div class="booking-card" data-booking-id="${{booking.booking_id}}">
+                                <span class="booking-status">予約確定</span>
                                 <div class="booking-date">${{formatDate(booking.visit_datetime)}}</div>
-                                <div class="booking-menu">メニュー：${{booking.menu || '未設定'}}</div>
-                                <div class="booking-menu">指名：${{booking.staff || 'なし'}}</div>
-                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時変更</button>
-                                <button class="btn btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">キャンセル</button>
+                                <div class="booking-menu">
+                                    <div class="booking-menu-label">ご利用クーポン・メニュー</div>
+                                    <div class="booking-menu-text">${{booking.menu || '未設定'}}</div>
+                                    <div class="booking-time">所要時間合計（目安）：約1時間</div>
+                                </div>
+                                <div style="font-size:13px;color:#666;margin:10px 0;">スタッフ：${{booking.staff || '指名なし'}}</div>
+                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">同じ内容で予約</button>
+                                <div class="btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">この予約をキャンセル</div>
                             </div>
                         `;
                     }});
