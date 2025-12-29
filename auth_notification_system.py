@@ -2194,7 +2194,7 @@ scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
 
 scheduler.add_job(
 
-    func=lambda: send_reminder_notifications(test_mode=False),
+    func=lambda: send_reminder_notifications(test_mode=True),
 
     trigger=CronTrigger(hour=0, minute=0, timezone='UTC'),  # JST 9:00 = UTC 0:00
 
@@ -2482,10 +2482,10 @@ def scrape_daily_test():
 @app.route('/api/reminder_test', methods=['GET'])
 def api_reminder_test():
     """リマインド送信テスト（神原良祐のみ、スクレイピングなし）"""
-    results = send_reminder_notifications(test_mode=False)
+    results = send_reminder_notifications(test_mode=True)
     return jsonify({"success": True, "results": results})
 
-def send_reminder_notifications(test_mode=False):
+def send_reminder_notifications(test_mode=True):
     """3日後・7日後の予約にリマインド通知を送信"""
     import re
     from datetime import datetime, timedelta, timezone
@@ -3322,7 +3322,7 @@ def liff_booking():
                     data.menus.forEach(m => {{
                         const opt = document.createElement('option');
                         opt.value = m.coupon_id;
-                        opt.textContent = m.name + ' ' + m.price;
+                        opt.textContent = m.name.replace(/《|》/g, '').replace(/¥[\d,]+$/, '').trim() + ' ' + m.price;
                         select.appendChild(opt);
                     }});
                 }}
