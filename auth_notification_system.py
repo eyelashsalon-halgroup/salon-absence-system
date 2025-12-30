@@ -3210,7 +3210,7 @@ def liff_booking():
                                 <div class="booking-menu">
                                     <div class="booking-menu-label">ご利用クーポン・メニュー</div>
                                     <div class="booking-menu-text">${{booking.menu || '未設定'}}</div>
-                                    <div class="booking-time">所要時間合計（目安）：約1時間</div>
+                                    
                                 </div>
                                 <div style="font-size:13px;color:#666;margin:10px 0;">スタッフ：${{booking.staff || '指名なし'}}</div>
                                 <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>
@@ -3701,70 +3701,54 @@ def api_liff_change_request():
 
 @app.route('/api/liff/cancel-request', methods=['POST'])
 def api_liff_cancel_request():
-    """予約キャンセルを自動実行"""
-    from playwright.sync_api import sync_playwright
-    
+    """予約キャンセルリクエストをスタッフに通知"""
     data = request.get_json()
     booking_id = data.get('booking_id')
     line_user_id = data.get('line_user_id')
     
     if not booking_id:
-        return jsonify({{'success': False, 'message': '予約IDが必要です'}}), 400
+        return jsonify({'success': False, 'message': '予約IDが必要です'}), 400
     
     try:
         # 予約情報を取得
-        headers = {{'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {{SUPABASE_KEY}}'}}
-        res = requests.get(f'{{SUPABASE_URL}}/rest/v1/8weeks_bookings?booking_id=eq.{{booking_id}}', headers=headers)
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}', headers=headers)
         bookings = res.json()
         if not bookings:
-            return jsonify({{'success': False, 'message': '予約が見つかりません'}}), 404
+            return jsonify({'success': False, 'message': '予約が見つかりません'}), 404
         
         booking = bookings[0]
         customer_name = booking.get('customer_name', '')
         visit_datetime = booking.get('visit_datetime', '')
+        menu = booking.get('menu', '')
+        staff = booking.get('staff', '指名なし')
         
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
-            
-            with open('session_cookies.json', 'r') as f:
-                cookies = json.load(f)
-                context.add_cookies(cookies)
-            
-            page = context.new_page()
-            url = f'https://salonboard.com/KLP/reserve/ext/extReserveChange/?reserveId={{booking_id}}'
-            page.goto(url, timeout=60000)
-            page.wait_for_timeout(3000)
-            
-            # キャンセルボタンをクリック
-            cancel_btn = page.query_selector('a:has-text("キャンセル"), button:has-text("キャンセル"), a:has-text("予約取消"), button:has-text("予約取消")')
-            if cancel_btn:
-                cancel_btn.click()
-                page.wait_for_timeout(2000)
-                
-                # 確認ダイアログのOKボタン
-                ok_btn = page.query_selector('button:has-text("OK"), a:has-text("OK"), button:has-text("はい"), a:has-text("はい")')
-                if ok_btn:
-                    ok_btn.click()
-                    page.wait_for_timeout(3000)
-            
-            browser.close()
+        # スタッフLINEに通知
+        staff_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN_STAFF')
+        staff_group_id = os.getenv('LINE_GROUP_ID_STAFF', 'C3798c50a8ee5e02eb0372e6eee4c5c5f')
         
-        # 8weeks_bookingsから削除
-        requests.delete(f'{{SUPABASE_URL}}/rest/v1/8weeks_bookings?booking_id=eq.{{booking_id}}', headers=headers)
+        message = f'[キャンセル依頼]\nお客様：{customer_name}\n日時：{visit_datetime}\nメニュー：{menu}\nスタッフ：{staff}\n\n※SalonBoardで予約取消をお願いします'
         
-        # 店舗に通知
-        print(f'[キャンセル完了] {{customer_name}} {{visit_datetime}}')
+        line_headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {staff_token}'
+        }
+        line_data = {
+            'to': staff_group_id,
+            'messages': [{'type': 'text', 'text': message}]
+        }
+        requests.post('https://api.line.me/v2/bot/message/push', headers=line_headers, json=line_data)
         
-        return jsonify({{'success': True, 'message': '予約をキャンセルしました'}})
+        print(f'[キャンセル依頼送信] {customer_name} {visit_datetime}')
+        
+        return jsonify({'success': True, 'message': 'キャンセル依頼を送信しました。スタッフが確認後、キャンセル処理を行います。'})
         
     except Exception as e:
-        print(f'[キャンセルエラー] {{e}}')
+        print(f'[キャンセルエラー] {e}')
         import traceback
         traceback.print_exc()
-        return jsonify({{'success': False, 'message': 'キャンセル処理中にエラーが発生しました'}}), 500
+        return jsonify({'success': False, 'message': 'キャンセル処理中にエラーが発生しました'}), 500
 
-@app.route("/api/liff/get-duration", methods=["POST"])
 def api_liff_get_duration():
     """SalonBoardから予約の所要時間を取得"""
     from playwright.sync_api import sync_playwright
