@@ -3255,47 +3255,77 @@ def liff_booking():
                 currentBookingMenu = menuEl ? menuEl.innerText.replace('メニュー：', '') : '未設定';
             }}
 
-            // 所要時間は固定値（高速化のためSalonBoard取得をスキップ）
+            // メニュー名から施術時間を取得
             currentBookingDuration = 60;
+            try {
+                const durationRes = await fetch(API_BASE + '/api/liff/menu-duration?menu=' + encodeURIComponent(currentBookingMenu));
+                const durationData = await durationRes.json();
+                if (durationData.success && durationData.duration) {
+                    currentBookingDuration = durationData.duration;
+                }
+            } catch (e) {
+                console.log('施術時間取得エラー', e);
+            }
             
-            // メニュー選択画面を表示
+            // メニュー選択画面を表示（ホットペッパー風UI）
             document.getElementById('bookings').innerHTML = `
-                <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;padding:15px;">
-                    <div class="section-header" style="margin:-15px -15px 15px;padding:12px 15px;background:#F5F5F5;border-bottom:1px solid #E0E0E0;">選択済みクーポン・メニュー</div>
-                    <div style="background:#fff;padding:15px;border:1px solid #E0E0E0;border-radius:5px;margin-bottom:20px;">
-                        <div style="display:flex;align-items:center;margin-bottom:10px;">
-                            <span style="background:#E4007F;color:#fff;font-size:11px;padding:3px 8px;border-radius:3px;margin-right:10px;">新規</span>
-                            <span style="font-size:14px;color:#333;">${{currentBookingMenu}}</span>
+                <div id="menu-selection" style="font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;">
+                    <!-- ステップインジケーター -->
+                    <div style="display:flex;justify-content:center;align-items:center;padding:20px 15px;background:#fff;border-bottom:1px solid #E0E0E0;">
+                        <div style="display:flex;align-items:center;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#E4007F;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">1</div>
+                            <span style="margin-left:8px;font-size:13px;color:#E4007F;font-weight:bold;">メニュー</span>
                         </div>
-                        <div style="font-size:12px;color:#666;border-top:1px solid #E0E0E0;padding-top:10px;margin-top:10px;">
-                            所要時間合計（目安）：<span id="duration-display">メニューを選択してください</span>
+                        <div style="width:30px;height:2px;background:#E0E0E0;margin:0 8px;"></div>
+                        <div style="display:flex;align-items:center;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#E0E0E0;color:#999;display:flex;align-items:center;justify-content:center;font-size:14px;">2</div>
+                            <span style="margin-left:8px;font-size:13px;color:#999;">日時</span>
                         </div>
-                    </div>
-                    
-                    <div style="margin-bottom:20px;">
-                        <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">メニューを変更する</label>
-                        <select id="menu-select" style="width:100%;padding:12px;border:1px solid #E0E0E0;border-radius:5px;font-size:14px;background:#fff;" onchange="updateSelectedMenu()">
-                            <option value="">変更しない</option>
-                        </select>
-                    </div>
-                    
-                    <input type="hidden" id="duration-select" value="70">
-                    
-                    <div style="margin-bottom:20px;">
-                        <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">スタッフ</label>
-                        <div style="display:flex;gap:10px;">
-                            <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#fff;">
-                                <input type="radio" name="staff-pref" value="no" checked style="margin-right:5px;"> 指名しない
-                            </label>
-                            <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#fff;">
-                                <input type="radio" name="staff-pref" value="yes" style="margin-right:5px;"> 指名する
-                            </label>
+                        <div style="width:30px;height:2px;background:#E0E0E0;margin:0 8px;"></div>
+                        <div style="display:flex;align-items:center;">
+                            <div style="width:28px;height:28px;border-radius:50%;background:#E0E0E0;color:#999;display:flex;align-items:center;justify-content:center;font-size:14px;">3</div>
+                            <span style="margin-left:8px;font-size:13px;color:#999;">確認</span>
                         </div>
                     </div>
                     
-                    <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;border-radius:5px;opacity:0.5;cursor:not-allowed;" onclick="showCalendar()" disabled>メニューを選択してください</button>
-                    <div style="text-align:center;margin-top:15px;">
-                        <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
+                    <div style="padding:15px;">
+                        <!-- 選択中のメニュー -->
+                        <div style="background:#FFF5F8;padding:15px;border:1px solid #FFCCE0;border-radius:8px;margin-bottom:20px;">
+                            <div style="font-size:12px;color:#E4007F;margin-bottom:8px;font-weight:bold;">選択中のメニュー</div>
+                            <div style="font-size:15px;color:#333;font-weight:500;">${{currentBookingMenu}}</div>
+                            <div style="font-size:13px;color:#666;margin-top:8px;">
+                                所要時間：<span id="duration-display" style="font-weight:bold;color:#E4007F;">${{currentBookingDuration}}分</span>
+                            </div>
+                        </div>
+                        
+                        <!-- メニュー変更 -->
+                        <div style="margin-bottom:20px;">
+                            <label style="font-size:14px;color:#333;display:block;margin-bottom:10px;font-weight:500;">メニューを変更する</label>
+                            <select id="menu-select" style="width:100%;padding:14px;border:1px solid #E0E0E0;border-radius:8px;font-size:15px;background:#fff;appearance:none;background-image:url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22><path fill=%22%23666%22 d=%22M6 8L1 3h10z%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;" onchange="updateSelectedMenu()">
+                                <option value="">変更しない（現在のメニューのまま）</option>
+                            </select>
+                        </div>
+                        
+                        <input type="hidden" id="duration-select" value="${{currentBookingDuration}}">
+                        
+                        <!-- スタッフ選択 -->
+                        <div style="margin-bottom:25px;">
+                            <label style="font-size:14px;color:#333;display:block;margin-bottom:10px;font-weight:500;">スタッフ</label>
+                            <div style="display:flex;gap:10px;">
+                                <label style="flex:1;padding:14px;border:2px solid #E4007F;border-radius:8px;text-align:center;cursor:pointer;background:#fff;color:#E4007F;font-weight:500;">
+                                    <input type="radio" name="staff-pref" value="no" checked style="display:none;"> 指名しない
+                                </label>
+                                <label style="flex:1;padding:14px;border:2px solid #E0E0E0;border-radius:8px;text-align:center;cursor:pointer;background:#fff;color:#666;">
+                                    <input type="radio" name="staff-pref" value="yes" style="display:none;"> 指名する
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- 次へボタン -->
+                        <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:8px;background:#E4007F;border:none;color:#fff;font-weight:bold;cursor:pointer;" onclick="showCalendar()">この内容で次へ</button>
+                        <div style="text-align:center;margin-top:15px;">
+                            <span style="color:#666;font-size:13px;cursor:pointer;text-decoration:underline;" onclick="location.reload()">← 予約一覧に戻る</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -3899,6 +3929,38 @@ def api_liff_menus():
         return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+@app.route('/api/liff/menu-duration', methods=['GET'])
+def api_liff_menu_duration():
+    """メニュー名から施術時間を取得（部分一致）"""
+    menu_name = request.args.get('menu', '')
+    
+    if not menu_name:
+        return jsonify({'success': False, 'message': 'メニュー名が必要です'})
+    
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salonboard_menus?select=name,duration', headers=headers)
+        menus = res.json()
+        
+        # 部分一致で検索
+        for m in menus:
+            if m['name'] in menu_name or menu_name in m['name']:
+                return jsonify({'success': True, 'duration': m['duration'], 'matched_menu': m['name']})
+        
+        # キーワードで検索
+        keywords = ['パリジェンヌ', 'まつ毛パーマ', '上まつ毛', '下まつげ', '上下', 'フラットラッシュ', 'ブラウン', 'パリエク', '3Dブロウ', 'リペア']
+        for kw in keywords:
+            if kw in menu_name:
+                for m in menus:
+                    if kw in m['name']:
+                        return jsonify({'success': True, 'duration': m['duration'], 'matched_menu': m['name']})
+        
+        return jsonify({'success': False, 'message': 'マッチするメニューが見つかりません', 'duration': 60})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e), 'duration': 60})
+
+
 
 # === 空き枠取得API ===
 @app.route('/api/liff/available-slots-range', methods=['GET'])
