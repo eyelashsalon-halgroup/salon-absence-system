@@ -3047,7 +3047,7 @@ def liff_booking():
         .content {{ background: white; padding: 0; }}
         .section-header {{ background: #F5F5F5; padding: 12px 15px; font-size: 14px; font-weight: bold; color: #333; border-top: 1px solid #E0E0E0; border-bottom: 1px solid #E0E0E0; }}
         .booking-card {{ background: #fff; border: 1px solid #E0E0E0; border-radius: 8px; padding: 15px; margin: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }}
-        .booking-status {{ display: inline-block; background: #FF6B35; color: white; font-size: 12px; padding: 4px 12px; border-radius: 3px; margin-bottom: 10px; }}
+        .booking-status {{ display: inline-block; background: #E85298; color: white; font-size: 12px; padding: 4px 12px; border-radius: 3px; margin-bottom: 10px; }}
         .booking-date {{ font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }}
         .booking-menu {{ font-size: 13px; color: #666; margin: 8px 0; padding: 12px; background: #FAFAFA; border-radius: 5px; border: 1px solid #E0E0E0; }}
         .booking-menu-label {{ font-size: 12px; color: #999; margin-bottom: 5px; }}
@@ -3056,11 +3056,11 @@ def liff_booking():
         .btn-row {{ display: flex; gap: 10px; margin: 15px 0; }}
         .btn {{ flex: 1; padding: 12px; border-radius: 5px; font-size: 14px; cursor: pointer; text-align: center; }}
         .btn-outline {{ background: #fff; color: #333; border: 1px solid #E0E0E0; }}
-        .btn-primary {{ background: #7030A0; color: white; border: none; }}
-        .btn-change {{ background: #7030A0; color: white; border: none; display: block; width: 100%; margin: 10px 0; }}
+        .btn-primary {{ background: #E85298; color: white; border: none; }}
+        .btn-change {{ background: #E85298; color: white; border: none; display: block; width: 100%; margin: 10px 0; }}
         .btn-cancel {{ background: transparent; color: #666; border: none; font-size: 13px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 10px; }}
         .btn-cancel:before {{ content: "×"; font-size: 16px; }}
-        .btn-submit {{ background: #7030A0; color: white; border: none; }}
+        .btn-submit {{ background: #E85298; color: white; border: none; }}
         .loading {{ text-align: center; padding: 40px; }}
         .no-booking {{ text-align: center; padding: 40px; color: #666; }}
         .user-info {{ background: #F5F5F5; padding: 12px 15px; margin: 0; font-size: 14px; }}
@@ -3273,8 +3273,8 @@ def liff_booking():
                     <!-- ステップインジケーター -->
                     <div style="display:flex;justify-content:center;align-items:center;padding:20px 15px;background:#fff;border-bottom:1px solid #E0E0E0;">
                         <div style="display:flex;align-items:center;">
-                            <div style="width:28px;height:28px;border-radius:50%;background:#FF6B35;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">1</div>
-                            <span style="margin-left:8px;font-size:13px;color:#FF6B35;font-weight:bold;">メニュー</span>
+                            <div style="width:28px;height:28px;border-radius:50%;background:#E85298;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">1</div>
+                            <span style="margin-left:8px;font-size:13px;color:#E85298;font-weight:bold;">メニュー</span>
                         </div>
                         <div style="width:30px;height:2px;background:#E0E0E0;margin:0 8px;"></div>
                         <div style="display:flex;align-items:center;">
@@ -3290,11 +3290,11 @@ def liff_booking():
                     
                     <div style="padding:15px;">
                         <!-- 選択中のメニュー -->
-                        <div style="background:#FFF5F0;padding:15px;border:1px solid #FFD4C4;border-radius:8px;margin-bottom:20px;">
-                            <div style="font-size:12px;color:#FF6B35;margin-bottom:8px;font-weight:bold;">選択中のメニュー</div>
+                        <div style="background:#FFF5F8;padding:15px;border:1px solid #FFCCE0;border-radius:8px;margin-bottom:20px;">
+                            <div style="font-size:12px;color:#E85298;margin-bottom:8px;font-weight:bold;">選択中のメニュー</div>
                             <div style="font-size:15px;color:#333;font-weight:500;">${{currentBookingMenu}}</div>
                             <div style="font-size:13px;color:#666;margin-top:8px;">
-                                所要時間：<span id="duration-display" style="font-weight:bold;color:#FF6B35;">${{currentBookingDuration}}分</span>
+                                所要時間：<span id="duration-display" style="font-weight:bold;color:#E85298;">${{formatDuration(currentBookingDuration)}}</span>
                             </div>
                         </div>
                         
@@ -3312,7 +3312,7 @@ def liff_booking():
                         <div style="margin-bottom:25px;">
                             <label style="font-size:14px;color:#333;display:block;margin-bottom:10px;font-weight:500;">スタッフ</label>
                             <div style="display:flex;gap:10px;">
-                                <label id="staff-no" style="flex:1;padding:14px;border:2px solid #FF6B35;border-radius:8px;text-align:center;cursor:pointer;background:#FFF5F0;color:#FF6B35;font-weight:500;" onclick="selectStaff('no')">
+                                <label id="staff-no" style="flex:1;padding:14px;border:2px solid #E85298;border-radius:8px;text-align:center;cursor:pointer;background:#FFF5F8;color:#E85298;font-weight:500;" onclick="selectStaff('no')">
                                     <input type="radio" name="staff-pref" value="no" checked style="display:none;"> 指名しない
                                 </label>
                                 <label id="staff-yes" style="flex:1;padding:14px;border:2px solid #E0E0E0;border-radius:8px;text-align:center;cursor:pointer;background:#fff;color:#666;" onclick="selectStaff('yes')">
@@ -3322,7 +3322,7 @@ def liff_booking():
                         </div>
                         
                         <!-- 次へボタン -->
-                        <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:8px;background:#FF6B35;border:none;color:#fff;font-weight:bold;cursor:pointer;" onclick="showCalendar()">この内容で次へ</button>
+                        <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:8px;background:#E85298;border:none;color:#fff;font-weight:bold;cursor:pointer;" onclick="showCalendar()">この内容で次へ</button>
                         <div style="text-align:center;margin-top:15px;">
                             <span style="color:#666;font-size:13px;cursor:pointer;text-decoration:underline;" onclick="location.reload()">← 予約一覧に戻る</span>
                         </div>
@@ -3333,21 +3333,63 @@ def liff_booking():
         }}
         
         
+        
+        
+        function showSalonTab() {{
+            document.getElementById('tab-salon').style.borderBottom = '2px solid #E85298';
+            document.getElementById('tab-salon').style.color = '#E85298';
+            document.getElementById('tab-salon').style.fontWeight = 'bold';
+            document.getElementById('tab-staff').style.borderBottom = 'none';
+            document.getElementById('tab-staff').style.color = '#999';
+            document.getElementById('tab-staff').style.fontWeight = 'normal';
+            document.getElementById('calendar-table').style.display = 'block';
+            document.getElementById('staff-view').style.display = 'none';
+        }}
+        
+        function showStaffTab() {{
+            document.getElementById('tab-staff').style.borderBottom = '2px solid #E85298';
+            document.getElementById('tab-staff').style.color = '#E85298';
+            document.getElementById('tab-staff').style.fontWeight = 'bold';
+            document.getElementById('tab-salon').style.borderBottom = 'none';
+            document.getElementById('tab-salon').style.color = '#999';
+            document.getElementById('tab-salon').style.fontWeight = 'normal';
+            document.getElementById('calendar-table').style.display = 'none';
+            if (!document.getElementById('staff-view')) {{
+                const staffDiv = document.createElement('div');
+                staffDiv.id = 'staff-view';
+                staffDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">スタッフ別空き状況は準備中です</div>';
+                document.getElementById('calendar-table').parentNode.insertBefore(staffDiv, document.getElementById('calendar-table').nextSibling);
+            }}
+            document.getElementById('staff-view').style.display = 'block';
+        }}
+        
+        function formatDuration(minutes) {{
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            if (hours > 0 && mins > 0) {{
+                return hours + '時間' + mins + '分';
+            }} else if (hours > 0) {{
+                return hours + '時間';
+            }} else {{
+                return mins + '分';
+            }}
+        }}
+        
         function selectStaff(value) {{
             const noLabel = document.getElementById('staff-no');
             const yesLabel = document.getElementById('staff-yes');
             if (value === 'no') {{
-                noLabel.style.border = '2px solid #FF6B35';
-                noLabel.style.background = '#FFF5F0';
-                noLabel.style.color = '#FF6B35';
+                noLabel.style.border = '2px solid #E85298';
+                noLabel.style.background = '#FFF5F8';
+                noLabel.style.color = '#E85298';
                 yesLabel.style.border = '2px solid #E0E0E0';
                 yesLabel.style.background = '#fff';
                 yesLabel.style.color = '#666';
                 document.querySelector('input[name="staff-pref"][value="no"]').checked = true;
             }} else {{
-                yesLabel.style.border = '2px solid #FF6B35';
-                yesLabel.style.background = '#FFF5F0';
-                yesLabel.style.color = '#FF6B35';
+                yesLabel.style.border = '2px solid #E85298';
+                yesLabel.style.background = '#FFF5F8';
+                yesLabel.style.color = '#E85298';
                 noLabel.style.border = '2px solid #E0E0E0';
                 noLabel.style.background = '#fff';
                 noLabel.style.color = '#666';
@@ -3409,24 +3451,24 @@ def liff_booking():
         async function showCalendar() {{
             document.getElementById('bookings').innerHTML = `
                 <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;">
-                    <div style="background:#F5F5F5;padding:12px 15px;border-bottom:1px solid #E0E0E0;margin:-15px -15px 15px;">
-                        <div style="font-size:12px;color:#999;margin-bottom:5px;">選択済みクーポン・メニュー</div>
-                        <div style="font-size:14px;color:#333;">${{currentBookingMenu}}</div>
-                        <div style="font-size:12px;color:#FF6B35;margin-top:8px;">所要時間合計（目安）：${{currentBookingDuration}}分</div>
+                    <div style="background:#FFF5F8;padding:15px;border:1px solid #FFCCE0;border-radius:8px;margin:15px;">
+                        <div style="font-size:12px;color:#E85298;margin-bottom:8px;font-weight:bold;">選択済みクーポン・メニュー</div>
+                        <div style="font-size:15px;color:#333;font-weight:500;">${{currentBookingMenu}}</div>
+                        <div style="font-size:13px;color:#666;margin-top:8px;">所要時間：<span style="font-weight:bold;color:#E85298;">${{formatDuration(currentBookingDuration)}}</span></div>
                     </div>
                     
                     <div style="display:flex;border-bottom:1px solid #E0E0E0;margin:0 -15px 15px;">
-                        <div style="flex:1;text-align:center;padding:12px;border-bottom:2px solid #7030A0;margin-bottom:-1px;font-weight:bold;color:#7030A0;font-size:14px;">サロンの空き状況</div>
-                        <div style="flex:1;text-align:center;padding:12px;color:#999;font-size:14px;">スタッフ別の空き状況</div>
+                        <div id="tab-salon" onclick="showSalonTab()" style="flex:1;text-align:center;padding:12px;border-bottom:2px solid #E85298;margin-bottom:-1px;font-weight:bold;color:#E85298;font-size:14px;cursor:pointer;">サロンの空き状況</div>
+                        <div id="tab-staff" onclick="showStaffTab()" style="flex:1;text-align:center;padding:12px;color:#999;font-size:14px;cursor:pointer;">スタッフ別の空き状況</div>
                     </div>
                     
                     <div id="calendar-loading" style="text-align:center;padding:30px;color:#666;">読み込み中...</div>
                     
                     <div id="week-nav" style="display:none;margin-bottom:15px;padding:0 5px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span onclick="changeWeek(-1)" style="color:#7030A0;font-size:13px;cursor:pointer;">< 前の一週間</span>
+                            <span onclick="changeWeek(-1)" style="color:#E85298;font-size:13px;cursor:pointer;">< 前の一週間</span>
                             <span id="month-label" style="font-size:15px;font-weight:bold;color:#333;"></span>
-                            <span onclick="changeWeek(1)" style="color:#7030A0;font-size:13px;cursor:pointer;">次の一週間 ></span>
+                            <span onclick="changeWeek(1)" style="color:#E85298;font-size:13px;cursor:pointer;">次の一週間 ></span>
                         </div>
                     </div>
                     
@@ -3988,7 +4030,7 @@ def api_liff_menu_duration():
 # === 空き枠取得API ===
 @app.route('/api/liff/available-slots-range', methods=['GET'])
 def api_liff_available_slots_range():
-    """14日分の空き枠をSupabaseから取得（高速）"""
+    """56日分の空き枠（8週間）をSupabaseから取得（高速）"""
     from datetime import datetime, timedelta
     
     try:
@@ -3997,7 +4039,7 @@ def api_liff_available_slots_range():
         headers = {'apikey': supabase_key, 'Authorization': f'Bearer {supabase_key}'}
         
         today = datetime.now()
-        dates = [(today + timedelta(days=i)).strftime('%Y%m%d') for i in range(14)]
+        dates = [(today + timedelta(days=i)).strftime('%Y%m%d') for i in range(56)]
         
         date_filter = ','.join(dates)
         res = requests.get(
