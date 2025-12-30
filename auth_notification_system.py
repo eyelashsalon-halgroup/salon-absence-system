@@ -3818,18 +3818,18 @@ def api_liff_cancel_request():
         menu = booking.get('menu', '')
         staff = booking.get('staff', '指名なし')
         
-        # スタッフLINEに通知
-        staff_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN_STAFF')
-        staff_group_id = os.getenv('LINE_GROUP_ID_STAFF', 'C3798c50a8ee5e02eb0372e6eee4c5c5f')
+        # HAL公式LINEに通知（管理画面で全スタッフ確認可能）
+        hal_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
+        hal_admin_id = os.getenv('LINE_USER_ID_HAL', 'U9022782f05526cf7632902acaed0cb08')
         
         message = f'[キャンセル依頼]\nお客様：{customer_name}\n日時：{visit_datetime}\nメニュー：{menu}\nスタッフ：{staff}\n\n※SalonBoardで予約取消をお願いします'
         
         line_headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {staff_token}'
+            'Authorization': f'Bearer {hal_token}'
         }
         line_data = {
-            'to': staff_group_id,
+            'to': hal_admin_id,
             'messages': [{'type': 'text', 'text': message}]
         }
         requests.post('https://api.line.me/v2/bot/message/push', headers=line_headers, json=line_data)
