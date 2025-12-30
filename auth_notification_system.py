@@ -3213,7 +3213,7 @@ def liff_booking():
                                     <div class="booking-time">所要時間合計（目安）：約1時間</div>
                                 </div>
                                 <div style="font-size:13px;color:#666;margin:10px 0;">スタッフ：${{booking.staff || '指名なし'}}</div>
-                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">同じ内容で予約</button>
+                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>
                                 <div class="btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">この予約をキャンセル</div>
                             </div>
                         `;
@@ -3268,7 +3268,7 @@ def liff_booking():
                             <span style="font-size:14px;color:#333;">${{currentBookingMenu}}</span>
                         </div>
                         <div style="font-size:12px;color:#666;border-top:1px solid #E0E0E0;padding-top:10px;margin-top:10px;">
-                            所要時間合計（目安）：<span id="duration-display">1時間</span>
+                            所要時間合計（目安）：<span id="duration-display">メニューを選択してください</span>
                         </div>
                     </div>
                     
@@ -3279,20 +3279,7 @@ def liff_booking():
                         </select>
                     </div>
                     
-                    <div style="margin-bottom:20px;">
-                        <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">所要時間合計（目安）</label>
-                        <select id="duration-select" style="width:100%;padding:12px;border:1px solid #E0E0E0;border-radius:5px;font-size:14px;background:#fff;" onchange="updateDuration()">
-                            <option value="10">10分</option>
-                            <option value="50">50分</option>
-                            <option value="60">1時間</option>
-                            <option value="70" selected>1時間10分</option>
-                            <option value="80">1時間20分</option>
-                            <option value="100">1時間40分</option>
-                            <option value="130">2時間10分</option>
-                            <option value="140">2時間20分</option>
-                            <option value="150">2時間30分</option>
-                        </select>
-                    </div>
+                    <input type="hidden" id="duration-select" value="70">
                     
                     <div style="margin-bottom:20px;">
                         <label style="font-size:13px;color:#333;display:block;margin-bottom:8px;">スタッフ</label>
@@ -3300,13 +3287,13 @@ def liff_booking():
                             <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#fff;">
                                 <input type="radio" name="staff-pref" value="no" checked style="margin-right:5px;"> 指名しない
                             </label>
-                            <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#f5f5f5;color:#999;">
+                            <label style="flex:1;padding:12px;border:1px solid #E0E0E0;border-radius:5px;text-align:center;cursor:pointer;background:#fff;">
                                 <input type="radio" name="staff-pref" value="yes" style="margin-right:5px;"> 指名する
                             </label>
                         </div>
                     </div>
                     
-                    <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;border-radius:5px;" onclick="showCalendar()">空き状況を確認する</button>
+                    <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;border-radius:5px;opacity:0.5;cursor:not-allowed;" onclick="showCalendar()" disabled>メニューを選択してください</button>
                     <div style="text-align:center;margin-top:15px;">
                         <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
                     </div>
@@ -3353,6 +3340,12 @@ def liff_booking():
                     if (mins > 0) display += mins + '分';
                     document.getElementById('duration-display').textContent = display || '1時間';
                 }}
+                // ボタンを有効化
+                const btn = document.getElementById('check-availability-btn');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.textContent = '空き状況を確認する';
             }}
         }}
         
