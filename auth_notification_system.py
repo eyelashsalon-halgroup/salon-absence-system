@@ -65,7 +65,8 @@ ADMIN_USERS = {
 
 STAFF_USERS = {
     'kambara': {'password': 'kambara123', 'full_name': '神原良祐', 'line_id': 'U9022782f05526cf7632902acaed0cb08'},
-    'saori': {'password': 'saori123', 'full_name': 'Saori', 'line_id': 'U1ad150fa84a287c095eb98186a8cdc45'}
+    'saori': {'password': 'saori123', 'full_name': 'Saori', 'line_id': 'U1ad150fa84a287c095eb98186a8cdc45'},
+    'ota': {'password': 'ota123', 'full_name': '太田由香利', 'line_id': 'U2c097f177a2c96b0732f6d15152d0d68'}
 }
 
 staff_mapping = {
@@ -3818,21 +3819,20 @@ def api_liff_cancel_request():
         menu = booking.get('menu', '')
         staff = booking.get('staff', '指名なし')
         
-        # HAL公式LINEに通知（管理画面で全スタッフ確認可能）
-        hal_token = os.getenv('LINE_CHANNEL_ACCESS_TOKEN')
-        hal_admin_id = os.getenv('LINE_USER_ID_HAL', 'U9022782f05526cf7632902acaed0cb08')
-        
+        # 全スタッフに通知
         message = f'[キャンセル依頼]\nお客様：{customer_name}\n日時：{visit_datetime}\nメニュー：{menu}\nスタッフ：{staff}\n\n※SalonBoardで予約取消をお願いします'
         
-        line_headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {hal_token}'
-        }
-        line_data = {
-            'to': hal_admin_id,
-            'messages': [{'type': 'text', 'text': message}]
-        }
-        requests.post('https://api.line.me/v2/bot/message/push', headers=line_headers, json=line_data)
+        # スタッフ全員に送信
+        staff_ids = [
+            'U9022782f05526cf7632902acaed0cb08',  # 神原良祐
+            'U2c097f177a2c96b0732f6d15152d0d68'   # 太田由香利
+        ]
+        
+        for staff_id in staff_ids:
+            try:
+                send_line_message(staff_id, message, LINE_BOT_TOKEN)
+            except Exception as e:
+                print(f'[キャンセル通知エラー] {staff_id}: {e}')
         
         print(f'[キャンセル依頼送信] {customer_name} {visit_datetime}')
         
