@@ -3505,7 +3505,7 @@ def liff_booking():
         function changeWeek(delta) {{
             currentWeek += delta;
             if (currentWeek < 0) currentWeek = 0;
-            if (currentWeek > 1) currentWeek = 1;
+            if (currentWeek > 7) currentWeek = 7;
             renderCalendar();
         }}
         
