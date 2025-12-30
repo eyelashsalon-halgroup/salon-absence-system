@@ -3347,7 +3347,7 @@ def liff_booking():
             document.getElementById('staff-view').style.display = 'none';
         }}
         
-        function showStaffTab() {{
+        async function showStaffTab() {{
             document.getElementById('tab-staff').style.borderBottom = '2px solid #E85298';
             document.getElementById('tab-staff').style.color = '#E85298';
             document.getElementById('tab-staff').style.fontWeight = 'bold';
@@ -3355,13 +3355,78 @@ def liff_booking():
             document.getElementById('tab-salon').style.color = '#999';
             document.getElementById('tab-salon').style.fontWeight = 'normal';
             document.getElementById('calendar-table').style.display = 'none';
+            document.getElementById('week-nav').style.display = 'none';
+            
             if (!document.getElementById('staff-view')) {{
                 const staffDiv = document.createElement('div');
                 staffDiv.id = 'staff-view';
-                staffDiv.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">スタッフ別空き状況は準備中です</div>';
                 document.getElementById('calendar-table').parentNode.insertBefore(staffDiv, document.getElementById('calendar-table').nextSibling);
             }}
-            document.getElementById('staff-view').style.display = 'block';
+            
+            const staffView = document.getElementById('staff-view');
+            staffView.style.display = 'block';
+            staffView.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">スタッフ読み込み中...</div>';
+            
+            try {{
+                const res = await fetch(API_BASE + '/api/liff/staff-list');
+                const data = await res.json();
+                
+                if (data.success && data.staff) {{
+                    let html = '<div style="padding:10px;">';
+                    html += '<div style="font-size:14px;color:#333;margin-bottom:15px;font-weight:bold;">スタッフを選択してください</div>';
+                    html += '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
+                    
+                    data.staff.forEach(s => {{
+                        html += '<button onclick="loadStaffSchedule(\'' + s.name + '\')" style="padding:12px 20px;border:2px solid #E85298;border-radius:8px;background:#fff;color:#E85298;font-size:14px;cursor:pointer;">' + s.name + '</button>';
+                    }});
+                    
+                    html += '</div>';
+                    html += '<div id="staff-schedule" style="margin-top:20px;"></div>';
+                    html += '</div>';
+                    staffView.innerHTML = html;
+                }} else {{
+                    staffView.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">スタッフ情報を取得できませんでした</div>';
+                }}
+            }} catch (e) {{
+                staffView.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">エラーが発生しました</div>';
+            }}
+        }}
+        
+        async function loadStaffSchedule(staffName) {{
+            const scheduleDiv = document.getElementById('staff-schedule');
+            scheduleDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">' + staffName + 'の予約を読み込み中...</div>';
+            
+            try {{
+                const res = await fetch(API_BASE + '/api/liff/staff-availability?staff=' + encodeURIComponent(staffName));
+                const data = await res.json();
+                
+                if (data.success) {{
+                    if (data.bookings.length === 0) {{
+                        scheduleDiv.innerHTML = '<div style="padding:15px;background:#FFF5F8;border-radius:8px;color:#666;">' + staffName + 'の予約はありません</div>';
+                    }} else {{
+                        let html = '<div style="font-size:14px;color:#333;margin-bottom:10px;font-weight:bold;">' + staffName + 'の予約一覧（' + data.bookings.length + '件）</div>';
+                        html += '<div style="max-height:300px;overflow-y:auto;">';
+                        
+                        data.bookings.sort((a, b) => a.visit_datetime.localeCompare(b.visit_datetime));
+                        
+                        data.bookings.forEach(b => {{
+                            const dt = b.visit_datetime || '';
+                            html += '<div style="padding:10px;border:1px solid #E0E0E0;border-radius:5px;margin-bottom:8px;background:#fff;">';
+                            html += '<div style="font-size:13px;color:#E85298;font-weight:bold;">' + dt + '</div>';
+                            html += '<div style="font-size:12px;color:#666;margin-top:5px;">' + (b.customer_name || '') + '</div>';
+                            html += '<div style="font-size:11px;color:#999;margin-top:3px;">' + (b.menu || '') + '</div>';
+                            html += '</div>';
+                        }});
+                        
+                        html += '</div>';
+                        scheduleDiv.innerHTML = html;
+                    }}
+                }} else {{
+                    scheduleDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">取得に失敗しました</div>';
+                }}
+            }} catch (e) {{
+                scheduleDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">エラーが発生しました</div>';
+            }}
         }}
         
         function formatDuration(minutes) {{
@@ -3994,6 +4059,51 @@ def api_liff_menus():
         return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/liff/staff-list', methods=['GET'])
+def api_liff_staff_list():
+    """スタッフ一覧を取得"""
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salon_staff?active=eq.true&select=id,name', headers=headers)
+        if res.status_code == 200:
+            return jsonify({'success': True, 'staff': res.json()})
+        return jsonify({'success': False, 'message': 'スタッフ取得失敗'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/liff/staff-availability', methods=['GET'])
+def api_liff_staff_availability():
+    """スタッフ別の空き状況を取得"""
+    staff_name = request.args.get('staff', '')
+    
+    if not staff_name:
+        return jsonify({'success': False, 'message': 'スタッフ名が必要です'})
+    
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        
+        # 該当スタッフの予約を取得
+        res = requests.get(
+            f'{SUPABASE_URL}/rest/v1/8weeks_bookings?staff=like.*{staff_name}*&select=visit_datetime,customer_name,menu',
+            headers=headers
+        )
+        
+        bookings = res.json() if res.status_code == 200 else []
+        
+        # 日付ごとにグループ化
+        by_date = {}
+        for b in bookings:
+            date = b.get('visit_datetime', '')[:10]
+            if date not in by_date:
+                by_date[date] = []
+            by_date[date].append(b)
+        
+        return jsonify({'success': True, 'bookings': bookings, 'by_date': by_date})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/api/liff/menu-duration', methods=['GET'])
 def api_liff_menu_duration():
     """メニュー名から施術時間を取得（部分一致）"""
