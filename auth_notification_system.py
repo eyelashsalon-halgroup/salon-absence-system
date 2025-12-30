@@ -3257,15 +3257,15 @@ def liff_booking():
 
             // メニュー名から施術時間を取得
             currentBookingDuration = 60;
-            try {
+            try {{
                 const durationRes = await fetch(API_BASE + '/api/liff/menu-duration?menu=' + encodeURIComponent(currentBookingMenu));
                 const durationData = await durationRes.json();
-                if (durationData.success && durationData.duration) {
+                if (durationData.success && durationData.duration) {{
                     currentBookingDuration = durationData.duration;
-                }
-            } catch (e) {
+                }}
+            }} catch (e) {{
                 console.log('施術時間取得エラー', e);
-            }
+            }}
             
             // メニュー選択画面を表示（ホットペッパー風UI）
             document.getElementById('bookings').innerHTML = `
