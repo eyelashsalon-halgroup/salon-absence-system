@@ -3047,7 +3047,7 @@ def liff_booking():
         .content {{ background: white; padding: 0; }}
         .section-header {{ background: #F5F5F5; padding: 12px 15px; font-size: 14px; font-weight: bold; color: #333; border-top: 1px solid #E0E0E0; border-bottom: 1px solid #E0E0E0; }}
         .booking-card {{ background: #fff; border: 1px solid #E0E0E0; border-radius: 8px; padding: 15px; margin: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }}
-        .booking-status {{ display: inline-block; background: #E4007F; color: white; font-size: 12px; padding: 4px 12px; border-radius: 3px; margin-bottom: 10px; }}
+        .booking-status {{ display: inline-block; background: #FF6B35; color: white; font-size: 12px; padding: 4px 12px; border-radius: 3px; margin-bottom: 10px; }}
         .booking-date {{ font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }}
         .booking-menu {{ font-size: 13px; color: #666; margin: 8px 0; padding: 12px; background: #FAFAFA; border-radius: 5px; border: 1px solid #E0E0E0; }}
         .booking-menu-label {{ font-size: 12px; color: #999; margin-bottom: 5px; }}
@@ -3273,8 +3273,8 @@ def liff_booking():
                     <!-- ステップインジケーター -->
                     <div style="display:flex;justify-content:center;align-items:center;padding:20px 15px;background:#fff;border-bottom:1px solid #E0E0E0;">
                         <div style="display:flex;align-items:center;">
-                            <div style="width:28px;height:28px;border-radius:50%;background:#E4007F;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">1</div>
-                            <span style="margin-left:8px;font-size:13px;color:#E4007F;font-weight:bold;">メニュー</span>
+                            <div style="width:28px;height:28px;border-radius:50%;background:#FF6B35;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;">1</div>
+                            <span style="margin-left:8px;font-size:13px;color:#FF6B35;font-weight:bold;">メニュー</span>
                         </div>
                         <div style="width:30px;height:2px;background:#E0E0E0;margin:0 8px;"></div>
                         <div style="display:flex;align-items:center;">
@@ -3290,11 +3290,11 @@ def liff_booking():
                     
                     <div style="padding:15px;">
                         <!-- 選択中のメニュー -->
-                        <div style="background:#FFF5F8;padding:15px;border:1px solid #FFCCE0;border-radius:8px;margin-bottom:20px;">
-                            <div style="font-size:12px;color:#E4007F;margin-bottom:8px;font-weight:bold;">選択中のメニュー</div>
+                        <div style="background:#FFF5F0;padding:15px;border:1px solid #FFD4C4;border-radius:8px;margin-bottom:20px;">
+                            <div style="font-size:12px;color:#FF6B35;margin-bottom:8px;font-weight:bold;">選択中のメニュー</div>
                             <div style="font-size:15px;color:#333;font-weight:500;">${{currentBookingMenu}}</div>
                             <div style="font-size:13px;color:#666;margin-top:8px;">
-                                所要時間：<span id="duration-display" style="font-weight:bold;color:#E4007F;">${{currentBookingDuration}}分</span>
+                                所要時間：<span id="duration-display" style="font-weight:bold;color:#FF6B35;">${{currentBookingDuration}}分</span>
                             </div>
                         </div>
                         
@@ -3312,17 +3312,17 @@ def liff_booking():
                         <div style="margin-bottom:25px;">
                             <label style="font-size:14px;color:#333;display:block;margin-bottom:10px;font-weight:500;">スタッフ</label>
                             <div style="display:flex;gap:10px;">
-                                <label style="flex:1;padding:14px;border:2px solid #E4007F;border-radius:8px;text-align:center;cursor:pointer;background:#fff;color:#E4007F;font-weight:500;">
+                                <label id="staff-no" style="flex:1;padding:14px;border:2px solid #FF6B35;border-radius:8px;text-align:center;cursor:pointer;background:#FFF5F0;color:#FF6B35;font-weight:500;" onclick="selectStaff('no')">
                                     <input type="radio" name="staff-pref" value="no" checked style="display:none;"> 指名しない
                                 </label>
-                                <label style="flex:1;padding:14px;border:2px solid #E0E0E0;border-radius:8px;text-align:center;cursor:pointer;background:#fff;color:#666;">
+                                <label id="staff-yes" style="flex:1;padding:14px;border:2px solid #E0E0E0;border-radius:8px;text-align:center;cursor:pointer;background:#fff;color:#666;" onclick="selectStaff('yes')">
                                     <input type="radio" name="staff-pref" value="yes" style="display:none;"> 指名する
                                 </label>
                             </div>
                         </div>
                         
                         <!-- 次へボタン -->
-                        <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:8px;background:#E4007F;border:none;color:#fff;font-weight:bold;cursor:pointer;" onclick="showCalendar()">この内容で次へ</button>
+                        <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:8px;background:#FF6B35;border:none;color:#fff;font-weight:bold;cursor:pointer;" onclick="showCalendar()">この内容で次へ</button>
                         <div style="text-align:center;margin-top:15px;">
                             <span style="color:#666;font-size:13px;cursor:pointer;text-decoration:underline;" onclick="location.reload()">← 予約一覧に戻る</span>
                         </div>
@@ -3330,6 +3330,29 @@ def liff_booking():
                 </div>
             `;
             loadMenus();
+        }}
+        
+        
+        function selectStaff(value) {{
+            const noLabel = document.getElementById('staff-no');
+            const yesLabel = document.getElementById('staff-yes');
+            if (value === 'no') {{
+                noLabel.style.border = '2px solid #FF6B35';
+                noLabel.style.background = '#FFF5F0';
+                noLabel.style.color = '#FF6B35';
+                yesLabel.style.border = '2px solid #E0E0E0';
+                yesLabel.style.background = '#fff';
+                yesLabel.style.color = '#666';
+                document.querySelector('input[name="staff-pref"][value="no"]').checked = true;
+            }} else {{
+                yesLabel.style.border = '2px solid #FF6B35';
+                yesLabel.style.background = '#FFF5F0';
+                yesLabel.style.color = '#FF6B35';
+                noLabel.style.border = '2px solid #E0E0E0';
+                noLabel.style.background = '#fff';
+                noLabel.style.color = '#666';
+                document.querySelector('input[name="staff-pref"][value="yes"]').checked = true;
+            }}
         }}
         
         let selectedMenuCouponId = null;
@@ -3389,7 +3412,7 @@ def liff_booking():
                     <div style="background:#F5F5F5;padding:12px 15px;border-bottom:1px solid #E0E0E0;margin:-15px -15px 15px;">
                         <div style="font-size:12px;color:#999;margin-bottom:5px;">選択済みクーポン・メニュー</div>
                         <div style="font-size:14px;color:#333;">${{currentBookingMenu}}</div>
-                        <div style="font-size:12px;color:#E4007F;margin-top:8px;">所要時間合計（目安）：${{currentBookingDuration}}分</div>
+                        <div style="font-size:12px;color:#FF6B35;margin-top:8px;">所要時間合計（目安）：${{currentBookingDuration}}分</div>
                     </div>
                     
                     <div style="display:flex;border-bottom:1px solid #E0E0E0;margin:0 -15px 15px;">
