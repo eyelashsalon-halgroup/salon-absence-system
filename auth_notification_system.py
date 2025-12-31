@@ -3377,7 +3377,7 @@ def liff_booking():
                     html += '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
                     
                     data.staff.forEach(s => {{
-                        html += '<button onclick="loadStaffSchedule(\x27' + s.name + '\x27)" style="padding:12px 20px;border:2px solid #E85298;border-radius:8px;background:#fff;color:#E85298;font-size:14px;cursor:pointer;">' + s.name + '</button>';
+                        html += '<button onclick="loadStaffSchedule(&#39;' + s.name + '&#39;)" style="padding:12px 20px;border:2px solid #E85298;border-radius:8px;background:#fff;color:#E85298;font-size:14px;cursor:pointer;">' + s.name + '</button>';
                     }});
                     
                     html += '</div>';
@@ -3890,7 +3890,8 @@ def api_liff_cancel_request():
         # スタッフ全員に送信
         staff_ids = [
             'U9022782f05526cf7632902acaed0cb08',  # 神原良祐
-            'U2c097f177a2c96b0732f6d15152d0d68'   # 太田由香利
+            'U2c097f177a2c96b0732f6d15152d0d68',  # 太田由香利
+            # 'XXXXXXXXX'  # 本店１（LINE ID取得後に追加）
         ]
         
         for staff_id in staff_ids:
