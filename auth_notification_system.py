@@ -3377,7 +3377,7 @@ def liff_booking():
                     html += '<div style="display:flex;flex-wrap:wrap;gap:10px;">';
                     
                     data.staff.forEach(s => {{
-                        html += '<button onclick="loadStaffSchedule(\'' + s.name + '\')" style="padding:12px 20px;border:2px solid #E85298;border-radius:8px;background:#fff;color:#E85298;font-size:14px;cursor:pointer;">' + s.name + '</button>';
+                        html += '<button onclick="loadStaffSchedule(\x27' + s.name + '\x27)" style="padding:12px 20px;border:2px solid #E85298;border-radius:8px;background:#fff;color:#E85298;font-size:14px;cursor:pointer;">' + s.name + '</button>';
                     }});
                     
                     html += '</div>';
