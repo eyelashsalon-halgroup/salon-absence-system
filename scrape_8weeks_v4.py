@@ -238,16 +238,24 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         day_off = row.query_selector('.isDayOff')
                         is_day_off = day_off is not None
                         
-                        # .scheduleToDoでleft/widthがNoneなら終日休日
+                        # .scheduleToDoが終日をカバーしているか、または予約が0件なら休日
                         if not is_day_off:
                             todos = row.query_selector_all('.scheduleToDo')
+                            reservations = row.query_selector_all('.scheduleReservation')
                             if day_offset < 3:
-                                print(f"[DEBUG] {date_str} staff{idx}: todos={len(todos)}", flush=True)
+                                print(f"[DEBUG] {date_str} staff{idx}: todos={len(todos)}, reservations={len(reservations)}", flush=True)
                             for todo in todos:
                                 style = todo.get_attribute('style') or ''
                                 if day_offset < 3:
-                                    print(f"[DEBUG]   style={style[:50]}", flush=True)
-                                if 'left' not in style or 'width' not in style:
+                                    print(f"[DEBUG]   style={style[:80]}", flush=True)
+                                # styleなし、またはwidth>=1000(ほぼ終日)なら休日
+                                if not style or 'left' not in style or 'width' not in style:
+                                    is_day_off = True
+                                    break
+                                # width値を抽出してチェック
+                                import re
+                                width_match = re.search(r'width:\s*(\d+)', style)
+                                if width_match and int(width_match.group(1)) >= 1000:
                                     is_day_off = True
                                     break
                         
