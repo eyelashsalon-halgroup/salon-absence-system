@@ -238,6 +238,15 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         day_off = row.query_selector('.isDayOff')
                         is_day_off = day_off is not None
                         
+                        # .scheduleToDoでleft/widthがNoneなら終日休日
+                        if not is_day_off:
+                            todos = row.query_selector_all('.scheduleToDo')
+                            for todo in todos:
+                                style = todo.get_attribute('style') or ''
+                                if 'left' not in style or 'width' not in style:
+                                    is_day_off = True
+                                    break
+                        
                         available_slots = []
                         if not is_day_off:
                             booked_slots.sort(key=lambda x: x['start'])
