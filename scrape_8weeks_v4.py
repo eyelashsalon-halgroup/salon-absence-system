@@ -241,8 +241,12 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         # .scheduleToDoでleft/widthがNoneなら終日休日
                         if not is_day_off:
                             todos = row.query_selector_all('.scheduleToDo')
+                            if day_offset < 3:
+                                print(f"[DEBUG] {date_str} staff{idx}: todos={len(todos)}", flush=True)
                             for todo in todos:
                                 style = todo.get_attribute('style') or ''
+                                if day_offset < 3:
+                                    print(f"[DEBUG]   style={style[:50]}", flush=True)
                                 if 'left' not in style or 'width' not in style:
                                     is_day_off = True
                                     break
