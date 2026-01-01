@@ -3680,7 +3680,7 @@ def liff_booking():
         
         async function cancelBooking(bookingId) {{
             const booking = bookings.find(b => b.booking_id === bookingId);
-            const msg = `[キャンセル]\nお客様：${booking.customer_name}\n日時：${booking.visit_datetime}\nメニュー：${booking.menu}\nスタッフ：${booking.staff}\n\n※SalonBoardで予約取消をお願いします`;
+            const msg = `[キャンセル]\nお客様：${{booking.customer_name}}\n日時：${{booking.visit_datetime}}\nメニュー：${{booking.menu}}\nスタッフ：${{booking.staff}}\n\n※SalonBoardで予約取消をお願いします`;
             alert(msg);
             return;
             if (false) {{
