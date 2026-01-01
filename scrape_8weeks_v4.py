@@ -220,20 +220,21 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                                 pass
                         
                         booked_slots = []
-                        reserve_cells = row.query_selector_all('.scheduleReserve')
-                        for cell in reserve_cells:
-                            time_text = cell.query_selector('.scheduleReserveTime')
-                            if time_text:
-                                times = time_text.inner_text().split('-')
-                                if len(times) == 2:
-                                    try:
+                        reservations = row.query_selector_all('.scheduleReservation, .scheduleToDo')
+                        for res in reservations:
+                            time_zone = res.query_selector('.scheduleTimeZoneSetting')
+                            if time_zone:
+                                try:
+                                    time_text = time_zone.inner_text()
+                                    times = json.loads(time_text)
+                                    if len(times) >= 2:
                                         start_parts = times[0].split(':')
                                         end_parts = times[1].split(':')
                                         start_h = int(start_parts[0]) + int(start_parts[1]) / 60
                                         end_h = int(end_parts[0]) + int(end_parts[1]) / 60
                                         booked_slots.append({'start': start_h, 'end': end_h})
-                                    except:
-                                        pass
+                                except:
+                                    pass
                         
                         day_off = row.query_selector('.isDayOff')
                         is_day_off = day_off is not None
