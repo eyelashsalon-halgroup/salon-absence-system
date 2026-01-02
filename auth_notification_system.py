@@ -3643,7 +3643,7 @@ def liff_booking():
                         </div>
                     </div>
                     
-                    <div id="calendar-table" style="overflow-x:auto;margin:0 -10px;"></div>
+                    <div id="calendar-table" style="margin:0;"></div>
                     
                     <div style="margin-top:20px;padding:12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:5px;font-size:11px;color:#666;">
                         <p style="margin-bottom:5px;">◯ の日時から施術を開始することが出来ます。</p>
@@ -3703,7 +3703,7 @@ def liff_booking():
             const days = ['日', '月', '火', '水', '木', '金', '土'];
             const requiredMinutes = currentBookingDuration;
             
-            let html = '<table style="border-collapse:collapse;font-size:12px;width:100%;">';
+            let html = '<table style="border-collapse:collapse;font-size:11px;width:100%;table-layout:fixed;">';
             html += '<thead><tr><th style="border:1px solid #ddd;padding:8px;background:#f5f5f5;width:60px;"></th>';
             
             dates.forEach(d => {{
