@@ -3654,7 +3654,7 @@ def liff_booking():
                         cellStyle = 'color:#999;background:#f0f0f0;';
                     }}
                     
-                    html += `<td style="border:1px solid #ddd;padding:8px;text-align:center;${{cellStyle}}">${{cellContent}}</td>`;
+                    html += `<td style="border:1px solid #ddd;padding:8px;text-align:center;height:32px;line-height:16px;${{cellStyle}}">${{cellContent}}</td>`;
                 }});
                 html += '</tr>';
             }});
