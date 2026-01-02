@@ -1053,9 +1053,13 @@ def approve_absence():
                     cust_name = cust.get('name', '').replace(' ', '')
                     if cust_name == customer_name and cust.get('line_user_id'):
                         message = f"【重要】ご予約日程変更のお願い\n\n{booking.get('visit_datetime', '')[:10]}のご予約について、担当スタッフの都合により日程変更をお願いしたくご連絡いたしました。\n\n大変申し訳ございませんが、ご都合の良い日時をお知らせください。\n\neyelashsalon HAL"
-                        # 本番: 顧客にLINE通知
-                        send_line_message(cust.get('line_user_id'), message, LINE_BOT_TOKEN_STAFF)
-                        print(f"[欠勤通知] {cust_name}様に送信完了", flush=True)
+                        # テストモード: 神原良祐とtest沙織のみに送信
+                        TEST_IDS = ["U9022782f05526cf7632902acaed0cb08", "U1d1dfe1993f1857327678e37b607187a"]  # 神原良祐, test沙織
+                        if cust.get('line_user_id') in TEST_IDS:
+                            send_line_message(cust.get('line_user_id'), message, LINE_BOT_TOKEN_STAFF)
+                            print(f"[欠勤通知-テスト] {cust_name}様に送信完了", flush=True)
+                        else:
+                            print(f"[欠勤通知-スキップ] {cust_name}様（テスト対象外）", flush=True)
                         notified_count += 1
                         break
             
