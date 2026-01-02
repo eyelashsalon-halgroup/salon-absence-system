@@ -1053,12 +1053,9 @@ def approve_absence():
                     cust_name = cust.get('name', '').replace(' ', '')
                     if cust_name == customer_name and cust.get('line_user_id'):
                         message = f"【重要】ご予約日程変更のお願い\n\n{booking.get('visit_datetime', '')[:10]}のご予約について、担当スタッフの都合により日程変更をお願いしたくご連絡いたしました。\n\n大変申し訳ございませんが、ご都合の良い日時をお知らせください。\n\neyelashsalon HAL"
-                        # [DISABLED] send_line_message(cust.get('line_user_id'), message, LINE_BOT_TOKEN_STAFF)
-                        # [TEST] 神原良祐にのみテスト送信
-                        TEST_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
-                        test_message = f"[テスト通知]\n顧客: {cust_name}\n予約日: {booking.get('visit_datetime', '')[:10]}\n\n※実際の顧客には送信されていません"
-                        send_line_message(TEST_LINE_ID, test_message, LINE_BOT_TOKEN_STAFF)
-                        print(f"[TEST] 神原良祐にテスト送信: {cust_name}", flush=True)
+                        # 本番: 顧客にLINE通知
+                        send_line_message(cust.get('line_user_id'), message, LINE_BOT_TOKEN_STAFF)
+                        print(f"[欠勤通知] {cust_name}様に送信完了", flush=True)
                         notified_count += 1
                         break
             
@@ -1067,6 +1064,110 @@ def approve_absence():
             flash(f'承認完了。顧客通知でエラー: {str(e)}', 'warning')
     
     return redirect('/admin/absences')
+
+
+
+@app.route('/admin/staff')
+@admin_required
+def admin_staff():
+    """スタッフマスタ管理画面"""
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salon_staff?select=*&order=id', headers=headers)
+        staff_list = res.json() if res.status_code == 200 else []
+    except:
+        staff_list = []
+    
+    template = """
+    <!DOCTYPE html>
+    <html><head>
+        <meta charset="UTF-8">
+        <title>スタッフマスタ管理</title>
+        <style>
+            body { font-family: sans-serif; margin: 20px; background: #f5f5f5; }
+            .container { max-width: 800px; margin: 0 auto; }
+            h1 { color: #333; }
+            .back-btn { display: inline-block; margin-bottom: 20px; padding: 10px 20px; background: #6b7280; color: white; text-decoration: none; border-radius: 5px; }
+            table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background: #E85298; color: white; }
+            .badge-active { background: #22c55e; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+            .badge-inactive { background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+            .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+            .btn-edit { background: #3b82f6; color: white; }
+            .btn-toggle { background: #f59e0b; color: white; }
+            .add-form { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            .add-form input { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; }
+            .btn-add { background: #22c55e; color: white; padding: 8px 16px; }
+        </style>
+    </head><body>
+        <div class="container">
+            <a href="/admin" class="back-btn">← 管理画面に戻る</a>
+            <h1>スタッフマスタ管理</h1>
+            
+            <div class="add-form">
+                <form method="POST" action="/admin/staff/add">
+                    <input type="text" name="name" placeholder="スタッフ名" required>
+                    <input type="text" name="line_id" placeholder="LINE ID（任意）">
+                    <button type="submit" class="btn btn-add">追加</button>
+                </form>
+            </div>
+            
+            <table>
+                <tr><th>ID</th><th>名前</th><th>LINE ID</th><th>状態</th><th>操作</th></tr>
+                {% for staff in staff_list %}
+                <tr>
+                    <td>{{ staff.id }}</td>
+                    <td>{{ staff.name }}</td>
+                    <td>{{ staff.line_id or '-' }}</td>
+                    <td>{% if staff.active %}<span class="badge-active">有効</span>{% else %}<span class="badge-inactive">無効</span>{% endif %}</td>
+                    <td>
+                        <form method="POST" action="/admin/staff/toggle" style="display:inline;">
+                            <input type="hidden" name="staff_id" value="{{ staff.id }}">
+                            <input type="hidden" name="active" value="{{ 'false' if staff.active else 'true' }}">
+                            <button type="submit" class="btn btn-toggle">{{ '無効化' if staff.active else '有効化' }}</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </body></html>
+    """
+    return render_template_string(template, staff_list=staff_list)
+
+@app.route('/admin/staff/add', methods=['POST'])
+@admin_required
+def admin_staff_add():
+    """スタッフ追加"""
+    name = request.form.get('name')
+    line_id = request.form.get('line_id') or None
+    
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}', 'Content-Type': 'application/json'}
+        data = {'name': name, 'line_id': line_id, 'active': True}
+        requests.post(f'{SUPABASE_URL}/rest/v1/salon_staff', headers=headers, json=data)
+        flash(f'{name}を追加しました', 'success')
+    except Exception as e:
+        flash(f'エラー: {str(e)}', 'error')
+    
+    return redirect('/admin/staff')
+
+@app.route('/admin/staff/toggle', methods=['POST'])
+@admin_required
+def admin_staff_toggle():
+    """スタッフ有効/無効切替"""
+    staff_id = request.form.get('staff_id')
+    active = request.form.get('active') == 'true'
+    
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}', 'Content-Type': 'application/json', 'Prefer': 'return=minimal'}
+        requests.patch(f'{SUPABASE_URL}/rest/v1/salon_staff?id=eq.{staff_id}', headers=headers, json={'active': active})
+        flash('更新しました', 'success')
+    except Exception as e:
+        flash(f'エラー: {str(e)}', 'error')
+    
+    return redirect('/admin/staff')
 
 
 @app.route('/admin')
