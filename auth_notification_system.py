@@ -3643,14 +3643,14 @@ def liff_booking():
                         </div>
                     </div>
                     
-                    <div id="calendar-table" style="margin:0;"></div>
+                    <div id="calendar-table" style="margin:0;overflow-x:hidden;"></div>
                     
                     <div style="margin-top:20px;padding:12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:5px;font-size:11px;color:#666;">
                         <p style="margin-bottom:5px;">◯ の日時から施術を開始することが出来ます。</p>
                         <p>ご希望の来店日時の ◯ を選択してください。</p>
                     </div>
                     
-                    <div style="text-align:center;margin-top:20px;">
+                    <div style="text-align:center;margin-top:20px;margin-bottom:100px;">
                         <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
                     </div>
                 </div>
