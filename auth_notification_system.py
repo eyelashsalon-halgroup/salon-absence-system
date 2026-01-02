@@ -3650,7 +3650,7 @@ def liff_booking():
                         <p>ご希望の来店日時の ◯ を選択してください。</p>
                     </div>
                     
-                    <div style="text-align:center;margin-top:20px;margin-bottom:100px;">
+                    <div style="text-align:center;margin-top:20px;margin-bottom:40px;">
                         <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
                     </div>
                 </div>
@@ -3703,7 +3703,7 @@ def liff_booking():
             const days = ['日', '月', '火', '水', '木', '金', '土'];
             const requiredMinutes = currentBookingDuration;
             
-            let html = '<table style="border-collapse:collapse;font-size:11px;width:100%;table-layout:fixed;">';
+            let html = '<table style="border-collapse:collapse;font-size:10px;width:100%;table-layout:fixed;max-width:100%;">';
             html += '<thead><tr><th style="border:1px solid #ddd;padding:8px;background:#f5f5f5;width:60px;"></th>';
             
             dates.forEach(d => {{
