@@ -3319,7 +3319,7 @@ def liff_booking():
                                     <div class="booking-menu-text">${{booking.menu || '未設定'}}</div>
                                     
                                 </div>
-                                <div style="font-size:13px;color:#666;margin:10px 0;">指名スタッフ：${{booking.staff === '神原良祐' ? '神原良祐（指名料￥330）' : (booking.staff || '指名なし')}}</div>
+                                <div style="font-size:13px;color:#666;margin:10px 0;">指名スタッフ：${{booking.staff === '神原良祐' ? '神原良祐（￥330）' : (booking.staff || '指名なし')}}</div>
                                 <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>
                                 <div class="btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">この予約をキャンセル</div>
                             </div>
@@ -3414,6 +3414,17 @@ def liff_booking():
                         </div>
                         
                         <input type="hidden" id="duration-select" value="${{currentBookingDuration}}">
+                        
+                        <!-- オプション選択 -->
+                        <div style="margin-bottom:20px;">
+                            <label style="font-size:14px;color:#333;display:block;margin-bottom:10px;font-weight:500;">オプション</label>
+                            <select id="option-select" style="width:100%;padding:14px;border:1px solid #E0E0E0;border-radius:8px;font-size:15px;background:#fff;">
+                                <option value="">オフなし</option>
+                                <option value="off_500">オフあり ¥500</option>
+                                <option value="off_shampoo_1000">オフあり+アイシャンプー ¥1,000</option>
+                            </select>
+                            <p style="font-size:11px;color:#E85298;margin-top:8px;">※次回予約特典のご予約は無料ですが、必ずご選択をお願いします。</p>
+                        </div>
                         
                         <!-- スタッフ選択 -->
                         <div style="margin-bottom:25px;">
@@ -3581,7 +3592,7 @@ def liff_booking():
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.dataset.duration = m.duration;
-                        opt.textContent = m.name;
+                        opt.textContent = m.name.replace(/^《[^》]+》\s*/, '');
                         select.appendChild(opt);
                     }});
                 }}
@@ -4164,7 +4175,7 @@ def api_liff_menus():
     """salon_menusテーブルからメニュー一覧を取得"""
     try:
         headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
-        res = requests.get(f'{SUPABASE_URL}/rest/v1/salonboard_menus?select=id,name,duration&order=id.asc', headers=headers)
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salon_menus?select=id,name,price&order=id.asc', headers=headers)
         if res.status_code == 200:
             return jsonify({'success': True, 'menus': res.json()})
         return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
