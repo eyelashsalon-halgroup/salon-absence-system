@@ -169,6 +169,8 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         
                         cached = existing_cache.get(booking_id, {})
                         menu = cached.get('menu', '')
+                        if menu and ('\n' in menu or '来店日' in menu or len(menu) > 200):
+                            menu = ''
                         phone = cached.get('phone', '')
                         
                         if not phone:
