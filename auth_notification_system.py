@@ -3310,7 +3310,7 @@ def liff_booking():
                 if (data.bookings && data.bookings.length > 0) {{
                     let html = '';
                     data.bookings.forEach(booking => {{
-                        const isNextBooking = booking.menu && booking.menu.includes('【次回】');
+                        const isNextBooking = booking.is_next_booking;
                         const statusText = isNextBooking ? '予約確定【次回予約分】' : '予約確定';
                         const staffDisplay = booking.staff ? booking.staff + '（￥330）' : '指名なし';
                         html += `
@@ -3940,6 +3940,10 @@ def api_liff_bookings_by_phone():
     today = datetime.now(JST).strftime('%Y-%m-%d')
     
     bookings = [b for b in all_bookings if b.get('visit_datetime', '') >= today]
+    
+    # 次回予約フラグを追加（clean_menu前に判定）
+    for b in bookings:
+        b['is_next_booking'] = '【次回】' in (b.get('menu') or '')
     
     # メニュークリーンアップ
     def clean_menu(m):
