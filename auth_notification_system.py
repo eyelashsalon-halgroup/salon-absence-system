@@ -3148,7 +3148,8 @@ def liff_booking():
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #FFFFFF; color: #333; }}
-        .container {{ max-width: 500px; margin: 0 auto; padding: 0; }}
+        html, body {{ overflow-x: hidden; width: 100%; }}
+        .container {{ max-width: 500px; margin: 0 auto; padding: 0; overflow-x: hidden; }}
         .header {{ background: #FFFFFF; color: #333; padding: 15px 20px; text-align: center; border-bottom: 1px solid #E0E0E0; font-size: 16px; font-weight: bold; }}
         .content {{ background: white; padding: 0; }}
         .section-header {{ background: #F5F5F5; padding: 12px 15px; font-size: 14px; font-weight: bold; color: #333; border-top: 1px solid #E0E0E0; border-bottom: 1px solid #E0E0E0; }}
@@ -3318,7 +3319,7 @@ def liff_booking():
                                     <div class="booking-menu-text">${{booking.menu || '未設定'}}</div>
                                     
                                 </div>
-                                <div style="font-size:13px;color:#666;margin:10px 0;">スタッフ：${{booking.staff || '指名なし'}}</div>
+                                <div style="font-size:13px;color:#666;margin:10px 0;">指名スタッフ：${{booking.staff === '神原良祐' ? '神原良祐（指名料￥330）' : (booking.staff || '指名なし')}}</div>
                                 <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>
                                 <div class="btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">この予約をキャンセル</div>
                             </div>
