@@ -3192,7 +3192,7 @@ def liff_booking():
                 <label>電話番号を入力してください</label>
                 <input type="tel" id="phone-input" placeholder="09012345678" pattern="[0-9]*">
                 <button class="btn btn-submit" onclick="submitPhone()">予約を確認</button>
-                <p class="phone-note">※ サロンボードにご登録の電話番号を入力してください<br>※ 初回のみ入力が必要です</p>
+                <p class="phone-note">※ ホットペッパーにご登録の電話番号を入力してください<br>※ 初回のみ入力が必要です</p>
             </div>
             <div id="bookings"></div>
         </div>
@@ -3318,7 +3318,7 @@ def liff_booking():
                                 <span class="booking-status">${{statusText}}</span>
                                 <div class="booking-date">${{formatDate(booking.visit_datetime)}}</div>
                                 <div class="booking-menu">
-                                    <div class="booking-menu-label">ご利用クーポン・メニュー</div>
+                                    <div class="booking-menu-label">施術メニュー</div>
                                     <div class="booking-menu-text">${{booking.menu || '未設定'}}</div>
                                     
                                 </div>
@@ -3427,9 +3427,10 @@ def liff_booking():
                         <div style="margin-bottom:20px;">
                             <label style="font-size:14px;color:#333;display:block;margin-bottom:10px;font-weight:500;">オプション</label>
                             <select id="option-select" style="width:100%;padding:14px;border:1px solid #E0E0E0;border-radius:8px;font-size:15px;background:#fff;">
-                                <option value="">オフなし</option>
-                                <option value="off_500">オフあり ¥500</option>
+                                <option value="">未選択</option>
                                 <option value="off_shampoo_1000">オフあり+アイシャンプー ¥1,000</option>
+                                <option value="off_500">オフあり ¥500</option>
+                                <option value="off_none">オフなし</option>
                             </select>
                             <p style="font-size:11px;color:#E85298;margin-top:8px;">※次回予約特典のご予約は無料ですが、必ずご選択をお願いします。</p>
                         </div>
@@ -3597,7 +3598,11 @@ def liff_booking():
                 const data = await res.json();
                 if (data.success && data.menus) {{
                     const select = document.getElementById('menu-select');
-                    data.menus.forEach(m => {{
+                    // 次回予約の場合は【次回】メニューのみ、通常は【全員】を除外
+                    const filteredMenus = currentIsNextBooking 
+                        ? data.menus.filter(m => m.name.includes('【次回】'))
+                        : data.menus.filter(m => !m.name.includes('【全員】'));
+                    filteredMenus.forEach(m => {{
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.dataset.duration = m.duration || 60;
@@ -3641,6 +3646,12 @@ def liff_booking():
         }}
         
         async function showCalendar() {{
+            // オプション未選択チェック
+            const optionSelect = document.getElementById('option-select');
+            if (optionSelect && optionSelect.value === '') {{
+                alert('オプションを選択してください');
+                return;
+            }}
             document.getElementById('bookings').innerHTML = `
                 <div id="calendar-view" style="font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;">
                     <div style="background:#FFF5F8;padding:15px;border:1px solid #FFCCE0;border-radius:8px;margin:15px;">
