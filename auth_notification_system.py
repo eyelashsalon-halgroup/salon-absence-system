@@ -3310,17 +3310,23 @@ def liff_booking():
                 if (data.bookings && data.bookings.length > 0) {{
                     let html = '';
                     data.bookings.forEach(booking => {{
+                        const isNextBooking = booking.menu && booking.menu.includes('【次回】');
+                        const statusText = isNextBooking ? '予約確定【次回予約分】' : '予約確定';
+                        const staffDisplay = booking.staff ? booking.staff + '（￥330）' : '指名なし';
                         html += `
                             <div class="booking-card" data-booking-id="${{booking.booking_id}}">
-                                <span class="booking-status">予約確定</span>
+                                <span class="booking-status">${{statusText}}</span>
                                 <div class="booking-date">${{formatDate(booking.visit_datetime)}}</div>
                                 <div class="booking-menu">
                                     <div class="booking-menu-label">ご利用クーポン・メニュー</div>
                                     <div class="booking-menu-text">${{booking.menu || '未設定'}}</div>
                                     
                                 </div>
-                                <div style="font-size:13px;color:#666;margin:10px 0;">指名スタッフ：${{booking.staff === '神原良祐' ? '神原良祐（￥330）' : (booking.staff || '指名なし')}}</div>
-                                <button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>
+                                <div style="font-size:13px;color:#666;margin:10px 0;">指名スタッフ：${{staffDisplay}}</div>
+                                ${{isNextBooking 
+                                    ? `<button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>`
+                                    : `<button class="btn btn-change" onclick="window.open('https://beauty.hotpepper.jp/CSP/kr/reserve/?storeId=H000537368', '_blank')">ホットペッパーで変更</button>`
+                                }}
                                 <div class="btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">この予約をキャンセル</div>
                             </div>
                         `;
