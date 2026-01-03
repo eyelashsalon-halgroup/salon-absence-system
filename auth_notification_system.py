@@ -3311,7 +3311,7 @@ def liff_booking():
                     let html = '';
                     data.bookings.forEach(booking => {{
                         const isNextBooking = booking.is_next_booking;
-                        const statusText = isNextBooking ? '予約確定【次回予約分】' : '予約確定';
+                        const statusText = isNextBooking ? '予約確定【次回予約分】' : '予約確定【ホットペッパー】';
                         const staffDisplay = booking.staff ? booking.staff + '（￥330）' : '指名なし';
                         html += `
                             <div class="booking-card" data-booking-id="${{booking.booking_id}}">
@@ -3324,7 +3324,7 @@ def liff_booking():
                                 </div>
                                 <div style="font-size:13px;color:#666;margin:10px 0;">指名スタッフ：${{staffDisplay}}</div>
                                 ${{isNextBooking 
-                                    ? `<button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}')">日時を変更する</button>`
+                                    ? `<button class="btn btn-change" onclick="changeBooking('${{booking.booking_id}}', '${{booking.menu || ""}}', '${{booking.staff || ""}}', ${{booking.is_next_booking}})">日時を変更する</button>`
                                     : `<button class="btn btn-change" onclick="window.open('https://beauty.hotpepper.jp/CSP/kr/reserve/?storeId=H000537368', '_blank')">ホットペッパーで変更</button>`
                                 }}
                                 <div class="btn-cancel" onclick="cancelBooking('${{booking.booking_id}}')">この予約をキャンセル</div>
@@ -3342,15 +3342,17 @@ def liff_booking():
         
         let calendarData = {{}};
         let currentBookingId = null;
+        let currentIsNextBooking = false;
         let currentBookingMenu = '';
         let currentBookingStaff = '';
         let currentBookingDuration = 60;
         let currentWeek = 0;
         
-        async function changeBooking(bookingId, menu, staff) {{
+        async function changeBooking(bookingId, menu, staff, isNextBooking) {{
             currentBookingId = bookingId;
             currentBookingMenu = menu || '未設定';
             currentBookingStaff = staff || 'なし';
+            currentIsNextBooking = isNextBooking || false;
             
             // ローディング表示
             document.getElementById('bookings').innerHTML = `
@@ -3590,15 +3592,16 @@ def liff_booking():
         
         async function loadMenus() {{
             try {{
-                const res = await fetch(API_BASE + '/api/liff/menus');
+                const endpoint = currentIsNextBooking ? '/api/liff/menus-next' : '/api/liff/menus';
+                const res = await fetch(API_BASE + endpoint);
                 const data = await res.json();
                 if (data.success && data.menus) {{
                     const select = document.getElementById('menu-select');
                     data.menus.forEach(m => {{
                         const opt = document.createElement('option');
                         opt.value = m.id;
-                        opt.dataset.duration = m.duration;
-                        opt.textContent = m.name.replace(/^《[^》]+》\s*/, '');
+                        opt.dataset.duration = m.duration || 60;
+                        opt.textContent = m.name.replace(/^《[^》]+》\s*/, '').replace(/^【次回】/, '');
                         select.appendChild(opt);
                     }});
                 }}
@@ -4186,6 +4189,18 @@ def api_liff_menus():
     try:
         headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
         res = requests.get(f'{SUPABASE_URL}/rest/v1/salon_menus?select=id,name,price&order=id.asc', headers=headers)
+        if res.status_code == 200:
+            return jsonify({'success': True, 'menus': res.json()})
+        return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/liff/menus-next', methods=['GET'])
+def api_liff_menus_next():
+    """salonboard_menusテーブルからメニュー一覧を取得（次回予約用）"""
+    try:
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salonboard_menus?select=id,name,duration&order=id.asc', headers=headers)
         if res.status_code == 200:
             return jsonify({'success': True, 'menus': res.json()})
         return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
