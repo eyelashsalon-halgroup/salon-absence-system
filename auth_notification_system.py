@@ -2321,13 +2321,10 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
-    func=lambda: [
-        requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/refresh-salonboard-cookie'),
-        requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices')
-    ],
+    func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices'),
     trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
-    id='daily_maintenance',
-    name='毎日21時メンテナンス（Cookie更新＆メニュー金額同期）'
+    id='daily_menu_sync',
+    name='毎日21時メニュー金額同期'
 )
 scheduler.start()
 
@@ -2410,162 +2407,6 @@ def cron_update_menu_prices():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-
-def refresh_cookie_background():
-    """バックグラウンドでCookie更新を実行"""
-    import json
-    from playwright.sync_api import sync_playwright
-    
-    SALONBOARD_ID = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
-    SALONBOARD_PW = os.environ.get('SALONBOARD_LOGIN_PASSWORD', 'Ne8T2Hhi!')
-    
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
-            page = context.new_page()
-            
-            # まず既存Cookieで試す
-            try:
-                with open('session_cookies.json', 'r') as f:
-                    cookies = json.load(f)
-                context.add_cookies(cookies)
-            except:
-                pass
-            
-            # 予約一覧ページにアクセスしてログイン状態確認
-            page.goto('https://salonboard.com/KLP/reserve/reserveList/', timeout=60000)
-            page.wait_for_timeout(3000)
-            
-            # ログインが必要か確認
-            if 'login' in page.url.lower() or '/KLP/' not in page.url:
-                print("[COOKIE更新] ログイン必要、実行中...", flush=True)
-                
-                page.goto('https://salonboard.com/login/', timeout=60000)
-                page.wait_for_timeout(5000)
-                
-                # CAPTCHA確認
-                if '画像認証' in page.content() or 'captcha' in page.content().lower():
-                    send_line_message("U9022782f05526cf7632902acaed0cb08", "[警告] SalonBoard画像認証が発生\n手動でログインしてください", LINE_BOT_TOKEN)
-                    browser.close()
-                    return
-                
-                page.fill('input[name="userId"]', SALONBOARD_ID)
-                page.fill('input[name="password"]', SALONBOARD_PW)
-                
-                btn = page.query_selector('a.common-CNCcommon__primaryBtn')
-                if btn:
-                    btn.click()
-                else:
-                    page.keyboard.press('Enter')
-                
-                # ログイン成功を待つ（最大30秒）
-                for i in range(30):
-                    page.wait_for_timeout(1000)
-                    if '/KLP/' in page.url:
-                        break
-                    if 'doLogin' in page.url:
-                        continue
-                
-                if '/KLP/' not in page.url:
-                    send_line_message("U9022782f05526cf7632902acaed0cb08", "[警告] Cookie更新失敗: ログインできませんでした", LINE_BOT_TOKEN)
-                    browser.close()
-                    return
-            
-            # Cookie保存
-            new_cookies = context.cookies()
-            with open('session_cookies.json', 'w') as f:
-                json.dump(new_cookies, f, indent=2, ensure_ascii=False)
-            
-            browser.close()
-            print(f"[COOKIE更新] 成功: {len(new_cookies)}個", flush=True)
-            send_line_message("U9022782f05526cf7632902acaed0cb08", f"[OK] Cookie更新成功: {len(new_cookies)}個", LINE_BOT_TOKEN)
-    
-    except Exception as e:
-        print(f"[COOKIE更新] エラー: {e}", flush=True)
-        send_line_message("U9022782f05526cf7632902acaed0cb08", f"[エラー] Cookie更新失敗: {str(e)[:100]}", LINE_BOT_TOKEN)
-
-@app.route('/api/cron/refresh-salonboard-cookie', methods=['POST'])
-def cron_refresh_salonboard_cookie():
-    """SalonBoard Cookieを自動更新（非同期）"""
-    import threading
-    thread = threading.Thread(target=refresh_cookie_background)
-    thread.start()
-    return jsonify({'success': True, 'message': 'Cookie更新を開始しました'})
-
-# 以下は削除（旧コード）
-def _old_cron_refresh_salonboard_cookie():
-    """SalonBoard Cookieを自動更新（毎日実行）- v4ベース"""
-    import json
-    from playwright.sync_api import sync_playwright
-    
-    SALONBOARD_ID = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
-    SALONBOARD_PW = os.environ.get('SALONBOARD_LOGIN_PASSWORD', 'Ne8T2Hhi!')
-    
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
-            page = context.new_page()
-            
-            # まず既存Cookieで試す
-            try:
-                with open('session_cookies.json', 'r') as f:
-                    cookies = json.load(f)
-                context.add_cookies(cookies)
-            except:
-                pass
-            
-            # 予約一覧ページにアクセスしてログイン状態確認
-            page.goto('https://salonboard.com/KLP/reserve/reserveList/', timeout=60000)
-            page.wait_for_timeout(3000)
-            
-            # ログインが必要か確認
-            if 'login' in page.url.lower() or '/KLP/' not in page.url:
-                print("[COOKIE更新] ログイン必要、実行中...", flush=True)
-                
-                page.goto('https://salonboard.com/login/', timeout=60000)
-                page.wait_for_timeout(5000)
-                
-                # CAPTCHA確認
-                if '画像認証' in page.content() or 'captcha' in page.content().lower():
-                    send_line_message("U9022782f05526cf7632902acaed0cb08", "[警告] SalonBoard画像認証が発生\n手動でログインしてください", LINE_BOT_TOKEN)
-                    browser.close()
-                    return jsonify({'success': False, 'message': 'CAPTCHA detected'})
-                
-                page.fill('input[name="userId"]', SALONBOARD_ID)
-                page.fill('input[name="password"]', SALONBOARD_PW)
-                
-                btn = page.query_selector('a.common-CNCcommon__primaryBtn')
-                if btn:
-                    btn.click()
-                else:
-                    page.keyboard.press('Enter')
-                
-                # ログイン成功を待つ（最大30秒）
-                for i in range(30):
-                    page.wait_for_timeout(1000)
-                    if '/KLP/' in page.url:
-                        break
-                    if 'doLogin' in page.url:
-                        continue
-                
-                if '/KLP/' not in page.url:
-                    browser.close()
-                    return jsonify({'success': False, 'message': 'Login failed'})
-            
-            # Cookie保存
-            new_cookies = context.cookies()
-            with open('session_cookies.json', 'w') as f:
-                json.dump(new_cookies, f, indent=2, ensure_ascii=False)
-            
-            browser.close()
-            print(f"[COOKIE更新] 成功: {len(new_cookies)}個", flush=True)
-            return jsonify({'success': True, 'cookies': len(new_cookies)})
-    
-    except Exception as e:
-        send_line_message("U9022782f05526cf7632902acaed0cb08", f"[エラー] Cookie更新失敗: {str(e)[:100]}", LINE_BOT_TOKEN)
-        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 if __name__ == '__main__':
