@@ -1,0 +1,262 @@
+[
+  {
+    "name": "JSESSIONID",
+    "value": "5FA77EE02380777E064B65A96E156237.ap451_0B1",
+    "domain": "salonboard.com",
+    "path": "/CNC",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "GalileoCookie",
+    "value": "49710e9e.6474c36c3caaa",
+    "domain": "salonboard.com",
+    "path": "/",
+    "expires": 1801802522.027577,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "bm_sz",
+    "value": "BB86620FF740A9E2D7872B4A14A539BA~YAAQbOUuF5swtzqbAQAAOt7cdx57S/jjZXOxc5kPqWdaCV/hnX0TRo7XBNHp+7IPi7b03lVCtVVI31e/KYZ7zOy+FT7Wc+rB4fdFzkxPe0QSZoBlk9yobqonFCT8C6w47od0+IiCKAH2J5RdVCX3iBbt5u4PJ/UrLsbW2hLltXB9AbzYpyS6e4ClzCz8IHdf6udqCIPpputNFSM6gwDW0lCJ9XQ1TeaaQz4XJnv0EZx7scyqZhv+Gk/odoGvYpeqH/6tf7cfZhxyDBcZNAZeivq35m6k6bGEAZ1d8OTjbjLtLz6uM4jj9fxBmKbD6CYa4fGwdWwwrF8IVDCBlqIvJCt8WRYLbgy6AnOhMdH9q62Z5Te4yGtjU7mMxNfurdVeL4tqu4Yr4uk=~3491137~3421509",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1767256922.028696,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ak_bmsc",
+    "value": "DEE2F9F4E4007BEA5863526149E80E3A~000000000000000000000000000000~YAAQbOUuFzgxtzqbAQAA3+Xcdx4q7kULjJA9Jeb2cUOS/gQvYLX83mYWs+qJ3dMj4a6viXFuWg3Il6b4bKlba5hRUoQFI6qDIu4lXOjVKDr/ISJFVty/F5ZGMpeHlgGmD1he0War+8UFedeaTPFDnJkGL8qRLRJiC187mM+MVxymyQzKMQPjrqluKTaWgDw+p1durwKnExU6QjSHYj5q5/GIbzfJYw8bYDDOeWR/W0hDNZraHj5B7h3cTQaJFLqm77iXg/bwl2Qhwd1WgmEvrjUZDqa+49Wd0XBb/D20Ftq62Bp/109vnNxvl4m14vdSHv7swfbuYY6bf5YmiiENb7f1ZdLlqIEET9/DYoCjqUSVNHPRdWnv3jz5AcboWxQGqJ1blS2BVa0KgmBmiUDesu8PgL6u8BCwU9BWsZJvCl22qvSGmMXfBehA/MKT1O3Oo2mNA4o7BbsZJAkg2yEez4NLYvMKHkKOIXC4Xmu8ZZm/xlBDCGAZOJRi",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1767249722.017792,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ga_6JN6VMPTB9",
+    "value": "GS2.1.s1767242524$o1$g0$t1767242524$j60$l0$h0",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1801802524.501184,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "receive-cookie-deprecation",
+    "value": "1",
+    "domain": ".fout.jp",
+    "path": "/",
+    "expires": 1801802524.637681,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://salonboard.com",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "uid",
+    "value": "o6CvCLMGB-2JJyQ72IUx-ND4AZ0",
+    "domain": ".fout.jp",
+    "path": "/",
+    "expires": 1801802526.062234,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "krt.vis",
+    "value": "RmPMDYjcMXf0fWD",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1801802524.647234,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ga",
+    "value": "GA1.2.950325749.1767242524",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1801802524.693928,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_gid",
+    "value": "GA1.2.827845639.1767242525",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1767328924,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_abck",
+    "value": "D0A1032BC70E69061813ADBF1EC218C8~-1~YAAQbOUuF58xtzqbAQAAjOvcdw93FTU1r7862b1aWHBCBaAwknaio2UQFobVmaRnTYqk9n/MlgWcIOyORvSUxP4Wtb0TrI77GBbo9HrnFPPrjFabrj7OnjDd6gdLu0Ve7/SdYz4oOb3YOwE7Gb2PpnNUpBbPjj2I47iw6OWTHq534gegB6rznzK7bsWqesy3oYBNsazDWfpEP82Uk6//TfaDBCyPzlI4vjDrfYDP249efqyNNpVu3mdh1C024LabTaFISPwmnqWvnKIIn3+eJkBuMMKaDvp5Ty1c1ltU+TeBZyvuEEupaM+Cy2D5Qwm+KwXIg0oGlNtWmzSR3PiitC/jTw00M+jYAnkkTxUARn65YDQxqH81W5a3RE2vEdAANMnAbiwYyMRuQ1Ll3U4GHplszfAC8CcojM5J9prW9I+ZJc4b/0NMPGlbarDP1Nyz0/VUYZaCwDev97Oa6HXVCR7MK6ondfvfQj+Wj+6pqOQgprZK76TbjOxVWBF4T4u10BywBgFdwenN/egsIa+BZjS3MmwF51ZjXfkwEs607ctGDUBEGFrotah8ZLol12feqxsLsdCrmCYxKCNwYDQ=~-1~-1~-1~AAQAAAAE%2f%2f%2f%2f%2f2IjYnQ5ooKtjwLofYsq8ci18AgLvD29lw4IPl4Ozw0oArRJhL7U6rp0Z+rth63mxgv%2fhETmmLqlO+z5FRn94RyRxGJVDP0sGoRL~-1",
+    "domain": ".salonboard.com",
+    "path": "/",
+    "expires": 1798778525.479422,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "lastW_mapping",
+    "value": "1767242525",
+    "domain": ".fout.jp",
+    "path": "/",
+    "expires": 1798778525,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "i",
+    "value": "73a48045-6b3e-4207-ba53-7e7e20348f09|1767242525",
+    "domain": ".openx.net",
+    "path": "/",
+    "expires": 1798778525.785775,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "KRTBCOOKIE_669",
+    "value": "13218-o6CvCLMGB-2JJyQ72IUx-ND4AZ0&KRTB&23652-o6CvCLMGB-2JJyQ72IUx-ND4AZ0",
+    "domain": ".pubmatic.com",
+    "path": "/",
+    "expires": 1769834525.797572,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "PugT",
+    "value": "1767242525",
+    "domain": ".pubmatic.com",
+    "path": "/",
+    "expires": 1769834525.797835,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "IDE",
+    "value": "AHWqTUljY5lAz5zTVdFjYEcVOf6wIeB02j541fJPm9XVvDQm5vDvldfu5TpHfXoGyig",
+    "domain": ".doubleclick.net",
+    "path": "/",
+    "expires": 1801802525.824121,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "xid",
+    "value": "a4bc99b9-73da-4982-8134-e3cd26faf160",
+    "domain": ".i-mobile.co.jp",
+    "path": "/",
+    "expires": 1798729200.919133,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "XANDR_PANID",
+    "value": "Vhh4ig-6cticJ0O-i3-iZ08pnp0087pZ_F8GrH5pJkE8hgT-0u2D5lnZc78OlUE7p0NSt6nlrtFFlWLJqLw5thb3aamRphi-lMcz-WGpju4.",
+    "domain": ".adnxs.com",
+    "path": "/",
+    "expires": 1775018526.300627,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://salonboard.com",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "uuid2",
+    "value": "2709635817792747288",
+    "domain": ".adnxs.com",
+    "path": "/",
+    "expires": 1775018526.300792,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "audit_p",
+    "value": "1|ekFYnpwmn/E2ktYJqtqQ6uhrYfLMAP6It8T3kY1gDNZToRNDuRJ8DGwemTo1uB35G8lAx+tTdWmM1KxoLazItzz7TM+vYUvnalLUtr9u1g62Qzm4VFjJ8I7l5yiaMqEiU76/YmonJyroBZ/ji4A7OIMijZYcFbRuMmkg4pyRNO0=",
+    "domain": ".rubiconproject.com",
+    "path": "/",
+    "expires": 1798778526.195153,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://salonboard.com",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "khaos",
+    "value": "MJUYKKFP-1-GP51",
+    "domain": ".rubiconproject.com",
+    "path": "/",
+    "expires": 1798778526.195245,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "khaos_p",
+    "value": "MJUYKKFP-1-GP51",
+    "domain": ".rubiconproject.com",
+    "path": "/",
+    "expires": 1798778526.195274,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://salonboard.com",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "audit",
+    "value": "1|ekFYnpwmn/E2ktYJqtqQ6uhrYfLMAP6It8T3kY1gDNZToRNDuRJ8DGwemTo1uB35G8lAx+tTdWmM1KxoLazItzz7TM+vYUvnalLUtr9u1g62Qzm4VFjJ8I7l5yiaMqEiU76/YmonJyroBZ/ji4A7OIMijZYcFbRuMmkg4pyRNO0=",
+    "domain": ".rubiconproject.com",
+    "path": "/",
+    "expires": 1798778526.195302,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "receive-cookie-deprecation",
+    "value": "1",
+    "domain": ".rubiconproject.com",
+    "path": "/",
+    "expires": 1775018526.195328,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://salonboard.com",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "anj",
+    "value": "dTM7k!M41.D>6NRF']wIg2GVNh5.IT!]tbPl1M>e*Wi6IU_Xx3J1)Dv^Ml#%SiF0aX]l4yFWIYbQmyw1Naau>k5(^G3If)y3KL9D3I?+2lH1:!",
+    "domain": ".adnxs.com",
+    "path": "/",
+    "expires": 1775018526.300756,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  }
+]
