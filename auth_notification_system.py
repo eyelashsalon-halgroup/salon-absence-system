@@ -3405,12 +3405,15 @@ def liff_booking():
             }}
         }}
         
+        let bookings = [];  // グローバル変数
+        
         async function loadBookings(phone) {{
             try {{
                 const response = await fetch(API_BASE + `/api/liff/bookings-by-phone?phone=${{phone}}`);
                 const data = await response.json();
                 
                 if (data.bookings && data.bookings.length > 0) {{
+                    bookings = data.bookings;  // グローバル変数に保存
                     let html = '';
                     data.bookings.forEach(booking => {{
                         const isNextBooking = booking.is_next_booking;
