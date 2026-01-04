@@ -3689,7 +3689,8 @@ def liff_booking():
                         const opt = document.createElement('option');
                         opt.value = m.id;
                         opt.dataset.duration = m.duration || 60;
-                        opt.textContent = m.name.replace(/^《[^》]+》\s*/, '').replace(/^【次回】/, '');
+                        const price = m.price ? ' ¥' + m.price.toLocaleString() : '';
+                        opt.textContent = m.name.replace(/^《[^》]+》\s*/, '').replace(/^【次回】/, '') + price;
                         select.appendChild(opt);
                     }});
                 }}
@@ -4294,7 +4295,7 @@ def api_liff_menus_next():
     """salonboard_menusテーブルからメニュー一覧を取得（次回予約用）"""
     try:
         headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
-        res = requests.get(f'{SUPABASE_URL}/rest/v1/salonboard_menus?select=id,name,duration&order=id.asc', headers=headers)
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salonboard_menus?select=id,name,duration,price&order=id.asc', headers=headers)
         if res.status_code == 200:
             return jsonify({'success': True, 'menus': res.json()})
         return jsonify({'success': False, 'message': 'メニュー取得失敗'}), 500
