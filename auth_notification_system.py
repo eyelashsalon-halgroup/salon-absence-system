@@ -334,10 +334,20 @@ def notify_shop_booking_change(customer_name, old_datetime, new_datetime, staff_
 
 ※お客様がLIFFから変更しました"""
     
-    # 管理者に通知
-    admin_line_id = os.getenv('ADMIN_LINE_USER_ID')
-    if admin_line_id:
-        send_line_message(admin_line_id, message, LINE_BOT_TOKEN_STAFF)
+    # テストモード: 神原良祐とtest沙織のみに送信
+    TEST_STAFF_IDS = [
+        "U9022782f05526cf7632902acaed0cb08",  # 神原良祐
+        "U1d1dfe1993f1857327678e37b607187a",  # test沙織
+        # === 本番モード時は以下を有効化 ===
+        # "U1ad150fa84a287c095eb98186a8cdc45",  # Saori
+        # "U2c097f177a2c96b0732f6d15152d0d68",  # 太田由香利
+        # "XXXXXXXXX",  # 本店１（LINE ID取得後に追加）
+    ]
+    for staff_id in TEST_STAFF_IDS:
+        try:
+            send_line_message(staff_id, message, LINE_BOT_TOKEN_STAFF)
+        except:
+            pass
 
 @app.route('/')
 def index():
@@ -2311,10 +2321,13 @@ scheduler.add_job(
 )
 
 scheduler.add_job(
-    func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices'),
+    func=lambda: [
+        requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/refresh-salonboard-cookie'),
+        requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices')
+    ],
     trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
-    id='update_menu_prices',
-    name='毎日21時メニュー金額更新'
+    id='daily_maintenance',
+    name='毎日21時メンテナンス（Cookie更新＆メニュー金額同期）'
 )
 scheduler.start()
 
@@ -2394,6 +2407,57 @@ def cron_update_menu_prices():
         
         return jsonify({'success': True, 'updated': updated})
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+@app.route('/api/cron/refresh-salonboard-cookie', methods=['POST'])
+def cron_refresh_salonboard_cookie():
+    """SalonBoard Cookieを自動更新（毎日実行）"""
+    import json
+    from playwright.sync_api import sync_playwright
+    
+    SALONBOARD_ID = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
+    SALONBOARD_PW = os.environ.get('SALONBOARD_LOGIN_PASSWORD', 'Ne8T2Hhi!')
+    
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            page = context.new_page()
+            
+            page.goto('https://salonboard.com/login/', timeout=60000)
+            page.wait_for_timeout(3000)
+            
+            # CAPTCHA確認
+            if '画像認証' in page.content() or 'captcha' in page.content().lower():
+                send_line_message("U9022782f05526cf7632902acaed0cb08", "[警告] SalonBoard画像認証が発生\n手動でログインしてください", LINE_BOT_TOKEN)
+                browser.close()
+                return jsonify({'success': False, 'message': 'CAPTCHA detected'})
+            
+            page.fill('input[name="userId"]', SALONBOARD_ID)
+            page.fill('input[name="password"]', SALONBOARD_PW)
+            
+            btn = page.query_selector('a.common-CNCcommon__primaryBtn')
+            if btn:
+                btn.click()
+            else:
+                page.keyboard.press('Enter')
+            
+            page.wait_for_timeout(10000)
+            
+            if 'login' not in page.url.lower():
+                cookies = context.cookies()
+                with open('session_cookies.json', 'w') as f:
+                    json.dump(cookies, f, indent=2)
+                browser.close()
+                return jsonify({'success': True, 'cookies': len(cookies)})
+            
+            browser.close()
+            return jsonify({'success': False, 'message': 'Login failed'})
+    
+    except Exception as e:
+        send_line_message("U9022782f05526cf7632902acaed0cb08", f"[エラー] Cookie更新失敗: {str(e)[:100]}", LINE_BOT_TOKEN)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -2878,10 +2942,18 @@ def send_reminder_notifications(test_mode=True):
                 json={'phone': phone, 'customer_name': customer_name, 'days_ahead': days, 'status': status}
             )
             
-            # 神原良祐に送信通知
+            # テストモード: 神原良祐とtest沙織のみに送信通知
             if status == "sent":
                 notify_message = f"✅ リマインド送信完了\n{customer_name}様（{days}日前）"
-                send_line_message("U9022782f05526cf7632902acaed0cb08", notify_message)
+                TEST_STAFF_IDS = [
+                    "U9022782f05526cf7632902acaed0cb08",  # 神原良祐
+                    "U1d1dfe1993f1857327678e37b607187a",  # test沙織
+                ]
+                for staff_id in TEST_STAFF_IDS:
+                    try:
+                        send_line_message(staff_id, notify_message)
+                    except:
+                        pass
     
     return results
 # ========== 8週間予約スクレイピング ==========
@@ -4116,11 +4188,14 @@ def api_liff_cancel_request():
         # 全スタッフに通知
         message = f'[キャンセル依頼]\nお客様：{customer_name}\n日時：{visit_datetime}\nメニュー：{menu}\nスタッフ：{staff}\n\n※SalonBoardで予約取消をお願いします'
         
-        # スタッフ全員に送信
+        # テストモード: 神原良祐とtest沙織のみに送信
         staff_ids = [
             'U9022782f05526cf7632902acaed0cb08',  # 神原良祐
-            'U2c097f177a2c96b0732f6d15152d0d68',  # 太田由香利
-            # 'XXXXXXXXX'  # 本店１（LINE ID取得後に追加）
+            'U1d1dfe1993f1857327678e37b607187a',  # test沙織
+            # === 本番モード時は以下を有効化 ===
+            # 'U1ad150fa84a287c095eb98186a8cdc45',  # Saori
+            # 'U2c097f177a2c96b0732f6d15152d0d68',  # 太田由香利
+            # 'XXXXXXXXX',  # 本店１（LINE ID取得後に追加）
         ]
         
         for staff_id in staff_ids:
