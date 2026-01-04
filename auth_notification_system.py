@@ -2310,9 +2310,92 @@ scheduler.add_job(
 
 )
 
+scheduler.add_job(
+    func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices'),
+    trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
+    id='update_menu_prices',
+    name='毎日21時メニュー金額更新'
+)
 scheduler.start()
 
 print("[SCHEDULER] リマインド自動送信スケジューラー開始（毎朝9:00 JST、神原良祐とtest沙織のみ）", flush=True)
+
+
+@app.route('/api/cron/update-menu-prices', methods=['POST'])
+def cron_update_menu_prices():
+    """毎日21時にsalonboard_menusの金額を更新（定期実行用）"""
+    import re
+    
+    def get_salonboard_menus():
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salonboard_menus?select=id,name,duration,price&order=id.asc', headers=headers)
+        return res.json() if res.status_code == 200 else []
+
+    def get_salon_menus():
+        headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
+        res = requests.get(f'{SUPABASE_URL}/rest/v1/salon_menus?select=name,price', headers=headers)
+        return res.json() if res.status_code == 200 else []
+
+    def extract_price(price_str):
+        if not price_str:
+            return 0
+        match = re.search(r'[\d,]+', str(price_str).replace(',', ''))
+        return int(match.group().replace(',', '')) if match else 0
+
+    def find_matching_price(menu_name, salon_menus):
+        clean_name = re.sub(r'【[^】]+】', '', menu_name).strip()
+        keywords_map = {
+            'フラットラッシュ100本': ['フラットラッシュ100本'],
+            'フラットラッシュ120本': ['フラットラッシュ120本'],
+            'フラットラッシュ140本': ['フラットラッシュ140本'],
+            'フラットラッシュつけ放題': ['フラットラッシュつけ放題'],
+            'ブラウンニュアンスカラー120本': ['ブラウンニュアンスカラー120本'],
+            'ブラウンニュアンスカラー140本': ['ブラウンニュアンスカラー140本'],
+            'ブラウンニュアンスカラーつけ放題': ['ブラウンニュアンスカラーつけ放題'],
+            'パリジェンヌラッシュリフト': ['パリジェンヌラッシュリフト', 'パリジェンヌ'],
+            '上下パリジェンヌ': ['上下パリジェンヌ'],
+            '上まつ毛パーマ': ['上まつ毛パーマ', '上まつげパーマ'],
+            '上下まつ毛パーマ': ['上下まつ毛パーマ', '上下まつげパーマ'],
+            '下まつげパーマ': ['下まつげパーマ', '下まつ毛パーマ'],
+            '眉ワックス': ['眉ワックス', '3Dブロウワックス'],
+            'パリエク120本': ['パリエク120本'],
+            'パリエク140本': ['パリエク140本'],
+            'パリエク付け放題': ['パリエク付け放題', 'パリエクつけ放題'],
+            'リペア': ['リペア'],
+        }
+        for key, keywords in keywords_map.items():
+            if key in clean_name:
+                for keyword in keywords:
+                    for sm in salon_menus:
+                        if keyword in sm.get('name', ''):
+                            return extract_price(sm.get('price', ''))
+        for sm in salon_menus:
+            sm_clean = re.sub(r'【[^】]+】|《[^》]+》', '', sm.get('name', '')).strip()
+            if clean_name in sm_clean or sm_clean in clean_name:
+                return extract_price(sm.get('price', ''))
+        return 0
+
+    try:
+        salonboard_menus = get_salonboard_menus()
+        salon_menus = get_salon_menus()
+        updated = 0
+        
+        for menu in salonboard_menus:
+            menu_id = menu['id']
+            menu_name = menu['name']
+            current_price = menu.get('price') or 0
+            new_price = find_matching_price(menu_name, salon_menus)
+            
+            if new_price > 0 and new_price != current_price:
+                headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}', 'Content-Type': 'application/json'}
+                res = requests.patch(f'{SUPABASE_URL}/rest/v1/salonboard_menus?id=eq.{menu_id}', headers=headers, json={'price': new_price})
+                if res.status_code == 204:
+                    updated += 1
+        
+        return jsonify({'success': True, 'updated': updated})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     # 初期ファイル作成
