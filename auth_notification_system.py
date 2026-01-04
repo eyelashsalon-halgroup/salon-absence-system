@@ -3973,18 +3973,19 @@ def liff_booking():
         
         async function cancelBooking(bookingId) {{
             const booking = bookings.find(b => b.booking_id === bookingId);
-            const msg = `[キャンセル]\nお客様：${{booking.customer_name}}\n日時：${{booking.visit_datetime}}\nメニュー：${{booking.menu}}\nスタッフ：${{booking.staff}}\n\n※SalonBoardで予約取消をお願いします`;
-            alert(msg);
-            return;
-            if (false) {{
-                const response = await fetch(API_BASE + '/api/liff/cancel-request', {{
-                    method: 'POST',
-                    headers: {{ 'Content-Type': 'application/json' }},
-                    body: JSON.stringify({{ booking_id: bookingId, line_user_id: lineUserId }})
-                }});
-                const data = await response.json();
-                alert(data.message || 'キャンセルリクエストを送信しました');
-                if (data.success) {{
+            if (confirm(`以下の予約をキャンセルしますか？\n\nお客様：${{booking.customer_name}}\n日時：${{booking.visit_datetime}}\nメニュー：${{booking.menu}}\nスタッフ：${{booking.staff}}`)) {{
+                document.getElementById('bookings').innerHTML = '<div style="text-align:center;padding:40px;"><p>キャンセル処理中...</p></div>';
+                try {{
+                    const response = await fetch(API_BASE + '/api/liff/cancel-request', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ booking_id: bookingId, line_user_id: lineUserId }})
+                    }});
+                    const data = await response.json();
+                    alert(data.message || 'キャンセル処理が完了しました');
+                    location.reload();
+                }} catch (e) {{
+                    alert('エラーが発生しました');
                     location.reload();
                 }}
             }}
@@ -4163,7 +4164,9 @@ def api_liff_change_request():
 
 @app.route('/api/liff/cancel-request', methods=['POST'])
 def api_liff_cancel_request():
-    """予約キャンセルリクエストをスタッフに通知"""
+    """予約キャンセルを自動実行し、スタッフに通知"""
+    from playwright.sync_api import sync_playwright
+    
     data = request.get_json()
     booking_id = data.get('booking_id')
     line_user_id = data.get('line_user_id')
@@ -4185,10 +4188,47 @@ def api_liff_cancel_request():
         menu = booking.get('menu', '')
         staff = booking.get('staff', '指名なし')
         
-        # 全スタッフに通知
-        message = f'[キャンセル依頼]\nお客様：{customer_name}\n日時：{visit_datetime}\nメニュー：{menu}\nスタッフ：{staff}\n\n※SalonBoardで予約取消をお願いします'
+        # SalonBoardでキャンセル実行
+        cancel_success = False
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context()
+                
+                with open('session_cookies.json', 'r') as f:
+                    cookies = json.load(f)
+                    context.add_cookies(cookies)
+                
+                page = context.new_page()
+                url = f'https://salonboard.com/KLP/reserve/ext/extReserveChange/?reserveId={booking_id}'
+                page.goto(url, timeout=60000)
+                page.wait_for_timeout(3000)
+                
+                # キャンセルボタンをクリック
+                cancel_btn = page.query_selector('a:has-text("キャンセル"), button:has-text("キャンセル"), input[value="キャンセル"]')
+                if cancel_btn:
+                    cancel_btn.click()
+                    page.wait_for_timeout(2000)
+                    
+                    # 確認ダイアログのOKボタン
+                    ok_btn = page.query_selector('a:has-text("OK"), button:has-text("OK"), a:has-text("はい"), button:has-text("はい"), input[value="OK"]')
+                    if ok_btn:
+                        ok_btn.click()
+                        page.wait_for_timeout(3000)
+                        cancel_success = True
+                
+                browser.close()
+        except Exception as e:
+            print(f'[SalonBoardキャンセルエラー] {e}')
         
-        # テストモード: 神原良祐とtest沙織のみに送信
+        # 8weeks_bookingsから削除
+        if cancel_success:
+            requests.delete(f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}', headers=headers)
+        
+        # スタッフに通知（テストモード: 神原良祐とtest沙織のみ）
+        status_text = "キャンセル完了" if cancel_success else "キャンセル依頼（手動対応必要）"
+        message = f'[{status_text}]\nお客様：{customer_name}\n日時：{visit_datetime}\nメニュー：{menu}\nスタッフ：{staff}'
+        
         staff_ids = [
             'U9022782f05526cf7632902acaed0cb08',  # 神原良祐
             'U1d1dfe1993f1857327678e37b607187a',  # test沙織
@@ -4204,9 +4244,12 @@ def api_liff_cancel_request():
             except Exception as e:
                 print(f'[キャンセル通知エラー] {staff_id}: {e}')
         
-        print(f'[キャンセル依頼送信] {customer_name} {visit_datetime}')
+        print(f'[キャンセル完了] {customer_name} {visit_datetime} success={cancel_success}')
         
-        return jsonify({'success': True, 'message': 'キャンセル依頼を送信しました。スタッフが確認後、キャンセル処理を行います。'})
+        if cancel_success:
+            return jsonify({'success': True, 'message': 'キャンセルが完了しました。'})
+        else:
+            return jsonify({'success': True, 'message': 'キャンセル依頼を送信しました。スタッフが確認します。'})
         
     except Exception as e:
         print(f'[キャンセルエラー] {e}')
