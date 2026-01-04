@@ -4156,22 +4156,29 @@ def cancel_booking_background(booking_id, line_user_id):
                 page.wait_for_timeout(3000)
                 
                 # 予約IDを含む要素をクリックしてポップアップを表示
-                reserve_element = page.query_selector(f'[data-reserve-id="{booking_id}"], [onclick*="{booking_id}"], a[href*="{booking_id}"]')
+                # 顧客名で検索（神原 良祐★ 様）
+                reserve_element = page.query_selector(f'li.scheduleReserveName[title*="{customer_name}"]')
+                if reserve_element:
+                    # 親のdiv.scheduleReservationをクリック
+                    reserve_element = reserve_element.evaluate_handle('el => el.closest(".scheduleReservation")').as_element()
+                
                 if not reserve_element:
-                    # 予約IDで検索（テキスト内に含まれる場合）
-                    all_elements = page.query_selector_all('.reserve-item, .schedule-item, td[onclick]')
-                    for el in all_elements:
-                        onclick = el.get_attribute('onclick') or ''
-                        if booking_id in onclick:
-                            reserve_element = el
-                            break
+                    # 全ての予約セルを検索
+                    all_reservations = page.query_selector_all('div.scheduleReservation')
+                    for el in all_reservations:
+                        title = el.query_selector('li.scheduleReserveName')
+                        if title:
+                            title_text = title.get_attribute('title') or ''
+                            if customer_name in title_text:
+                                reserve_element = el
+                                break
                 
                 if reserve_element:
                     reserve_element.click()
                     page.wait_for_timeout(2000)
                     
                     # ポップアップの「キャンセル」ボタンをクリック
-                    cancel_btn = page.query_selector('a:has-text("キャンセル"), button:has-text("キャンセル")')
+                    cancel_btn = page.query_selector('a.btn_schedule_cancel, a:has-text("キャンセル")')
                     if cancel_btn:
                         cancel_btn.click()
                         page.wait_for_timeout(2000)
