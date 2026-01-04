@@ -4149,26 +4149,42 @@ def cancel_booking_background(booking_id, line_user_id):
                     context.add_cookies(cookies)
                 
                 page = context.new_page()
-                # 予約キャンセルページに直接アクセス
-                url = f'https://salonboard.com/KLP/reserve/reserveCancel/cancel/?reserveId={booking_id}'
+                # 予約日から日付を取得してスケジュールページにアクセス
+                visit_date = visit_datetime[:10].replace('/', '').replace('-', '')  # YYYYMMDD形式
+                url = f'https://salonboard.com/KLP/schedule/salonSchedule/?date={visit_date}'
                 page.goto(url, timeout=60000)
-                page.wait_for_timeout(2000)
+                page.wait_for_timeout(3000)
                 
-                # 確認ダイアログの「はい」ボタンをクリック
-                yes_btn = page.query_selector('a:has-text("はい"), button:has-text("はい"), input[value="はい"]')
-                if yes_btn:
-                    yes_btn.click()
+                # 予約IDを含む要素をクリックしてポップアップを表示
+                reserve_element = page.query_selector(f'[data-reserve-id="{booking_id}"], [onclick*="{booking_id}"], a[href*="{booking_id}"]')
+                if not reserve_element:
+                    # 予約IDで検索（テキスト内に含まれる場合）
+                    all_elements = page.query_selector_all('.reserve-item, .schedule-item, td[onclick]')
+                    for el in all_elements:
+                        onclick = el.get_attribute('onclick') or ''
+                        if booking_id in onclick:
+                            reserve_element = el
+                            break
+                
+                if reserve_element:
+                    reserve_element.click()
                     page.wait_for_timeout(2000)
-                    cancel_success = True
-                    print(f'[SalonBoardキャンセル成功] {booking_id}')
-                else:
-                    # 別のセレクタを試す
-                    confirm_btn = page.query_selector('.btn-primary, .common-CNCcommon__primaryBtn, input[type="submit"]')
-                    if confirm_btn:
-                        confirm_btn.click()
+                    
+                    # ポップアップの「キャンセル」ボタンをクリック
+                    cancel_btn = page.query_selector('a:has-text("キャンセル"), button:has-text("キャンセル")')
+                    if cancel_btn:
+                        cancel_btn.click()
                         page.wait_for_timeout(2000)
-                        cancel_success = True
-                        print(f'[SalonBoardキャンセル成功] {booking_id}')
+                        
+                        # 確認ダイアログの「はい」ボタンをクリック
+                        yes_btn = page.query_selector('a:has-text("はい"), button:has-text("はい")')
+                        if yes_btn:
+                            yes_btn.click()
+                            page.wait_for_timeout(2000)
+                            cancel_success = True
+                            print(f'[SalonBoardキャンセル成功] {booking_id}')
+                else:
+                    print(f'[SalonBoardキャンセル] 予約要素が見つかりません: {booking_id}')
                 
                 browser.close()
         except Exception as e:
