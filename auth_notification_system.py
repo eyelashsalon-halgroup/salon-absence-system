@@ -4149,22 +4149,24 @@ def cancel_booking_background(booking_id, line_user_id):
                     context.add_cookies(cookies)
                 
                 page = context.new_page()
-                # 予約詳細ページにアクセス
-                url = f'https://salonboard.com/KLP/reserve/reserveDetail/?reserveId={booking_id}'
+                # 予約キャンセルページに直接アクセス
+                url = f'https://salonboard.com/KLP/reserve/reserveCancel/cancel/?reserveId={booking_id}'
                 page.goto(url, timeout=60000)
-                page.wait_for_timeout(3000)
+                page.wait_for_timeout(2000)
                 
-                # キャンセルリンクを探す
-                cancel_link = page.query_selector('a[href*="reserveCancel"], a:has-text("キャンセル"), a:has-text("取消")')
-                if cancel_link:
-                    cancel_link.click()
-                    page.wait_for_timeout(3000)
-                    
-                    # 確認ボタンをクリック
-                    confirm_btn = page.query_selector('input[type="submit"], button[type="submit"], a.common-CNCcommon__primaryBtn')
+                # 確認ダイアログの「はい」ボタンをクリック
+                yes_btn = page.query_selector('a:has-text("はい"), button:has-text("はい"), input[value="はい"]')
+                if yes_btn:
+                    yes_btn.click()
+                    page.wait_for_timeout(2000)
+                    cancel_success = True
+                    print(f'[SalonBoardキャンセル成功] {booking_id}')
+                else:
+                    # 別のセレクタを試す
+                    confirm_btn = page.query_selector('.btn-primary, .common-CNCcommon__primaryBtn, input[type="submit"]')
                     if confirm_btn:
                         confirm_btn.click()
-                        page.wait_for_timeout(3000)
+                        page.wait_for_timeout(2000)
                         cancel_success = True
                         print(f'[SalonBoardキャンセル成功] {booking_id}')
                 
