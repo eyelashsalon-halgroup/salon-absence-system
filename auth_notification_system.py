@@ -4153,7 +4153,12 @@ def cancel_booking_background(booking_id, line_user_id):
                 visit_date = visit_datetime[:10].replace('/', '').replace('-', '')  # YYYYMMDD形式
                 url = f'https://salonboard.com/KLP/schedule/salonSchedule/?date={visit_date}'
                 page.goto(url, timeout=60000)
-                page.wait_for_timeout(3000)
+                
+                # 予約要素が表示されるまで待つ
+                try:
+                    page.wait_for_selector('.scheduleReservation', timeout=30000)
+                except:
+                    print(f'[SalonBoardキャンセル] 予約要素が見つかりません')
                 
                 # 予約IDを含む要素をクリックしてポップアップを表示
                 # 顧客名で検索（神原 良祐★ 様）
