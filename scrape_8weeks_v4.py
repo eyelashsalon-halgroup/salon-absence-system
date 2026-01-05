@@ -268,7 +268,8 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                             'status': '予約確定',
                             'booking_source': booking_source
                         })
-                    except:
+                    except Exception as e:
+                        print(f"[ERROR] 予約処理エラー: {booking_id if 'booking_id' in dir() else 'unknown'} - {e}", flush=True)
                         continue
                 
                 

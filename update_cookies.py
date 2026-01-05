@@ -7,11 +7,15 @@ with sync_playwright() as p:
     page = context.new_page()
     
     page.goto('https://salonboard.com/login/')
-    print("ブラウザでログインしてください。完了したらEnterを押してください。")
+    page.wait_for_timeout(2000)
+    
+    print("SalonBoardにログインしてください...")
+    print("ログイン完了後、Enterを押してください")
     input()
     
     cookies = context.cookies()
     with open('session_cookies.json', 'w') as f:
-        json.dump(cookies, f, indent=2, ensure_ascii=False)
-    print(f"クッキー保存完了: {len(cookies)}個")
+        json.dump(cookies, f)
+    print(f"✅ Cookie保存完了: {len(cookies)}件")
+    
     browser.close()
