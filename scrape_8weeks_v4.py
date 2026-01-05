@@ -48,6 +48,47 @@ def get_phone_for_customer(customer_name, booking_id):
             return phone
     return ''
 
+def get_phone_from_salonboard(page, booking_id):
+    """SalonBoardの予約詳細から電話番号を取得"""
+    try:
+        # 予約詳細ページにアクセス
+        url = f'https://salonboard.com/KLP/reserve/reserveDetail/?reserveId={booking_id}'
+        page.goto(url, timeout=30000)
+        page.wait_for_timeout(2000)
+        
+        # 電話番号を取得（複数パターン対応）
+        phone_patterns = [
+            'input[name="tel"]',
+            'input[name="phone"]',
+            '.customer-tel',
+            'td:has-text("電話") + td',
+            'text=/0[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{4}/'
+        ]
+        
+        for pattern in phone_patterns:
+            try:
+                el = page.query_selector(pattern)
+                if el:
+                    phone = el.get_attribute('value') or el.inner_text()
+                    phone = phone.replace('-', '').replace(' ', '').strip()
+                    if phone and len(phone) >= 10:
+                        print(f"[PHONE-SB] {booking_id} → {phone}")
+                        return phone
+            except:
+                continue
+        
+        # ページ全体から電話番号パターンを検索
+        content = page.content()
+        import re
+        phone_match = re.search(r'0[789]0[0-9]{8}', content)
+        if phone_match:
+            print(f"[PHONE-SB] {booking_id} → {phone_match.group()}")
+            return phone_match.group()
+        
+    except Exception as e:
+        print(f"[PHONE-SB] エラー: {booking_id} - {e}")
+    return ''
+
 
 # スレッドセーフなロック
 db_lock = threading.Lock()
@@ -175,6 +216,13 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         
                         if not phone:
                             phone = get_phone_for_customer(customer_name, booking_id)
+                        
+                        # それでも電話番号がなければSalonBoardから取得
+                        if not phone:
+                            phone = get_phone_from_salonboard(page, booking_id)
+                            # 予約一覧ページに戻る
+                            page.goto(url, timeout=60000)
+                            page.wait_for_timeout(500)
                         
                         bookings_list.append({
                             'booking_id': booking_id,
@@ -433,6 +481,31 @@ def main():
     end_time = datetime.now(JST)
     elapsed = (end_time - start_time).total_seconds()
     print(f"[PARALLEL] 全ワーカー完了: 合計{len(all_bookings)}件 ({elapsed:.1f}秒)", flush=True)
+    
+    # SalonBoardにない予約をDBから削除
+    if all_bookings:
+        scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
+        existing_booking_ids = set(existing_cache.keys())
+        
+        # 8週間以内の予約のみ対象（過去の予約は削除しない）
+        today_str = today.strftime('%Y-%m-%d')
+        
+        # DBにあるがSalonBoardにない予約を削除
+        to_delete = existing_booking_ids - scraped_booking_ids
+        if to_delete:
+            print(f"[DELETE] SalonBoardにない予約を削除: {len(to_delete)}件", flush=True)
+            for booking_id in to_delete:
+                try:
+                    del_res = requests.delete(
+                        f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}",
+                        headers=headers
+                    )
+                    if del_res.status_code in [200, 204]:
+                        print(f"[DELETE] 削除成功: {booking_id}", flush=True)
+                    else:
+                        print(f"[DELETE] 削除エラー: {booking_id} - {del_res.status_code}", flush=True)
+                except Exception as e:
+                    print(f"[DELETE] 削除例外: {booking_id} - {e}", flush=True)
     
     # DBに一括保存（バッチ）
     total_saved = 0
