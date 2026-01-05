@@ -71,16 +71,27 @@ def get_details_from_salonboard(page, booking_id):
                     print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}")
                     break
         
-        # メニューを取得
-        for row in rows:
-            text = row.inner_text()
-            if 'メニュー' in text and ('まつ' in text or 'パリ' in text or 'エク' in text or '眉' in text):
-                # メニュー行の内容を取得
-                menu_text = text.replace('メニュー', '').strip()
-                if menu_text and len(menu_text) > 5:
-                    result['menu'] = menu_text[:500]  # 長すぎる場合は切り詰め
-                    print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
-                    break
+        # メニューを取得（【まつげエクステ】などのパターンを検索）
+        import re
+        menu_patterns = [
+            r'【まつげエクステ】[^【]+',
+            r'【その他まつげメニュー】[^【]+',
+            r'【付替オフ】[^【]+',
+            r'【リピーター様】[^【]+',
+            r'【次回】[^【\n]+',
+            r'パリジェンヌ[^【\n]+',
+            r'フラットラッシュ[^【\n]+'
+        ]
+        menu_parts = []
+        for pattern in menu_patterns:
+            matches = re.findall(pattern, page_content)
+            for match in matches:
+                clean = match.strip()
+                if clean and len(clean) > 3 and clean not in menu_parts:
+                    menu_parts.append(clean)
+        if menu_parts:
+            result['menu'] = ' '.join(menu_parts[:3])[:300]  # 最大3つ、300文字まで
+            print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
         
         # 予約経路を取得
         if '次回予約' in page_content:
