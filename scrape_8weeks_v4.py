@@ -517,30 +517,11 @@ def main():
     elapsed = (end_time - start_time).total_seconds()
     print(f"[PARALLEL] 全ワーカー完了: 合計{len(all_bookings)}件 ({elapsed:.1f}秒)", flush=True)
     
-    # SalonBoardにない予約をDBから削除
-    if all_bookings:
-        scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
-        existing_booking_ids = set(existing_cache.keys())
-        
-        # 8週間以内の予約のみ対象（過去の予約は削除しない）
-        today_str = today.strftime('%Y-%m-%d')
-        
-        # DBにあるがSalonBoardにない予約を削除
-        to_delete = existing_booking_ids - scraped_booking_ids
-        if to_delete:
-            print(f"[DELETE] SalonBoardにない予約を削除: {len(to_delete)}件", flush=True)
-            for booking_id in to_delete:
-                try:
-                    del_res = requests.delete(
-                        f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}",
-                        headers=headers
-                    )
-                    if del_res.status_code in [200, 204]:
-                        print(f"[DELETE] 削除成功: {booking_id}", flush=True)
-                    else:
-                        print(f"[DELETE] 削除エラー: {booking_id} - {del_res.status_code}", flush=True)
-                except Exception as e:
-                    print(f"[DELETE] 削除例外: {booking_id} - {e}", flush=True)
+    # SalonBoardにない予約をDBから削除（一時的に無効化）
+    # TODO: 削除ロジックはスクレイピングの安定性が確認できてから再有効化
+    # if all_bookings:
+    #     scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
+    #     ...
     
     # DBに一括保存（バッチ）
     total_saved = 0
