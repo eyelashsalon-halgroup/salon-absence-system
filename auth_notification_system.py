@@ -4168,13 +4168,17 @@ def cancel_booking_background(booking_id, line_user_id):
                     reserve_element = reserve_element.evaluate_handle('el => el.closest(".scheduleReservation")').as_element()
                 
                 if not reserve_element:
-                    # 全ての予約セルを検索
+                    # 全ての予約セルを検索（姓のみで部分一致）
                     all_reservations = page.query_selector_all('div.scheduleReservation')
+                    customer_name_parts = customer_name.replace('　', ' ').split()
+                    search_name = customer_name_parts[0] if customer_name_parts else customer_name
+                    print(f'[SalonBoardキャンセル] 検索名: {search_name}, 予約数: {len(all_reservations)}')
                     for el in all_reservations:
                         title = el.query_selector('li.scheduleReserveName')
                         if title:
                             title_text = title.get_attribute('title') or ''
-                            if customer_name in title_text:
+                            if search_name in title_text:
+                                print(f'[SalonBoardキャンセル] 見つかった: {title_text}')
                                 reserve_element = el
                                 break
                 
