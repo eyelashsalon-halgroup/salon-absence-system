@@ -48,41 +48,56 @@ def get_phone_for_customer(customer_name, booking_id):
             return phone
     return ''
 
-def get_phone_from_salonboard(page, booking_id):
-    """SalonBoardの予約詳細から電話番号を取得"""
+def get_details_from_salonboard(page, booking_id):
+    """SalonBoardの予約詳細から電話番号、メニュー、予約経路を取得"""
+    result = {'phone': '', 'menu': '', 'booking_source': None}
     try:
         # 予約詳細ページにアクセス
         url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
         page.goto(url, timeout=30000)
         page.wait_for_timeout(2000)
         
-        # 電話番号を取得（テーブル形式対応）
-        try:
-            # 「電話番号」の行を探す
-            rows = page.query_selector_all('tr, .row, div')
-            for row in rows:
-                text = row.inner_text()
-                if '電話番号' in text:
-                    # 電話番号パターンを抽出
-                    import re
-                    phone_match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
-                    if phone_match:
-                        print(f"[PHONE-SB] {booking_id} → {phone_match.group()}")
-                        return phone_match.group()
-        except Exception as e:
-            print(f"[PHONE-SB] 行検索エラー: {e}")
-        
-        # ページ全体から電話番号パターンを検索
-        content = page.content()
+        page_content = page.content()
         import re
-        phone_match = re.search(r'0[789]0[0-9]{8}', content)
-        if phone_match:
-            print(f"[PHONE-SB] {booking_id} → {phone_match.group()}")
-            return phone_match.group()
+        
+        # 電話番号を取得
+        rows = page.query_selector_all('tr, .row, div')
+        for row in rows:
+            text = row.inner_text()
+            if '電話番号' in text:
+                phone_match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
+                if phone_match:
+                    result['phone'] = phone_match.group()
+                    print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}")
+                    break
+        
+        # メニューを取得
+        for row in rows:
+            text = row.inner_text()
+            if 'メニュー' in text and ('まつ' in text or 'パリ' in text or 'エク' in text or '眉' in text):
+                # メニュー行の内容を取得
+                menu_text = text.replace('メニュー', '').strip()
+                if menu_text and len(menu_text) > 5:
+                    result['menu'] = menu_text[:500]  # 長すぎる場合は切り詰め
+                    print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
+                    break
+        
+        # 予約経路を取得
+        if '次回予約' in page_content:
+            result['booking_source'] = '次回'
+            print(f"[DETAIL-SB] {booking_id} 経路: 次回予約")
+        elif 'NHPB' in page_content or 'ホットペッパー' in page_content:
+            result['booking_source'] = 'NHPB'
+            print(f"[DETAIL-SB] {booking_id} 経路: ホットペッパー")
         
     except Exception as e:
-        print(f"[PHONE-SB] エラー: {booking_id} - {e}")
-    return ''
+        print(f"[DETAIL-SB] エラー: {booking_id} - {e}")
+    return result
+
+def get_phone_from_salonboard(page, booking_id):
+    """後方互換性のため残す"""
+    result = get_details_from_salonboard(page, booking_id)
+    return result['phone']
 
 
 # スレッドセーフなロック
@@ -204,17 +219,29 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
 
                         
                         cached = existing_cache.get(booking_id, {})
-                        menu = cached.get('menu', '')
-                        if menu and ('\n' in menu or '来店日' in menu or len(menu) > 200):
-                            menu = ''
-                        phone = cached.get('phone', '')
+                        cached_menu = cached.get('menu', '')
+                        cached_phone = cached.get('phone', '')
                         
+                        # キャッシュのメニューが有効か確認
+                        menu = ''
+                        if cached_menu and '\n' not in cached_menu and '来店日' not in cached_menu and len(cached_menu) <= 200:
+                            menu = cached_menu
+                        
+                        phone = cached_phone
                         if not phone:
                             phone = get_phone_for_customer(customer_name, booking_id)
                         
-                        # それでも電話番号がなければSalonBoardから取得
-                        if not phone:
-                            phone = get_phone_from_salonboard(page, booking_id)
+                        # 新規予約 or メニュー/電話番号がない場合はSalonBoardから詳細取得
+                        booking_source = None
+                        is_new_booking = booking_id not in existing_cache
+                        if is_new_booking or not menu or not phone:
+                            details = get_details_from_salonboard(page, booking_id)
+                            if details['phone']:
+                                phone = details['phone']
+                            if details['menu']:
+                                menu = details['menu']
+                            if details['booking_source']:
+                                booking_source = details['booking_source']
                             # 予約一覧ページに戻る
                             page.goto(url, timeout=60000)
                             page.wait_for_timeout(500)
@@ -226,7 +253,8 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                             'staff': staff_name,
                             'menu': menu,
                             'phone': phone,
-                            'status': '予約確定'
+                            'status': '予約確定',
+                            'booking_source': booking_source
                         })
                     except:
                         continue
