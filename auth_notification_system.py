@@ -4133,6 +4133,7 @@ def cancel_booking_background(booking_id, line_user_id):
         
         booking = bookings[0]
         customer_name = booking.get('customer_name', '')
+        phone = booking.get('phone', '')
         visit_datetime = booking.get('visit_datetime', '')
         menu = booking.get('menu', '')
         staff = booking.get('staff', '指名なし')
@@ -4160,27 +4161,47 @@ def cancel_booking_background(booking_id, line_user_id):
                 except:
                     print(f'[SalonBoardキャンセル] 予約要素が見つかりません')
                 
-                # 予約IDを含む要素をクリックしてポップアップを表示
-                # 顧客名で検索（神原 良祐★ 様）
-                reserve_element = page.query_selector(f'li.scheduleReserveName[title*="{customer_name}"]')
-                if reserve_element:
-                    # 親のdiv.scheduleReservationをクリック
-                    reserve_element = reserve_element.evaluate_handle('el => el.closest(".scheduleReservation")').as_element()
+                # 予約セルを検索（フルネーム一致）
+                # 顧客名のスペースを正規化（全角→半角）
+                normalized_name = customer_name.replace('　', ' ').strip()
+                print(f'[SalonBoardキャンセル] 検索: 顧客名={normalized_name}, 電話番号={phone}')
                 
-                if not reserve_element:
-                    # 全ての予約セルを検索（姓のみで部分一致）
-                    all_reservations = page.query_selector_all('div.scheduleReservation')
-                    customer_name_parts = customer_name.replace('　', ' ').split()
-                    search_name = customer_name_parts[0] if customer_name_parts else customer_name
-                    print(f'[SalonBoardキャンセル] 検索名: {search_name}, 予約数: {len(all_reservations)}')
-                    for el in all_reservations:
-                        title = el.query_selector('li.scheduleReserveName')
-                        if title:
-                            title_text = title.get_attribute('title') or ''
-                            if search_name in title_text:
-                                print(f'[SalonBoardキャンセル] 見つかった: {title_text}')
+                all_reservations = page.query_selector_all('div.scheduleReservation')
+                print(f'[SalonBoardキャンセル] 予約セル数: {len(all_reservations)}')
+                
+                reserve_element = None
+                for el in all_reservations:
+                    title_el = el.query_selector('li.scheduleReserveName')
+                    if title_el:
+                        title_text = title_el.get_attribute('title') or ''
+                        # 「神原 良祐★ 様」から「神原 良祐」を抽出して比較
+                        title_name = title_text.replace('★', '').replace('様', '').replace('　', ' ').strip()
+                        if normalized_name == title_name:
+                            print(f'[SalonBoardキャンセル] フルネーム一致: {title_text}')
+                            
+                            # クリックしてポップアップを開き、電話番号を確認
+                            el.click()
+                            page.wait_for_timeout(2000)
+                            
+                            # ポップアップ内の電話番号を確認
+                            popup_phone = page.query_selector('text=' + phone[-4:])  # 下4桁で確認
+                            popup_content = page.content()
+                            if phone and phone in popup_content:
+                                print(f'[SalonBoardキャンセル] 電話番号一致: {phone}')
                                 reserve_element = el
                                 break
+                            elif not phone:
+                                # 電話番号がDBにない場合はフルネーム一致のみでOK
+                                print(f'[SalonBoardキャンセル] 電話番号なし、フルネームのみで一致')
+                                reserve_element = el
+                                break
+                            else:
+                                print(f'[SalonBoardキャンセル] 電話番号不一致、次の予約を確認')
+                                # ポップアップを閉じる
+                                close_btn = page.query_selector('a.btn_schedule_panel_close, button:has-text("閉じる"), .close')
+                                if close_btn:
+                                    close_btn.click()
+                                    page.wait_for_timeout(500)
                 
                 if reserve_element:
                     reserve_element.click()
