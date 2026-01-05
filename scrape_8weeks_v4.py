@@ -71,27 +71,28 @@ def get_details_from_salonboard(page, booking_id):
                     print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}")
                     break
         
-        # メニューを取得（【まつげエクステ】などのパターンを検索）
+        # メニューを取得（ページのテキストから抽出）
         import re
-        menu_patterns = [
-            r'【まつげエクステ】[^【]+',
-            r'【その他まつげメニュー】[^【]+',
-            r'【付替オフ】[^【]+',
-            r'【リピーター様】[^【]+',
-            r'【次回】[^【\n]+',
-            r'パリジェンヌ[^【\n]+',
-            r'フラットラッシュ[^【\n]+'
-        ]
-        menu_parts = []
-        for pattern in menu_patterns:
-            matches = re.findall(pattern, page_content)
-            for match in matches:
-                clean = match.strip()
-                if clean and len(clean) > 3 and clean not in menu_parts:
-                    menu_parts.append(clean)
-        if menu_parts:
-            result['menu'] = ' '.join(menu_parts[:3])[:300]  # 最大3つ、300文字まで
-            print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
+        try:
+            page_text = page.inner_text('body')
+            menu_patterns = [
+                r'【まつげエクステ】[^【\n]+',
+                r'【その他まつげメニュー】[^【\n]+',
+                r'【付替オフ】[^【\n]+',
+                r'【次回】[^【\n]+'
+            ]
+            menu_parts = []
+            for pattern in menu_patterns:
+                matches = re.findall(pattern, page_text)
+                for match in matches:
+                    clean = match.strip()
+                    if clean and len(clean) > 5 and clean not in menu_parts:
+                        menu_parts.append(clean)
+            if menu_parts:
+                result['menu'] = ' / '.join(menu_parts[:3])[:300]
+                print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
+        except Exception as e:
+            print(f"[DETAIL-SB] メニュー取得エラー: {e}")
         
         # 予約経路を取得
         if '次回予約' in page_content:
