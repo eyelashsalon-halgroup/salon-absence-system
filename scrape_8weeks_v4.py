@@ -52,30 +52,25 @@ def get_phone_from_salonboard(page, booking_id):
     """SalonBoardの予約詳細から電話番号を取得"""
     try:
         # 予約詳細ページにアクセス
-        url = f'https://salonboard.com/KLP/reserve/reserveDetail/?reserveId={booking_id}'
+        url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
         page.goto(url, timeout=30000)
         page.wait_for_timeout(2000)
         
-        # 電話番号を取得（複数パターン対応）
-        phone_patterns = [
-            'input[name="tel"]',
-            'input[name="phone"]',
-            '.customer-tel',
-            'td:has-text("電話") + td',
-            'text=/0[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{4}/'
-        ]
-        
-        for pattern in phone_patterns:
-            try:
-                el = page.query_selector(pattern)
-                if el:
-                    phone = el.get_attribute('value') or el.inner_text()
-                    phone = phone.replace('-', '').replace(' ', '').strip()
-                    if phone and len(phone) >= 10:
-                        print(f"[PHONE-SB] {booking_id} → {phone}")
-                        return phone
-            except:
-                continue
+        # 電話番号を取得（テーブル形式対応）
+        try:
+            # 「電話番号」の行を探す
+            rows = page.query_selector_all('tr, .row, div')
+            for row in rows:
+                text = row.inner_text()
+                if '電話番号' in text:
+                    # 電話番号パターンを抽出
+                    import re
+                    phone_match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
+                    if phone_match:
+                        print(f"[PHONE-SB] {booking_id} → {phone_match.group()}")
+                        return phone_match.group()
+        except Exception as e:
+            print(f"[PHONE-SB] 行検索エラー: {e}")
         
         # ページ全体から電話番号パターンを検索
         content = page.content()
