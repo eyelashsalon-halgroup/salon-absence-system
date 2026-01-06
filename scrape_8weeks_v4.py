@@ -103,8 +103,10 @@ def get_details_from_salonboard(page, booking_id):
             elif 'NHPB' in route_text or 'ホットペッパー' in route_text:
                 result['booking_source'] = 'NHPB'
                 print(f"[DETAIL-SB] {booking_id} 経路: ホットペッパー")
-        except:
-            pass
+            else:
+                print(f"[DETAIL-SB] {booking_id} 経路: 不明")
+        except Exception as e:
+            print(f"[DETAIL-SB] {booking_id} 経路取得エラー: {e}")
         
     except Exception as e:
         print(f"[DETAIL-SB] エラー: {booking_id} - {e}")
