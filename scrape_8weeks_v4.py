@@ -250,10 +250,11 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         if not phone:
                             phone = get_phone_for_customer(customer_name, booking_id)
                         
-                        # 新規予約 or メニュー/電話番号がない場合はSalonBoardから詳細取得
-                        booking_source = None
+                        # 新規予約 or メニュー/電話番号/booking_sourceがない場合はSalonBoardから詳細取得
+                        cached_booking_source = existing_cache.get(booking_id, {}).get('booking_source')
+                        booking_source = cached_booking_source
                         is_new_booking = booking_id not in existing_cache
-                        if is_new_booking or not menu or not phone:
+                        if is_new_booking or not menu or not phone or not booking_source:
                             details = get_details_from_salonboard(page, booking_id)
                             if details['phone']:
                                 phone = details['phone']
@@ -484,12 +485,12 @@ def main():
     existing_cache = {}
     try:
         cache_res = requests.get(
-            f"{SUPABASE_URL}/rest/v1/8weeks_bookings?select=booking_id,menu,phone",
+            f"{SUPABASE_URL}/rest/v1/8weeks_bookings?select=booking_id,menu,phone,booking_source",
             headers=headers
         )
         if cache_res.status_code == 200:
             for item in cache_res.json():
-                existing_cache[item['booking_id']] = {'menu': item.get('menu', ''), 'phone': item.get('phone', '')}
+                existing_cache[item['booking_id']] = {'menu': item.get('menu', ''), 'phone': item.get('phone', ''), 'booking_source': item.get('booking_source')}
             print(f"[CACHE] 既存データ: {len(existing_cache)}件", flush=True)
     except Exception as e:
         print(f"[CACHE] キャッシュ取得エラー: {e}", flush=True)
