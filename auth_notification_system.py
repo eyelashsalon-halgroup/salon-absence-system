@@ -4140,6 +4140,7 @@ def cancel_booking_background(booking_id, line_user_id):
         
         # SalonBoardでキャンセル実行
         cancel_success = False
+        print(f'[SalonBoardキャンセル開始] booking_id={booking_id}, visit_datetime={visit_datetime}', flush=True)
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
@@ -4160,15 +4161,15 @@ def cancel_booking_background(booking_id, line_user_id):
                 try:
                     page.wait_for_selector('.scheduleReservation', timeout=30000)
                 except:
-                    print(f'[SalonBoardキャンセル] 予約要素が見つかりません')
+                    print(f'[SalonBoardキャンセル] 予約要素が見つかりません', flush=True)
                 
                 # 予約セルを検索（フルネーム一致）
                 # 顧客名のスペースを正規化（全角→半角）
                 normalized_name = customer_name.replace('　', ' ').strip()
-                print(f'[SalonBoardキャンセル] 検索: 顧客名={normalized_name}, 電話番号={phone}')
+                print(f'[SalonBoardキャンセル] 検索: 顧客名={normalized_name}, 電話番号={phone}', flush=True)
                 
                 all_reservations = page.query_selector_all('div.scheduleReservation')
-                print(f'[SalonBoardキャンセル] 予約セル数: {len(all_reservations)}')
+                print(f'[SalonBoardキャンセル] 予約セル数: {len(all_reservations)}', flush=True)
                 
                 reserve_element = None
                 for el in all_reservations:
