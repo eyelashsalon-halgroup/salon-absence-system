@@ -4145,7 +4145,8 @@ def cancel_booking_background(booking_id, line_user_id):
                 browser = p.chromium.launch(headless=True)
                 context = browser.new_context()
                 
-                with open('session_cookies.json', 'r') as f:
+                cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
+                with open(cookie_file, 'r') as f:
                     cookies = json.load(f)
                     context.add_cookies(cookies)
                 
@@ -4344,7 +4345,8 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             browser = p.chromium.launch(headless=True)
             context = browser.new_context()
             
-            with open('session_cookies.json', 'r') as f:
+            cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
+            with open(cookie_file, 'r') as f:
                 cookies = json.load(f)
                 context.add_cookies(cookies)
             
@@ -4601,7 +4603,8 @@ def api_liff_available_slots():
             # ローカルファイルからも試す
             if not cookies_loaded:
                 try:
-                    with open('session_cookies.json', 'r') as f:
+                    cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
+            with open(cookie_file, 'r') as f:
                         cookies = json.load(f)
                         context.add_cookies(cookies)
                         cookies_loaded = True
