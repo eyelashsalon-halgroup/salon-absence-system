@@ -4123,6 +4123,7 @@ def cancel_booking_background(booking_id, line_user_id):
     LINE_BOT_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
     
     try:
+        print(f'[キャンセル処理開始] booking_id={booking_id}, line_user_id={line_user_id}', flush=True)
         # 予約情報を取得
         headers = {'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {SUPABASE_KEY}'}
         res = requests.get(f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}', headers=headers)
@@ -4257,10 +4258,10 @@ def cancel_booking_background(booking_id, line_user_id):
             except Exception as e:
                 print(f'[顧客通知エラー] {e}')
         
-        print(f'[キャンセル処理完了] {customer_name} {visit_datetime} success={cancel_success}')
+        print(f'[キャンセル処理完了] {customer_name} {visit_datetime} success={cancel_success}', flush=True)
         
     except Exception as e:
-        print(f'[キャンセル処理エラー] {e}')
+        print(f'[キャンセル処理エラー] {e}', flush=True)
         import traceback
         traceback.print_exc()
 
