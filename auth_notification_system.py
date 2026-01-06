@@ -4267,24 +4267,19 @@ def cancel_booking_background(booking_id, line_user_id):
 
 @app.route('/api/liff/cancel-request', methods=['POST'])
 def api_liff_cancel_request():
-    """予約キャンセルを非同期で実行"""
-    import threading
+    """予約キャンセルを非同期で実行（サブプロセス）"""
+    import subprocess
     
     data = request.get_json()
     booking_id = data.get('booking_id')
-    line_user_id = data.get('line_user_id')
+    line_user_id = data.get('line_user_id') or ''
     
     if not booking_id:
         return jsonify({'success': False, 'message': '予約IDが必要です'}), 400
     
-    # バックグラウンドで実行
-    import sys
-    sys.stderr.write(f'[API] キャンセルスレッド起動: booking_id={booking_id}\n')
-    sys.stderr.flush()
-    thread = threading.Thread(target=cancel_booking_background, args=(booking_id, line_user_id))
-    thread.start()
-    sys.stderr.write(f'[API] キャンセルスレッド開始完了\n')
-    sys.stderr.flush()
+    # サブプロセスでバックグラウンド実行
+    print(f'[API] キャンセル処理開始: booking_id={booking_id}', flush=True)
+    subprocess.Popen(['python3', 'cancel_booking.py', booking_id, line_user_id])
     
     return jsonify({'success': True, 'message': 'キャンセル処理を開始しました。完了後LINEでお知らせします。'})
 
