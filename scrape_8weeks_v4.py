@@ -118,6 +118,7 @@ result_lock = threading.Lock()
 
 def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, today):
     """指定範囲の日付をスクレイピング（1ワーカー）"""
+    import re
     from playwright.sync_api import sync_playwright
     
     print(f"[W{worker_id}] 開始: {start_day}〜{end_day-1}日目", flush=True)
