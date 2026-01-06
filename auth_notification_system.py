@@ -2934,7 +2934,7 @@ def scrape_8weeks():
             # クッキー読み込み
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
             if os.path.exists(cookie_file):
-                        with open(cookie_file, 'r') as f:
+                with open(cookie_file, 'r') as f:
                     cookies = json.load(f)
                     context.add_cookies(cookies)
             
@@ -3038,7 +3038,7 @@ def scrape_test_1day():
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
             if os.path.exists(cookie_file):
-                        with open(cookie_file, 'r') as f:
+                with open(cookie_file, 'r') as f:
                     cookies = json.load(f)
                     context.add_cookies(cookies)
             
@@ -3094,7 +3094,7 @@ def scrape_test_1day_v2():
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
             if os.path.exists(cookie_file):
-                        with open(cookie_file, 'r') as f:
+                with open(cookie_file, 'r') as f:
                     cookies = json.load(f)
                     context.add_cookies(cookies)
             
@@ -4146,7 +4146,7 @@ def cancel_booking_background(booking_id, line_user_id):
                 context = browser.new_context()
                 
                 cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
-                        with open(cookie_file, 'r') as f:
+                with open(cookie_file, 'r') as f:
                     cookies = json.load(f)
                     context.add_cookies(cookies)
                 
@@ -4346,7 +4346,7 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             context = browser.new_context()
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
-                    with open(cookie_file, 'r') as f:
+            with open(cookie_file, 'r') as f:
                 cookies = json.load(f)
                 context.add_cookies(cookies)
             
