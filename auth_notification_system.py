@@ -4248,8 +4248,8 @@ def cancel_booking_background(booking_id, line_user_id):
             except Exception as e:
                 print(f'[キャンセル通知エラー] {staff_id}: {e}')
         
-        # 顧客にも通知
-        if line_user_id:
+        # 顧客にも通知（成功時のみ）
+        if line_user_id and cancel_success:
             try:
                 customer_msg = f'予約をキャンセルしました。\n\n日時：{visit_datetime}\nメニュー：{menu}\n\nまたのご予約お待ちしております。'
                 send_line_message(line_user_id, customer_msg, LINE_BOT_TOKEN)
