@@ -94,13 +94,17 @@ def get_details_from_salonboard(page, booking_id):
         except Exception as e:
             print(f"[DETAIL-SB] メニュー取得エラー: {e}")
         
-        # 予約経路を取得
-        if '次回予約' in page_content:
-            result['booking_source'] = '次回'
-            print(f"[DETAIL-SB] {booking_id} 経路: 次回予約")
-        elif 'NHPB' in page_content or 'ホットペッパー' in page_content:
-            result['booking_source'] = 'NHPB'
-            print(f"[DETAIL-SB] {booking_id} 経路: ホットペッパー")
+        # 予約経路を取得（テキストから検索）
+        try:
+            route_text = page.inner_text('body')
+            if '次回予約' in route_text:
+                result['booking_source'] = '次回'
+                print(f"[DETAIL-SB] {booking_id} 経路: 次回予約")
+            elif 'NHPB' in route_text or 'ホットペッパー' in route_text:
+                result['booking_source'] = 'NHPB'
+                print(f"[DETAIL-SB] {booking_id} 経路: ホットペッパー")
+        except:
+            pass
         
     except Exception as e:
         print(f"[DETAIL-SB] エラー: {booking_id} - {e}")
