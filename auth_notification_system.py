@@ -4278,8 +4278,10 @@ def api_liff_cancel_request():
         return jsonify({'success': False, 'message': '予約IDが必要です'}), 400
     
     # バックグラウンドで実行
+    print(f'[API] キャンセルスレッド起動: booking_id={booking_id}', flush=True)
     thread = threading.Thread(target=cancel_booking_background, args=(booking_id, line_user_id))
     thread.start()
+    print(f'[API] キャンセルスレッド開始完了', flush=True)
     
     return jsonify({'success': True, 'message': 'キャンセル処理を開始しました。完了後LINEでお知らせします。'})
 
