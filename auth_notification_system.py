@@ -1663,8 +1663,7 @@ def webhook():
         events = request.json.get('events', [])
         for event in events:
             # 友だち追加時の処理
-            if event['type'] == 'follow':
-                continue
+
 
             if event['type'] == 'message':
                 user_id = event['source']['userId']
