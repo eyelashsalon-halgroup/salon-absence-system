@@ -6,6 +6,15 @@ import json
 import requests
 from datetime import datetime
 
+
+# Xvfb仮想ディスプレイ起動（Railway用）
+try:
+    from pyvirtualdisplay import Display
+    display = Display(visible=0, size=(1920, 1080))
+    display.start()
+    print("[OK] Xvfb仮想ディスプレイ起動", flush=True)
+except Exception as e:
+    print(f"[WARN] Xvfb起動スキップ: {e}", flush=True)
 def login_to_salonboard(page):
     """SalonBoardにログイン"""
     login_id = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
