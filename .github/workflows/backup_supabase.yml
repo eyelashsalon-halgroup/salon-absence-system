@@ -1,13 +1,10 @@
 name: Daily Supabase Backup
-
 on:
   schedule:
     - cron: '0 0 * * *'  # 毎日UTC 0:00 (JST 9:00)
   workflow_dispatch:  # 手動実行も可能
-
 permissions:
   contents: write  # リポジトリへの書き込み権限
-
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -34,6 +31,36 @@ jobs:
           curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/reminder_logs?select=*" \
             -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
             > backups/reminder_logs_$(date +%Y%m%d).json
+      
+      - name: Backup salon_staff
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/salon_staff?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/salon_staff_$(date +%Y%m%d).json
+      
+      - name: Backup available_slots
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/available_slots?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/available_slots_$(date +%Y%m%d).json
+      
+      - name: Backup salon_menus
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/salon_menus?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/salon_menus_$(date +%Y%m%d).json
+      
+      - name: Backup salonboard_menus
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/salonboard_menus?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/salonboard_menus_$(date +%Y%m%d).json
+      
+      - name: Backup message_templates
+        run: |
+          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/message_templates?select=*" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
+            > backups/message_templates_$(date +%Y%m%d).json
       
       - name: Commit and push
         run: |
