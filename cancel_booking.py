@@ -6,6 +6,49 @@ import json
 import requests
 from datetime import datetime
 
+def login_to_salonboard(page):
+    """SalonBoardにログイン"""
+    login_id = os.environ.get('SALONBOARD_LOGIN_ID', 'CD18317')
+    login_password = os.environ.get('SALONBOARD_LOGIN_PASSWORD', 'Ne8T2Hhi!')
+    
+    print('[LOGIN] ログイン処理開始', flush=True)
+    page.goto('https://salonboard.com/login/', timeout=120000)
+    page.wait_for_timeout(5000)
+    
+    try:
+        # ID入力
+        page.fill('input[name="userId"]', login_id)
+        print('[LOGIN] ID入力成功', flush=True)
+        page.wait_for_timeout(500)
+        
+        # パスワード入力
+        page.fill('input[name="password"]', login_password)
+        print('[LOGIN] パスワード入力成功', flush=True)
+        page.wait_for_timeout(500)
+        
+        # Enterキーでログイン
+        page.keyboard.press('Enter')
+        print('[LOGIN] Enterキー押下', flush=True)
+        
+        # ページ遷移を待つ
+        for i in range(30):
+            page.wait_for_timeout(1000)
+            current_url = page.url
+            print(f'[LOGIN] {i+1}秒後URL: {current_url}', flush=True)
+            if '/KLP/' in current_url or 'schedule' in current_url:
+                print('[LOGIN] ログイン成功', flush=True)
+                return True
+            if 'login' not in current_url.lower():
+                print('[LOGIN] ログイン成功（URLチェック）', flush=True)
+                return True
+        
+        print('[LOGIN] タイムアウト', flush=True)
+        return False
+    except Exception as e:
+        print(f'[LOGIN] エラー: {e}', flush=True)
+        return False
+
+
 def cancel_booking(booking_id, line_user_id):
     """SalonBoardで予約をキャンセル"""
     from playwright.sync_api import sync_playwright
@@ -37,12 +80,13 @@ def cancel_booking(booking_id, line_user_id):
         
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(headless=False)
                 context = browser.new_context()
                 
                 # Cookie読み込み
+                cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
                 try:
-                    with open('session_cookies.json', 'r') as f:
+                    with open(cookie_file, 'r') as f:
                         cookies = json.load(f)
                     context.add_cookies(cookies)
                     print(f'[OK] クッキー読み込み: {len(cookies)}個', flush=True)
@@ -53,7 +97,28 @@ def cancel_booking(booking_id, line_user_id):
                 visit_date = visit_datetime[:10].replace('/', '').replace('-', '')
                 url = f'https://salonboard.com/KLP/schedule/salonSchedule/?date={visit_date}'
                 print(f'[SalonBoard] アクセス: {url}', flush=True)
-                page.goto(url, timeout=60000)
+                
+                try:
+                    page.goto(url, timeout=120000)
+                except Exception as e:
+                    print(f'[SalonBoard] 初回アクセスエラー: {e}', flush=True)
+                
+                # ログインページにリダイレクトされたか確認
+                if 'login' in page.url.lower() or 'エラー' in page.title():
+                    print('[SalonBoard] セッション切れ、再ログイン実行', flush=True)
+                    if login_to_salonboard(page):
+                        # ログイン成功後、Cookie保存
+                        new_cookies = context.cookies()
+                        with open(cookie_file, 'w') as f:
+                            json.dump(new_cookies, f)
+                        print(f'[OK] 新しいCookie保存: {len(new_cookies)}個', flush=True)
+                        
+                        # 再度予約ページへ
+                        page.goto(url, timeout=120000)
+                    else:
+                        print('[ERROR] ログイン失敗', flush=True)
+                        browser.close()
+                        raise Exception('ログイン失敗')
                 
                 # 予約要素が表示されるまで待つ
                 try:
@@ -82,21 +147,60 @@ def cancel_booking(booking_id, line_user_id):
                 
                 if reserve_element:
                     reserve_element.click()
-                    page.wait_for_timeout(2000)
+                    print('[OK] 予約セルをクリック', flush=True)
+                    page.wait_for_timeout(3000)
+                    
+                    # 現在のURL確認
+                    print(f'[DEBUG] クリック後URL: {page.url}', flush=True)
                     
                     # キャンセルボタンを探してクリック
                     cancel_btn = page.query_selector('button:has-text("キャンセル"), a:has-text("キャンセル"), input[value="キャンセル"]')
                     if cancel_btn:
+                        print('[OK] キャンセルボタン発見', flush=True)
                         cancel_btn.click()
                         page.wait_for_timeout(2000)
                         
                         # 確認ダイアログのOKボタン
-                        yes_btn = page.query_selector('button:has-text("はい"), button:has-text("OK"), input[value="はい"]')
+                        page.wait_for_timeout(2000)
+                        print(f'[DEBUG] キャンセル後URL: {page.url}', flush=True)
+                        
+                        # ダイアログ内のボタンを探す
+                        yes_btn = page.query_selector('button:has-text("はい"), button:has-text("OK"), input[value="はい"], input[value="OK"], a:has-text("はい"), a:has-text("OK"), .btn-primary, .okBtn')
+                        
+                        if not yes_btn:
+                            # alertダイアログの場合
+                            try:
+                                page.on('dialog', lambda dialog: dialog.accept())
+                                print('[DEBUG] ダイアログハンドラ設定', flush=True)
+                            except:
+                                pass
+                            
+                            # 全ボタンを確認
+                            all_btns = page.query_selector_all('button, input[type="button"], input[type="submit"], a.btn')
+                            print(f'[DEBUG] 全ボタン数: {len(all_btns)}', flush=True)
+                            for btn in all_btns:
+                                try:
+                                    txt = btn.inner_text() or btn.get_attribute('value') or ''
+                                    print(f'[DEBUG] ボタン: {txt}', flush=True)
+                                except:
+                                    pass
+                        
                         if yes_btn:
+                            print('[OK] 確認ボタン発見', flush=True)
                             yes_btn.click()
                             page.wait_for_timeout(2000)
                             cancel_success = True
                             print(f'[SalonBoardキャンセル成功] {booking_id}', flush=True)
+                        else:
+                            print('[ERROR] 確認ボタンが見つかりません', flush=True)
+                    else:
+                        print('[ERROR] キャンセルボタンが見つかりません', flush=True)
+                        # ページ内容をデバッグ
+                        try:
+                            html = page.content()[:2000]
+                            print(f'[DEBUG] ページ内容: {html}', flush=True)
+                        except:
+                            pass
                 else:
                     print(f'[ERROR] 予約要素が見つかりません: {booking_id}', flush=True)
                 
