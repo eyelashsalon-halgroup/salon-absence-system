@@ -166,6 +166,17 @@ def cancel_booking(booking_id, line_user_id):
                     # デバッグ: モーダル内の要素確認
                     modal_elements = page.query_selector_all("a, button")
                     print(f"[DEBUG] モーダル内要素数: {len(modal_elements)}", flush=True)
+                    # キャンセルテキストを含む全要素を出力
+                    cancel_locators = page.locator("text=キャンセル").all()
+                    print(f"[DEBUG] キャンセルテキスト要素数: {len(cancel_locators)}", flush=True)
+                    for i, loc in enumerate(cancel_locators):
+                        try:
+                            cls = loc.get_attribute("class") or ""
+                            tag = loc.evaluate("e => e.tagName")
+                            parent_cls = loc.evaluate("e => e.parentElement?.className || ")
+                            print(f"[DEBUG] #{i} tag={tag}, class={cls}, parent={parent_cls[:50]}", flush=True)
+                        except Exception as e:
+                            print(f"[DEBUG] #{i} error: {e}", flush=True)
                     for el in modal_elements[:30]:
                         try:
                             txt = el.inner_text() or ""
