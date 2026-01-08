@@ -157,6 +157,13 @@ def cancel_booking(booking_id, line_user_id):
                 if reserve_element:
                     reserve_element.click()
                     print('[OK] 予約セルをクリック', flush=True)
+                    page.wait_for_timeout(1000)
+                    # モーダル検出
+                    modal = page.query_selector(".jscReserveDetailArea, .reserveDetailArea, .modalArea, [class*=modal], [class*=dialog]")
+                    if modal:
+                        print(f"[DEBUG] モーダル検出: {modal.get_attribute('class')}", flush=True)
+                    else:
+                        print("[DEBUG] モーダル検出できず", flush=True)
                     page.wait_for_timeout(3000)
                     
                     # 現在のURL確認
