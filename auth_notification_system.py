@@ -4749,6 +4749,6 @@ def run_scrape_job():
 
 # スクレイピング用スケジューラー（毎分実行）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
-scrape_scheduler.add_job(run_scrape_job, 'interval', minutes=5, id='scrape_8weeks', next_run_time=datetime.now() + timedelta(seconds=60))
+#scrape_scheduler.add_job(run_scrape_job, 'interval', minutes=5, id='scrape_8weeks', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（毎分実行）", flush=True)
