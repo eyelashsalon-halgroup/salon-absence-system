@@ -163,6 +163,17 @@ def cancel_booking(booking_id, line_user_id):
                     print(f'[DEBUG] クリック後URL: {page.url}', flush=True)
                     
                     # キャンセルボタンを探してクリック
+                    # デバッグ: モーダル内の要素確認
+                    modal_elements = page.query_selector_all("a, button")
+                    print(f"[DEBUG] モーダル内要素数: {len(modal_elements)}", flush=True)
+                    for el in modal_elements[:30]:
+                        try:
+                            txt = el.inner_text() or ""
+                            cls = el.get_attribute("class") or ""
+                            if "キャンセル" in txt or "cancel" in cls.lower():
+                                print(f"[DEBUG] キャンセル関連: text={txt[:30]}, class={cls}", flush=True)
+                        except:
+                            pass
                     cancel_btn = page.query_selector('.jscReserveDetailCancel, .reserveDetailTab:has-text("キャンセル"), button.cancelBtn')
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
