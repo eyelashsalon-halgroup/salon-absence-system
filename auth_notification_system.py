@@ -4282,7 +4282,16 @@ def api_liff_cancel_request():
     
     # サブプロセスでバックグラウンド実行
     print(f'[API] キャンセル処理開始: booking_id={booking_id}', flush=True)
-    subprocess.Popen(['python3', '/app/cancel_booking.py', booking_id, line_user_id])
+    try:
+        import sys
+        proc = subprocess.Popen(
+            ['python3', '/app/cancel_booking.py', booking_id, line_user_id],
+            stdout=sys.stdout,
+            stderr=sys.stderr
+        )
+        print(f'[API] サブプロセス起動成功: PID={proc.pid}', flush=True)
+    except Exception as e:
+        print(f'[API] サブプロセス起動エラー: {e}', flush=True)
     
     return jsonify({'success': True, 'message': 'キャンセル処理を開始しました。完了後LINEでお知らせします。'})
 
