@@ -172,6 +172,9 @@ def cancel_booking(booking_id, line_user_id):
                             cls = el.get_attribute("class") or ""
                             if "キャンセル" in txt or "cancel" in cls.lower():
                                 print(f"[DEBUG] キャンセル関連: text={txt[:30]}, class={cls}", flush=True)
+                            href = el.get_attribute("href") or ""
+                            onclick = el.get_attribute("onclick") or ""
+                            print(f"[DEBUG] href={href[:50]}, onclick={onclick[:50]}", flush=True)
                         except:
                             pass
                     cancel_btn = page.query_selector('.btnSizeCancelTable')
