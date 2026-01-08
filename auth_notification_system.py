@@ -3160,6 +3160,7 @@ def api_scrape_8weeks_v2():
 
 # 8週間スクレイピング実行中フラグ
 scrape_8weeks_running = False
+cancel_running = False
 
 @app.route('/api/scrape_8weeks_v4', methods=['GET', 'POST'])
 def api_scrape_8weeks_v4():
@@ -3168,6 +3169,9 @@ def api_scrape_8weeks_v4():
     
     # 二重実行防止
     if scrape_8weeks_running:
+        return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
+    if cancel_running:
+        print('[SCHEDULER] キャンセル処理中のためスキップ', flush=True)
         return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
     
     import threading
@@ -4281,6 +4285,8 @@ def api_liff_cancel_request():
         return jsonify({'success': False, 'message': '予約IDが必要です'}), 400
     
     # サブプロセスでバックグラウンド実行
+    global cancel_running
+    cancel_running = True
     print(f'[API] キャンセル処理開始: booking_id={booking_id}', flush=True)
     try:
         import sys
@@ -4290,6 +4296,13 @@ def api_liff_cancel_request():
             stderr=sys.stderr
         )
         print(f'[API] サブプロセス起動成功: PID={proc.pid}', flush=True)
+        import threading
+        def reset_flag():
+            global cancel_running
+            proc.wait()
+            cancel_running = False
+            print('[API] キャンセルフラグリセット', flush=True)
+        threading.Thread(target=reset_flag, daemon=True).start()
     except Exception as e:
         print(f'[API] サブプロセス起動エラー: {e}', flush=True)
     
