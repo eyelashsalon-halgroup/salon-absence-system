@@ -178,10 +178,10 @@ def cancel_booking(booking_id, line_user_id):
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
                         cancel_btn.evaluate("e => e.click()")
-                        page.wait_for_timeout(2000)
+                        page.wait_for_timeout(5000)
                         
                         # 確認ダイアログのOKボタン
-                        page.wait_for_timeout(2000)
+                        page.wait_for_timeout(5000)
                         print(f'[DEBUG] キャンセル後URL: {page.url}', flush=True)
                         
                         # ダイアログ内のボタンを探す
@@ -208,7 +208,7 @@ def cancel_booking(booking_id, line_user_id):
                         if yes_btn:
                             print('[OK] 確認ボタン発見', flush=True)
                             yes_btn.click()
-                            page.wait_for_timeout(2000)
+                            page.wait_for_timeout(5000)
                             cancel_success = True
                             print(f'[SalonBoardキャンセル成功] {booking_id}', flush=True)
                         else:
