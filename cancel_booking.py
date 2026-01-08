@@ -174,7 +174,7 @@ def cancel_booking(booking_id, line_user_id):
                                 print(f"[DEBUG] キャンセル関連: text={txt[:30]}, class={cls}", flush=True)
                         except:
                             pass
-                    cancel_btn = page.query_selector('.jscReserveDetailCancel, .reserveDetailTab:has-text("キャンセル"), button.cancelBtn')
+                    cancel_btn = page.query_selector('.btnSizeCancelTable')
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
                         cancel_btn.evaluate("e => e.click()")
