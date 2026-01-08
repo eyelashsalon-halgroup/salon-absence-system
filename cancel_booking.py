@@ -195,10 +195,10 @@ def cancel_booking(booking_id, line_user_id):
                             print(f"[DEBUG] href={href[:50]}, onclick={onclick[:50]}", flush=True)
                         except:
                             pass
-                    cancel_btn = page.query_selector('.btnSizeCancelTable')
+                    cancel_btn = page.locator('a:has-text("キャンセル")').first
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
-                        cancel_btn.evaluate("e => e.click()")
+                        cancel_btn.click()
                         page.wait_for_timeout(5000)
                         
                         # 確認ダイアログのOKボタン
@@ -206,7 +206,7 @@ def cancel_booking(booking_id, line_user_id):
                         print(f'[DEBUG] キャンセル後URL: {page.url}', flush=True)
                         
                         # ダイアログ内のボタンを探す
-                        yes_btn = page.query_selector('button:has-text("はい"), button:has-text("OK"), input[value="はい"], input[value="OK"], a:has-text("はい"), a:has-text("OK"), .btn-primary, .okBtn')
+                        yes_btn = page.locator('button:has-text("はい"), a:has-text("はい")').first
                         
                         if not yes_btn:
                             # alertダイアログの場合
