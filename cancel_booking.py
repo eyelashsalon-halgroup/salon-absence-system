@@ -166,7 +166,7 @@ def cancel_booking(booking_id, line_user_id):
                     cancel_btn = page.query_selector('button:has-text("キャンセル"), a:has-text("キャンセル"), input[value="キャンセル"]')
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
-                        cancel_btn.click()
+                        cancel_btn.evaluate("e => e.click()")
                         page.wait_for_timeout(2000)
                         
                         # 確認ダイアログのOKボタン
