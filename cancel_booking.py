@@ -163,6 +163,16 @@ def cancel_booking(booking_id, line_user_id):
                     print(f'[DEBUG] クリック後URL: {page.url}', flush=True)
                     
                     # キャンセルボタンを探してクリック
+                    # デバッグ: モーダル内のボタン一覧
+                    page.wait_for_timeout(3000)
+                    all_buttons = page.query_selector_all("button, a, input[type=button], input[type=submit]")
+                    print(f"[DEBUG] モーダル内ボタン数: {len(all_buttons)}", flush=True)
+                    for b in all_buttons[:20]:
+                        try:
+                            txt = b.inner_text() or b.get_attribute("value") or b.get_attribute("class") or ""
+                            print(f"[DEBUG] ボタン: {txt[:50]}", flush=True)
+                        except:
+                            pass
                     cancel_btn = page.wait_for_selector('button:has-text("キャンセル"), a:has-text("キャンセル"), input[value="キャンセル"]', state='visible', timeout=10000)
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
