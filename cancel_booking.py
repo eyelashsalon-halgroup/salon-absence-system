@@ -163,7 +163,7 @@ def cancel_booking(booking_id, line_user_id):
                     print(f'[DEBUG] クリック後URL: {page.url}', flush=True)
                     
                     # キャンセルボタンを探してクリック
-                    cancel_btn = page.query_selector('button:has-text("キャンセル"), a:has-text("キャンセル"), input[value="キャンセル"]')
+                    cancel_btn = page.wait_for_selector('button:has-text("キャンセル"), a:has-text("キャンセル"), input[value="キャンセル"]', state='visible', timeout=10000)
                     if cancel_btn:
                         print('[OK] キャンセルボタン発見', flush=True)
                         cancel_btn.click(force=True, no_wait_after=True)
