@@ -202,38 +202,33 @@ def cancel_booking(booking_id, line_user_id):
                     # モーダル検出
                     modal = page.query_selector(".jscReserveDetailArea, .reserveDetailArea, .modalArea, [class*=modal], [class*=dialog]")
                     if modal:
-                        print(f"[DEBUG] モーダル検出: {modal.get_attribute('class')}", flush=True)
+                        pass
                     else:
-                        print("[DEBUG] モーダル検出できず", flush=True)
+                        pass
                     page.wait_for_timeout(3000)
                     
                     # 現在のURL確認
-                    print(f'[DEBUG] クリック後URL: {page.url}', flush=True)
                     
                     # キャンセルボタンを探してクリック
                     # デバッグ: モーダル内の要素確認
                     modal_elements = page.query_selector_all("a, button")
-                    print(f"[DEBUG] モーダル内要素数: {len(modal_elements)}", flush=True)
                     # キャンセルテキストを含む全要素を出力
                     cancel_locators = page.locator("text=キャンセル").all()
-                    print(f"[DEBUG] キャンセルテキスト要素数: {len(cancel_locators)}", flush=True)
                     for i, loc in enumerate(cancel_locators):
                         try:
                             cls = loc.get_attribute("class") or ""
                             tag = loc.evaluate("e => e.tagName")
                             parent_cls = loc.evaluate("e => e.parentElement?.className || ")
-                            print(f"[DEBUG] #{i} tag={tag}, class={cls}, parent={parent_cls[:50]}", flush=True)
                         except Exception as e:
-                            print(f"[DEBUG] #{i} error: {e}", flush=True)
+                            pass
                     for el in modal_elements[:30]:
                         try:
                             txt = el.inner_text() or ""
                             cls = el.get_attribute("class") or ""
                             if "キャンセル" in txt or "cancel" in cls.lower():
-                                print(f"[DEBUG] キャンセル関連: text={txt[:30]}, class={cls}", flush=True)
+                                pass
                             href = el.get_attribute("href") or ""
                             onclick = el.get_attribute("onclick") or ""
-                            print(f"[DEBUG] href={href[:50]}, onclick={onclick[:50]}", flush=True)
                         except:
                             pass
                     cancel_btn = page.locator('a:has-text("キャンセル")').first
@@ -244,7 +239,6 @@ def cancel_booking(booking_id, line_user_id):
                         
                         # 確認ダイアログのOKボタン
                         page.wait_for_timeout(5000)
-                        print(f'[DEBUG] キャンセル後URL: {page.url}', flush=True)
                         
                         # ダイアログ内のボタンを探す
                         yes_btn = page.locator('button:has-text("はい"), a:has-text("はい")').first
@@ -253,17 +247,14 @@ def cancel_booking(booking_id, line_user_id):
                             # alertダイアログの場合
                             try:
                                 page.on('dialog', lambda dialog: dialog.accept())
-                                print('[DEBUG] ダイアログハンドラ設定', flush=True)
                             except:
                                 pass
                             
                             # 全ボタンを確認
                             all_btns = page.query_selector_all('button, input[type="button"], input[type="submit"], a.btn')
-                            print(f'[DEBUG] 全ボタン数: {len(all_btns)}', flush=True)
                             for btn in all_btns:
                                 try:
                                     txt = btn.inner_text() or btn.get_attribute('value') or ''
-                                    print(f'[DEBUG] ボタン: {txt}', flush=True)
                                 except:
                                     pass
                         
@@ -280,7 +271,6 @@ def cancel_booking(booking_id, line_user_id):
                         # ページ内容をデバッグ
                         try:
                             html = page.content()[:2000]
-                            print(f'[DEBUG] ページ内容: {html}', flush=True)
                         except:
                             pass
                 else:
