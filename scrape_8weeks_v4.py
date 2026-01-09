@@ -278,6 +278,13 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         })
                     except Exception as e:
                         print(f"[ERROR] 予約処理エラー: {booking_id if 'booking_id' in dir() else 'unknown'} - {e}", flush=True)
+                        # リトライ1回
+                        try:
+                            page.wait_for_timeout(1000)
+                            page.goto(url, timeout=60000)
+                            page.wait_for_timeout(500)
+                        except:
+                            pass
                         continue
                 
                 
