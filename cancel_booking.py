@@ -145,7 +145,9 @@ def cancel_booking(booking_id, line_user_id):
                 
                 reserve_element = None
                 for el in all_reservations:
-                    title_el = el.query_selector('li.scheduleReserveName')
+                    # 予約番号を取得
+                    el_html = el.get_attribute("onclick") or el.get_attribute("data-reservation-id") or ""
+                    print(f"[DEBUG] 予約セル属性: {el_html[:100]}", flush=True)                    title_el = el.query_selector('li.scheduleReserveName')
                     if title_el:
                         title_text = title_el.get_attribute('title') or ''
                         title_name = title_text.replace('★', '').replace('様', '').replace('　', ' ').strip()
