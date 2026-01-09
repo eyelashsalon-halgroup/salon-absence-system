@@ -225,8 +225,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         name_elem = cells[2].query_selector("p.wordBreak")
                         customer_name = name_elem.text_content().strip() if name_elem else ""
                         customer_name = re.sub(r'[★☆♪♡⭐️🦁]', '', customer_name).strip()
-                        if '神原良祐' in customer_name or '神原 良祐' in customer_name:
-                            print(f"[DEBUG] 神原良祐発見: {customer_name} / booking_id: {booking_id}", flush=True)
+
                         
                         # 時間取得（v3形式）
                         time_cell = cells[0].text_content().strip()

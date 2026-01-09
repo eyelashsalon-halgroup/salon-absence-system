@@ -143,23 +143,57 @@ def cancel_booking(booking_id, line_user_id):
                 all_reservations = page.query_selector_all('div.scheduleReservation')
                 print(f'[SalonBoardキャンセル] 予約セル数: {len(all_reservations)}', flush=True)
                 
+                # 予約時間を抽出（HH:MM形式）
+                visit_time = visit_datetime[11:16] if len(visit_datetime) >= 16 else ''
+                
                 reserve_element = None
+                name_matched_elements = []
+                
                 for el in all_reservations:
-                    # 予約セルのonclick属性からbooking_idを確認
+                    # 予約セルのonclick/data属性/HTMLからbooking_idを確認
                     onclick = el.get_attribute('onclick') or ''
-                    if booking_id in onclick:
+                    data_id = el.get_attribute('data-reservation-id') or el.get_attribute('data-id') or ''
+                    try:
+                        el_html = el.evaluate('e => e.outerHTML')[:500]
+                    except:
+                        el_html = ''
+                    
+                    if booking_id in onclick or booking_id in data_id or booking_id in el_html:
                         reserve_element = el
                         print(f'[OK] 予約セル発見（booking_id一致）: {booking_id}', flush=True)
                         break
-                    # フォールバック：顧客名で検索
+                    
+                    # 顧客名で候補を収集
                     title_el = el.query_selector('li.scheduleReserveName')
                     if title_el:
                         title_text = title_el.get_attribute('title') or ''
                         title_name = title_text.replace('★', '').replace('様', '').replace('　', ' ').strip()
-                        if normalized_name == title_name and not reserve_element:
-                            # 名前一致だが、まだbooking_id一致を探し続ける
+                        if normalized_name == title_name:
+                            name_matched_elements.append(el)
+                
+                # booking_idで見つからない場合、時間で絞り込み
+                if not reserve_element and name_matched_elements:
+                    for el in name_matched_elements:
+                        # 予約セルの時間を取得
+                        time_el = el.query_selector('.scheduleReserveTime, .time, [class*=time]')
+                        el_time = ''
+                        if time_el:
+                            el_time = time_el.text_content().strip()
+                        else:
+                            el_text = el.text_content()[:50]
+                            time_match = re.search(r'(\d{1,2}:\d{2})', el_text)
+                            if time_match:
+                                el_time = time_match.group(1)
+                        
+                        if visit_time and visit_time in el_time:
                             reserve_element = el
-                            print(f'[WARN] 予約セル発見（名前一致、booking_id未確認）: {title_text}', flush=True)
+                            print(f'[OK] 予約セル発見（名前+時間一致）: {normalized_name} {visit_time}', flush=True)
+                            break
+                    
+                    # 時間でも絞れない場合は最初の候補を使用
+                    if not reserve_element:
+                        reserve_element = name_matched_elements[0]
+                        print(f'[WARN] 予約セル発見（名前のみ一致）: {normalized_name}', flush=True)
                 
                 if reserve_element:
                     reserve_element.click()
