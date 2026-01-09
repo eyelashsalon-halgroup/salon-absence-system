@@ -145,14 +145,21 @@ def cancel_booking(booking_id, line_user_id):
                 
                 reserve_element = None
                 for el in all_reservations:
+                    # 予約セルのonclick属性からbooking_idを確認
+                    onclick = el.get_attribute('onclick') or ''
+                    if booking_id in onclick:
+                        reserve_element = el
+                        print(f'[OK] 予約セル発見（booking_id一致）: {booking_id}', flush=True)
+                        break
+                    # フォールバック：顧客名で検索
                     title_el = el.query_selector('li.scheduleReserveName')
                     if title_el:
                         title_text = title_el.get_attribute('title') or ''
                         title_name = title_text.replace('★', '').replace('様', '').replace('　', ' ').strip()
-                        if normalized_name == title_name:
+                        if normalized_name == title_name and not reserve_element:
+                            # 名前一致だが、まだbooking_id一致を探し続ける
                             reserve_element = el
-                            print(f'[OK] 予約セル発見: {title_text}', flush=True)
-                            break
+                            print(f'[WARN] 予約セル発見（名前一致、booking_id未確認）: {title_text}', flush=True)
                 
                 if reserve_element:
                     reserve_element.click()
