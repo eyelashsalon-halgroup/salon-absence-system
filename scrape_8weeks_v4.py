@@ -534,6 +534,12 @@ def main():
     elapsed = (end_time - start_time).total_seconds()
     print(f"[PARALLEL] 全ワーカー完了: 合計{len(all_bookings)}件 ({elapsed:.1f}秒)", flush=True)
     
+    # 神原良祐の予約を確認
+    kambara_bookings = [b for b in all_bookings if '神原' in b.get('customer_name', '')]
+    if kambara_bookings:
+        for kb in kambara_bookings:
+            print(f"[神原予約] {kb['booking_id']} {kb['visit_datetime']}", flush=True)
+    
     # SalonBoardにない予約をDBから削除（一時的に無効化）
     # TODO: 削除ロジックはスクレイピングの安定性が確認できてから再有効化
     # if all_bookings:
