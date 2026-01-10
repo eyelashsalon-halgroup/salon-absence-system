@@ -413,13 +413,32 @@ def login_to_salonboard(page):
         print(f"[LOGIN] ID/PW入力完了", flush=True)
         
         # ログインボタンをクリック
-        btn = page.query_selector('a.common-CNCcommon__primaryBtn')
+        btn = None
+        selectors = [
+            'a.common-CNCcommon__primaryBtn',
+            'button[type="submit"]',
+            'input[type="submit"]',
+            'a.loginBtn',
+            '.loginBtn',
+            'button.primary',
+            'a:has-text("ログイン")',
+            'button:has-text("ログイン")'
+        ]
+        for sel in selectors:
+            try:
+                btn = page.query_selector(sel)
+                if btn:
+                    print(f"[LOGIN] ボタン発見: {sel}", flush=True)
+                    break
+            except:
+                pass
+        
         if btn:
             btn.click()
             print(f"[LOGIN] ボタンクリック", flush=True)
         else:
+            print(f"[LOGIN] ボタン見つからず、Enter押下", flush=True)
             page.keyboard.press('Enter')
-            print(f"[LOGIN] Enter押下", flush=True)
         
         # ページ遷移を待つ
         for i in range(30):
