@@ -3177,12 +3177,13 @@ def api_scrape_8weeks_v4():
     import threading
     import subprocess
     
+    # スレッド開始前にdays_limitを取得
+    days_limit = request.args.get('days_limit', '56')
     scrape_8weeks_running = True
     
     def run_scrape():
         global scrape_8weeks_running
         try:
-            days_limit = request.args.get('days_limit', '56')
             subprocess.run(['python3', '-c', f'from scrape_8weeks_v4 import main; main(days_limit={days_limit})'], timeout=1800)
         except Exception as e:
             print(f"スクレイピングエラー: {e}")
