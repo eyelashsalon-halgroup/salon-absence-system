@@ -55,7 +55,7 @@ def get_details_from_salonboard(page, booking_id):
         # 予約詳細ページにアクセス
         url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
         page.goto(url, timeout=30000)
-        page.wait_for_timeout(500)
+        page.wait_for_timeout(2000)
         
         page_content = page.content()
         import re
@@ -166,7 +166,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                 
                 try:
                     page.goto(url, timeout=60000)
-                    page.wait_for_timeout(150)
+                    page.wait_for_timeout(500)
                 except Exception as e:
                     print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー: {e}", flush=True)
                     continue
@@ -184,7 +184,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                             json.dump(new_cookies, f, indent=2, ensure_ascii=False)
                     
                     page.goto(url, timeout=60000)
-                    page.wait_for_timeout(150)
+                    page.wait_for_timeout(500)
                 
                 # 予約テーブル取得
                 reservation_table = None
@@ -251,11 +251,21 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         if not phone:
                             phone = get_phone_for_customer(customer_name, booking_id)
                         
-                        # Phase 1: 詳細取得はスキップ（後でまとめて取得）
+                        # 新規予約 or メニュー/電話番号/booking_sourceがない場合はSalonBoardから詳細取得
                         cached_booking_source = existing_cache.get(booking_id, {}).get('booking_source')
                         booking_source = cached_booking_source
                         is_new_booking = booking_id not in existing_cache
-                        needs_detail = is_new_booking or not menu or not phone or not booking_source
+                        if is_new_booking or not menu or not phone or not booking_source:
+                            details = get_details_from_salonboard(page, booking_id)
+                            if details['phone']:
+                                phone = details['phone']
+                            if details['menu']:
+                                menu = details['menu']
+                            if details['booking_source']:
+                                booking_source = details['booking_source']
+                            # 予約一覧ページに戻る
+                            page.goto(url, timeout=60000)
+                            page.wait_for_timeout(500)
                         
                         bookings_list.append({
                             'booking_id': booking_id,
@@ -265,35 +275,19 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                             'menu': menu,
                             'phone': phone,
                             'status': '予約確定',
-                            'booking_source': booking_source,
-                            'needs_detail': needs_detail
+                            'booking_source': booking_source
                         })
                     except Exception as e:
                         print(f"[ERROR] 予約処理エラー: {booking_id if 'booking_id' in dir() else 'unknown'} - {e}", flush=True)
                         # リトライ1回
                         try:
-                            page.wait_for_timeout(300)
+                            page.wait_for_timeout(1000)
                             page.goto(url, timeout=60000)
-                            page.wait_for_timeout(150)
+                            page.wait_for_timeout(500)
                         except:
                             pass
                         continue
                 
-                
-                # === 詳細取得（日付の処理終了後、同じブラウザで）===
-                needs_detail_list = [b for b in bookings_list if b.get('needs_detail', False)]
-                for b in needs_detail_list:
-                    try:
-                        details = get_details_from_salonboard(page, b['booking_id'])
-                        if details['phone']:
-                            b['phone'] = details['phone']
-                        if details['menu']:
-                            b['menu'] = details['menu']
-                        if details['booking_source']:
-                            b['booking_source'] = details['booking_source']
-                        b['needs_detail'] = False
-                    except Exception as e:
-                        print(f"[W{worker_id}] 詳細エラー {b['booking_id']}", flush=True)
                 
                 # === 空き枠取得（スケジュール画面から）===
                 import math
@@ -301,7 +295,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                 try:
                     page.goto(schedule_url, timeout=60000)
                     page.wait_for_selector('.scheduleMainTableLine', timeout=10000)
-                    page.wait_for_timeout(150)
+                    page.wait_for_timeout(500)
                     
                     staff_list = []
                     staff_options = page.query_selector_all('#stockNameList option')
@@ -411,7 +405,7 @@ def login_to_salonboard(page):
     
     print(f"[LOGIN] ログインページにアクセス中...", flush=True)
     page.goto('https://salonboard.com/login/', timeout=60000)
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(5000)
     
     try:
         page.fill('input[name="userId"]', login_id)
@@ -448,7 +442,7 @@ def login_to_salonboard(page):
         
         # ページ遷移を待つ
         for i in range(30):
-            page.wait_for_timeout(300)
+            page.wait_for_timeout(1000)
             current_url = page.url
             if '/KLP/' in current_url:
                 print(f"[LOGIN] ログイン成功", flush=True)
@@ -488,9 +482,8 @@ def increment_failure_count(error_message=""):
     if scrape_failure_count == FAILURE_THRESHOLD:
         send_scrape_alert(scrape_failure_count, error_message)
 
-def main(days_limit=56):
-    mode = "高速版（14日）" if days_limit <= 14 else "通常版（8週間）"
-    print(f"[{datetime.now(JST)}] 予約スクレイピング {mode} 開始", flush=True)
+def main():
+    print(f"[{datetime.now(JST)}] 8週間予約スクレイピング（並列処理版）開始", flush=True)
     
     try:
         from playwright.sync_api import sync_playwright
@@ -533,11 +526,8 @@ def main(days_limit=56):
     all_bookings = []
     all_slots = []
     
-    # days_limitに応じて分割
-    if days_limit <= 14:
-        ranges = [(0, 3), (3, 5), (5, 8), (8, 10), (10, 12), (12, days_limit)]
-    else:
-        ranges = [(0, 10), (10, 19), (19, 28), (28, 37), (37, 46), (46, days_limit)]
+    # 4分割で並列実行
+    ranges = [(0, 10), (10, 19), (19, 28), (28, 37), (37, 46), (46, 56)]
     
     print("[PARALLEL] 6ワーカーで並列実行開始", flush=True)
     start_time = datetime.now(JST)
@@ -574,50 +564,6 @@ def main(days_limit=56):
     # if all_bookings:
     #     scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
     #     ...
-    
-    # Phase 2: 詳細が必要な予約だけ取得（高速版はスキップ）
-    needs_detail_bookings = [b for b in all_bookings if b.get('needs_detail', False)]
-    print(f"[PHASE2] 詳細取得が必要な予約: {len(needs_detail_bookings)}件", flush=True)
-    
-    if days_limit <= 14:
-        print(f"[PHASE2] 高速版のためスキップ（通常版で取得）", flush=True)
-        needs_detail_bookings = []
-    
-    if needs_detail_bookings:
-        
-        # 詳細取得用のブラウザを1つ起動
-        try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                context = browser.new_context()
-                page = context.new_page()
-                
-                # ログイン（共通関数を使用）
-                if not login_to_salonboard(page):
-                    print("[PHASE2] ログイン失敗、スキップ", flush=True)
-                else:
-                
-                    # 詳細取得
-                    for booking in needs_detail_bookings:
-                        try:
-                            details = get_details_from_salonboard(page, booking['booking_id'])
-                            if details['phone']:
-                                booking['phone'] = details['phone']
-                            if details['menu']:
-                                booking['menu'] = details['menu']
-                            if details['booking_source']:
-                                booking['booking_source'] = details['booking_source']
-                            print(f"[PHASE2] 詳細取得完了: {booking['booking_id']}", flush=True)
-                        except Exception as e:
-                            print(f"[PHASE2] 詳細取得エラー: {booking['booking_id']} - {e}", flush=True)
-                
-                browser.close()
-        except Exception as e:
-            print(f"[PHASE2] ブラウザエラー: {e}", flush=True)
-    
-    # needs_detailフラグを削除
-    for b in all_bookings:
-        b.pop('needs_detail', None)
     
     # DBに一括保存（バッチ）
     total_saved = 0

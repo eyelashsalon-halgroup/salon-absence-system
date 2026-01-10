@@ -55,7 +55,7 @@ def get_details_from_salonboard(page, booking_id):
         # 予約詳細ページにアクセス
         url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
         page.goto(url, timeout=30000)
-        page.wait_for_timeout(500)
+        page.wait_for_timeout(800)
         
         page_content = page.content()
         import re
@@ -166,7 +166,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                 
                 try:
                     page.goto(url, timeout=60000)
-                    page.wait_for_timeout(150)
+                    page.wait_for_timeout(200)
                 except Exception as e:
                     print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー: {e}", flush=True)
                     continue
@@ -184,7 +184,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                             json.dump(new_cookies, f, indent=2, ensure_ascii=False)
                     
                     page.goto(url, timeout=60000)
-                    page.wait_for_timeout(150)
+                    page.wait_for_timeout(200)
                 
                 # 予約テーブル取得
                 reservation_table = None
@@ -272,9 +272,9 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         print(f"[ERROR] 予約処理エラー: {booking_id if 'booking_id' in dir() else 'unknown'} - {e}", flush=True)
                         # リトライ1回
                         try:
-                            page.wait_for_timeout(300)
+                            page.wait_for_timeout(400)
                             page.goto(url, timeout=60000)
-                            page.wait_for_timeout(150)
+                            page.wait_for_timeout(200)
                         except:
                             pass
                         continue
@@ -301,7 +301,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                 try:
                     page.goto(schedule_url, timeout=60000)
                     page.wait_for_selector('.scheduleMainTableLine', timeout=10000)
-                    page.wait_for_timeout(150)
+                    page.wait_for_timeout(200)
                     
                     staff_list = []
                     staff_options = page.query_selector_all('#stockNameList option')
@@ -411,7 +411,7 @@ def login_to_salonboard(page):
     
     print(f"[LOGIN] ログインページにアクセス中...", flush=True)
     page.goto('https://salonboard.com/login/', timeout=60000)
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(1500)
     
     try:
         page.fill('input[name="userId"]', login_id)
@@ -448,7 +448,7 @@ def login_to_salonboard(page):
         
         # ページ遷移を待つ
         for i in range(30):
-            page.wait_for_timeout(300)
+            page.wait_for_timeout(400)
             current_url = page.url
             if '/KLP/' in current_url:
                 print(f"[LOGIN] ログイン成功", flush=True)
