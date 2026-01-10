@@ -3182,7 +3182,8 @@ def api_scrape_8weeks_v4():
     def run_scrape():
         global scrape_8weeks_running
         try:
-            subprocess.run(['python3', 'scrape_8weeks_v4.py'], timeout=1800)
+            days_limit = request.args.get('days_limit', '56')
+            subprocess.run(['python3', '-c', f'from scrape_8weeks_v4 import main; main(days_limit={days_limit})'], timeout=1800)
         except Exception as e:
             print(f"スクレイピングエラー: {e}")
         finally:
@@ -4750,18 +4751,29 @@ def api_liff_available_slots():
 
 
 # APScheduler: 毎分スクレイピング実行
-def run_scrape_job():
-    """毎分実行されるスクレイピングジョブ"""
+def run_scrape_job_fast():
+    """高速版（14日）- 1分ごと"""
     try:
         import requests as req
-        print(f"[SCHEDULER] スクレイピング開始: {datetime.now()}", flush=True)
-        res = req.post('http://localhost:10000/api/scrape_8weeks_v4', timeout=30)
-        print(f"[SCHEDULER] スクレイピング結果: {res.status_code}", flush=True)
+        print(f"[SCHEDULER] 高速版スクレイピング開始: {datetime.now()}", flush=True)
+        res = req.post('http://localhost:10000/api/scrape_8weeks_v4?days_limit=14', timeout=300)
+        print(f"[SCHEDULER] 高速版結果: {res.status_code}", flush=True)
     except Exception as e:
-        print(f"[SCHEDULER] エラー: {e}", flush=True)
+        print(f"[SCHEDULER] 高速版エラー: {e}", flush=True)
 
-# スクレイピング用スケジューラー（毎分実行）
+def run_scrape_job_full():
+    """通常版（56日）- 5分ごと"""
+    try:
+        import requests as req
+        print(f"[SCHEDULER] 通常版スクレイピング開始: {datetime.now()}", flush=True)
+        res = req.post('http://localhost:10000/api/scrape_8weeks_v4?days_limit=56', timeout=600)
+        print(f"[SCHEDULER] 通常版結果: {res.status_code}", flush=True)
+    except Exception as e:
+        print(f"[SCHEDULER] 通常版エラー: {e}", flush=True)
+
+# スクレイピング用スケジューラー（高速版1分、通常版5分）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
-scrape_scheduler.add_job(run_scrape_job, 'interval', minutes=1, id='scrape_8weeks', next_run_time=datetime.now() + timedelta(seconds=60))
+scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=1, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
+scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
-print("[SCHEDULER] スクレイピングスケジューラー開始（毎分実行）", flush=True)
+print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
