@@ -243,7 +243,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         cached_booking_source = existing_cache.get(booking_id, {}).get('booking_source')
                         booking_source = cached_booking_source
                         is_new_booking = booking_id not in existing_cache
-                        needs_detail = True  # メニュー変更検知のため常に詳細取得
+                        needs_detail = True  # 常に詳細取得（メニュー変更検知のため）
                         
                         bookings_list.append({
                             'booking_id': booking_id,
