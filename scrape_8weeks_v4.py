@@ -71,26 +71,14 @@ def get_details_from_salonboard(page, booking_id):
                     print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}")
                     break
         
-        # メニューを取得（ページのテキストから抽出）
-        import re
+        # メニューを取得（メニュー行のみから）
         try:
-            page_text = page.inner_text('body')
-            menu_patterns = [
-                r'【まつげエクステ】[^【\n]+',
-                r'【その他まつげメニュー】[^【\n]+',
-                r'【付替オフ】[^【\n]+',
-                r'【次回】[^【\n]+'
-            ]
-            menu_parts = []
-            for pattern in menu_patterns:
-                matches = re.findall(pattern, page_text)
-                for match in matches:
-                    clean = match.strip()
-                    if clean and len(clean) > 5 and clean not in menu_parts:
-                        menu_parts.append(clean)
-            if menu_parts:
-                result['menu'] = ' / '.join(menu_parts[:3])[:300]
-                print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
+            menu_row = page.query_selector('tr:has(th:text("メニュー"))')
+            if menu_row:
+                menu_td = menu_row.query_selector('td')
+                if menu_td:
+                    result['menu'] = menu_td.inner_text().strip()[:300]
+                    print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:80]}...")
         except Exception as e:
             print(f"[DETAIL-SB] メニュー取得エラー: {e}")
         
@@ -255,7 +243,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         cached_booking_source = existing_cache.get(booking_id, {}).get('booking_source')
                         booking_source = cached_booking_source
                         is_new_booking = booking_id not in existing_cache
-                        needs_detail = is_new_booking or not menu or not phone or not booking_source
+                        needs_detail = True  # メニュー変更検知のため常に詳細取得
                         
                         bookings_list.append({
                             'booking_id': booking_id,
@@ -288,7 +276,9 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         if details['phone']:
                             b['phone'] = details['phone']
                         if details['menu']:
+                            if b.get('booking_id') == 'YF68900387':
                             b['menu'] = details['menu']
+                            if b.get('booking_id') == 'YF68900387':
                         if details['booking_source']:
                             b['booking_source'] = details['booking_source']
                         b['needs_detail'] = False
@@ -553,6 +543,8 @@ def main(days_limit=56):
             try:
                 bookings, slots = future.result()
                 with result_lock:
+                    for b in bookings:
+                        if b.get('booking_id') == 'YF68900387':
                     all_bookings.extend(bookings)
                     all_slots.extend(slots)
                 print(f"[PARALLEL] Worker{worker_id+1} 完了: {len(bookings)}件", flush=True)
@@ -616,7 +608,11 @@ def main(days_limit=56):
             print(f"[PHASE2] ブラウザエラー: {e}", flush=True)
     
     # needs_detailフラグを削除
-    for b in all_bookings:
+
+    duplicates = [bid for bid in set(booking_ids) if booking_ids.count(bid) > 1]
+    if duplicates:
+
+        if b.get('booking_id') == 'YF68900387':
         b.pop('needs_detail', None)
     
     # DBに一括保存（バッチ）
