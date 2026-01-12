@@ -2325,14 +2325,68 @@ scheduler.add_job(
 
 scheduler.add_job(
     func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices'),
-    trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
+    trigger=CronTrigger(hour=12, minute=20, timezone='UTC'),  # JST 21:20 = UTC 12:20
     id='daily_menu_sync',
     name='毎日21時メニュー金額同期'
+)
+scheduler.add_job(
+    func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/refresh-cookie'),
+    trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
+    id='daily_cookie_refresh',
+    name='毎日21時Cookie更新'
+)
+scheduler.add_job(
+    func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/scrape-hotpepper'),
+    trigger=CronTrigger(hour=12, minute=10, timezone='UTC'),  # JST 21:10 = UTC 12:10
+    id='daily_hotpepper_scrape',
+    name='毎日21時ホットペッパーメニュー取得'
 )
 scheduler.start()
 
 print("[SCHEDULER] リマインド自動送信スケジューラー開始（毎朝9:00 JST、神原良祐とtest沙織のみ）", flush=True)
 
+
+
+
+# ===== Cookie自動更新（21時実行） =====
+def refresh_salonboard_cookie():
+    """SalonBoardに再ログインしてCookieを更新"""
+    from playwright.sync_api import sync_playwright
+    import json
+    print("[Cookie更新] 開始")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto("https://salonboard.com/login/")
+            page.wait_for_timeout(2000)
+            login_id = os.getenv("SALONBOARD_LOGIN_ID", "CD18317")
+            login_pw = os.getenv("SALONBOARD_LOGIN_PASSWORD", "")
+            page.fill('input[name="loginId"]', login_id)
+            page.fill('input[name="password"]', login_pw)
+            login_btn = page.query_selector('button[type="submit"], input[type="submit"], .login-btn')
+            if login_btn:
+                login_btn.click()
+            else:
+                page.click('button:has-text("ログイン")')
+            page.wait_for_timeout(5000)
+            cookies = context.cookies()
+            cookie_file = os.path.join(os.path.dirname(__file__), "session_cookies.json")
+            with open(cookie_file, "w") as f:
+                json.dump(cookies, f)
+            browser.close()
+            print(f"[Cookie更新] 完了: {len(cookies)}個のCookieを保存")
+            return {"success": True, "cookies_count": len(cookies)}
+    except Exception as e:
+        print(f"[Cookie更新] エラー: {e}")
+        return {"success": False, "error": str(e)}
+
+@app.route("/api/cron/refresh-cookie", methods=["POST"])
+def cron_refresh_cookie():
+    """Cookie更新エンドポイント"""
+    result = refresh_salonboard_cookie()
+    return jsonify(result)
 
 @app.route('/api/cron/update-menu-prices', methods=['POST'])
 def cron_update_menu_prices():
