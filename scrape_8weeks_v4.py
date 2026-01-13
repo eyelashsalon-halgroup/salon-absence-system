@@ -276,9 +276,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         if details['phone']:
                             b['phone'] = details['phone']
                         if details['menu']:
-                            if b.get('booking_id') == 'YF68900387':
                             b['menu'] = details['menu']
-                            if b.get('booking_id') == 'YF68900387':
                         if details['booking_source']:
                             b['booking_source'] = details['booking_source']
                         b['needs_detail'] = False
@@ -543,8 +541,6 @@ def main(days_limit=56):
             try:
                 bookings, slots = future.result()
                 with result_lock:
-                    for b in bookings:
-                        if b.get('booking_id') == 'YF68900387':
                     all_bookings.extend(bookings)
                     all_slots.extend(slots)
                 print(f"[PARALLEL] Worker{worker_id+1} 完了: {len(bookings)}件", flush=True)
@@ -608,11 +604,7 @@ def main(days_limit=56):
             print(f"[PHASE2] ブラウザエラー: {e}", flush=True)
     
     # needs_detailフラグを削除
-
-    duplicates = [bid for bid in set(booking_ids) if booking_ids.count(bid) > 1]
-    if duplicates:
-
-        if b.get('booking_id') == 'YF68900387':
+    for b in all_bookings:
         b.pop('needs_detail', None)
     
     # DBに一括保存（バッチ）
