@@ -2341,6 +2341,12 @@ scheduler.add_job(
     id='daily_hotpepper_scrape',
     name='毎日21時ホットペッパーメニュー取得'
 )
+scheduler.add_job(
+    func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/fill-customer-phones'),
+    trigger=CronTrigger(hour=12, minute=30, timezone='UTC'),  # JST 21:30 = UTC 12:30
+    id='daily_fill_phones',
+    name='毎日21時半電話番号補完'
+)
 scheduler.start()
 
 print("[SCHEDULER] リマインド自動送信スケジューラー開始（毎朝9:00 JST、神原良祐とtest沙織のみ）", flush=True)
@@ -4011,6 +4017,51 @@ def liff_booking():
 </html>'''
     return html
 
+
+@app.route('/api/cron/fill-customer-phones', methods=['POST'])
+def cron_fill_customer_phones():
+    """電話番号がNULLの顧客を8weeks_bookingsから補完"""
+    headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'Content-Type': 'application/json'
+    }
+    
+    # 電話番号がNULLの顧客を取得
+    res = requests.get(
+        f'{SUPABASE_URL}/rest/v1/customers?phone=is.null&select=id,name,line_user_id',
+        headers=headers
+    )
+    null_phone_customers = res.json() if res.status_code == 200 else []
+    
+    updated_count = 0
+    for c in null_phone_customers:
+        name = c.get('name', '')
+        if not name or name in ['NULL', 'saorin', 'HAL本店1']:
+            continue
+        
+        # 名前で8weeks_bookingsから電話番号を検索
+        norm_name = name.replace(' ', '').replace('　', '')
+        booking_res = requests.get(
+            f'{SUPABASE_URL}/rest/v1/8weeks_bookings?select=customer_name,phone',
+            headers=headers
+        )
+        if booking_res.status_code == 200:
+            for b in booking_res.json():
+                booking_name = b.get('customer_name', '').replace(' ', '').replace('　', '')
+                if norm_name == booking_name and b.get('phone'):
+                    # 電話番号を更新
+                    requests.patch(
+                        f"{SUPABASE_URL}/rest/v1/customers?id=eq.{c['id']}",
+                        headers=headers,
+                        json={'phone': b['phone']}
+                    )
+                    print(f"[電話番号補完] {name} → {b['phone']}")
+                    updated_count += 1
+                    break
+    
+    return jsonify({'success': True, 'updated': updated_count})
+
 @app.route('/api/liff/check-registration')
 def api_liff_check_registration():
     """LINE IDで電話番号登録状況を確認"""
@@ -4056,21 +4107,50 @@ def api_liff_register_phone():
         f'{SUPABASE_URL}/rest/v1/customers?line_user_id=eq.{line_user_id}&select=id',
         headers=headers
     )
-    customers = res.json()
+    customers_by_line = res.json()
     
-    if customers:
-        # 既存顧客の電話番号を更新
+    # 電話番号で既存顧客を検索（重複防止）
+    res_phone = requests.get(
+        f'{SUPABASE_URL}/rest/v1/customers?phone=eq.{phone}&select=id,line_user_id',
+        headers=headers
+    )
+    customers_by_phone = res_phone.json()
+    
+    if customers_by_line:
+        # LINE IDで見つかった → 電話番号を更新
         requests.patch(
             f'{SUPABASE_URL}/rest/v1/customers?line_user_id=eq.{line_user_id}',
             headers=headers,
             json={'phone': phone}
         )
+    elif customers_by_phone:
+        # 電話番号で見つかった → LINE IDを更新（未設定の場合のみ）
+        existing = customers_by_phone[0]
+        if not existing.get('line_user_id'):
+            requests.patch(
+                f"{SUPABASE_URL}/rest/v1/customers?id=eq.{existing['id']}",
+                headers=headers,
+                json={'line_user_id': line_user_id}
+            )
+        # 既にLINE IDがある場合は何もしない（別人）
     else:
+        # 電話番号で8weeks_bookingsから名前を取得
+        name_from_booking = None
+        booking_res = requests.get(
+            f'{SUPABASE_URL}/rest/v1/8weeks_bookings?phone=eq.{phone}&select=customer_name',
+            headers=headers
+        )
+        if booking_res.status_code == 200 and booking_res.json():
+            name_from_booking = booking_res.json()[0].get('customer_name')
+        
         # 新規顧客として登録
+        new_customer = {'line_user_id': line_user_id, 'phone': phone}
+        if name_from_booking:
+            new_customer['name'] = name_from_booking
         requests.post(
             f'{SUPABASE_URL}/rest/v1/customers',
             headers=headers,
-            json={'line_user_id': line_user_id, 'phone': phone}
+            json=new_customer
         )
     
     return jsonify({'success': True})
