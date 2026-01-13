@@ -185,10 +185,41 @@ def save_mapping(customer_name, user_id):
         if check_response.status_code == 200:
             existing_data = check_response.json()
             if len(existing_data) == 0:
-                # 電話番号を検索
+                # 電話番号を検索（8weeks_bookingsにマッチ必須）
                 phone, customer_number, normalized_name = find_phone_from_bookings(customer_name)
-                if normalized_name:
-                    customer_name = normalized_name
+                
+                # 8weeks_bookingsにマッチしない場合は登録しない
+                if not normalized_name:
+                    print(f"✗ {customer_name} は8weeks_bookingsにマッチしないため登録スキップ")
+                    return False
+                
+                customer_name = normalized_name
+                
+                # 空文字をNoneに変換
+                if phone == '':
+                    phone = None
+                
+                # 電話番号で既存顧客を検索（重複防止）
+                if phone:
+                    phone_check = requests.get(
+                        f'{SUPABASE_URL}/rest/v1/customers?phone=eq.{phone}&select=id,line_user_id',
+                        headers=headers
+                    )
+                    if phone_check.status_code == 200 and phone_check.json():
+                        existing_by_phone = phone_check.json()[0]
+                        if not existing_by_phone.get('line_user_id'):
+                            # LINE IDを更新
+                            requests.patch(
+                                f"{SUPABASE_URL}/rest/v1/customers?id=eq.{existing_by_phone['id']}",
+                                headers=headers,
+                                json={'line_user_id': user_id, 'name': customer_name}
+                            )
+                            print(f"✓ {customer_name} 既存顧客にLINE ID紐付け")
+                            return True
+                        else:
+                            print(f"✓ {customer_name} 既に別LINE IDで登録済み")
+                            return True
+                
                 # 新規登録
                 data = {
                     'name': customer_name,
