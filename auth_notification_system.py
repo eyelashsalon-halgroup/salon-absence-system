@@ -1952,7 +1952,10 @@ def line_webhook():
                 # メッセージ本文が名前っぽい場合は名前として処理
                 if message_text and 2 <= len(message_text) <= 20 and not any(c in message_text for c in ['http', '予約', '確認', 'キャンセル']):
                     # メッセージを名前として登録/更新
-                    if save_mapping(message_text, user_id):
+                    print(f"[WEBHOOK] save_mapping呼び出し: {message_text}, {user_id}", flush=True)
+                    result = save_mapping(message_text, user_id)
+                    print(f"[WEBHOOK] save_mapping結果: {result}", flush=True)
+                    if result:
                         print(f"✅ 顧客名更新: {message_text} ({user_id})")
                 else:
                     # プロフィール取得で新規登録
