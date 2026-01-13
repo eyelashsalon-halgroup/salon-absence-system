@@ -1933,9 +1933,11 @@ def export_absences():
 def line_webhook():
     try:
         body = request.get_json()
+        print(f"[WEBHOOK] 受信: {body}", flush=True)
         events = body.get('events', [])
         
         for event in events:
+            print(f"[WEBHOOK] イベント: {event.get('type')} from {event.get('source', {}).get('userId', 'unknown')}", flush=True)
             if event['type'] == 'message':
                 user_id = event['source']['userId']
                 message_text = event.get('message', {}).get('text', '')
