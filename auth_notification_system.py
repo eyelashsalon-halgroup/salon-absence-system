@@ -4953,14 +4953,21 @@ print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1
 @app.route('/api/cron/fill-phone-from-salonboard', methods=['POST'])
 def cron_fill_phone_from_salonboard():
     """電話番号が空のBE予約をSalonBoardから補完（軽量版スクリプト実行）"""
+    import threading
     import subprocess
-    try:
-        result = subprocess.run(['python3', 'scrape_phone_fill.py'], capture_output=True, text=True, timeout=600)
-        print(result.stdout)
-        if result.stderr:
-            print(f"[PHONE-FILL] stderr: {result.stderr}")
-        return jsonify({'status': 'ok', 'output': result.stdout}), 200
-    except Exception as e:
-        print(f"[PHONE-FILL] エラー: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+    def run_phone_fill():
+        try:
+            print("[PHONE-FILL] スクリプト開始", flush=True)
+            result = subprocess.run(['python3', 'scrape_phone_fill.py'], capture_output=True, text=True, timeout=600)
+            print(result.stdout, flush=True)
+            if result.stderr:
+                print(f"[PHONE-FILL] stderr: {result.stderr}", flush=True)
+            print("[PHONE-FILL] スクリプト完了", flush=True)
+        except Exception as e:
+            print(f"[PHONE-FILL] エラー: {e}", flush=True)
+    
+    thread = threading.Thread(target=run_phone_fill)
+    thread.start()
+    return jsonify({'status': 'started'}), 200
 
