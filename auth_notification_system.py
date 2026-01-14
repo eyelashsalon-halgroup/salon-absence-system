@@ -4976,7 +4976,8 @@ def cron_fill_phone_from_salonboard():
     
     updated_count = 0
     try:
-        with open('session_cookies.json', 'r') as f:
+        cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
+        with open(cookie_file, 'r') as f:
             cookies = json.load(f)
         
         with sync_playwright() as p:
