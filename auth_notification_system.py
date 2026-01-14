@@ -4952,83 +4952,15 @@ print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1
 
 @app.route('/api/cron/fill-phone-from-salonboard', methods=['POST'])
 def cron_fill_phone_from_salonboard():
-    """電話番号が空のBE予約をSalonBoardから補完"""
-    from playwright.sync_api import sync_playwright
-    import json
-    import re
-    
-    headers = {
-        'apikey': SUPABASE_KEY,
-        'Authorization': f'Bearer {SUPABASE_KEY}',
-        'Content-Type': 'application/json'
-    }
-    
-    # 電話番号が空の予約を取得
-    res = requests.get(
-        f'{SUPABASE_URL}/rest/v1/8weeks_bookings?phone=eq.&select=booking_id,customer_name',
-        headers=headers
-    )
-    empty_phone_bookings = res.json() if res.status_code == 200 else []
-    print(f"[電話番号補完] 対象: {len(empty_phone_bookings)}件", flush=True)
-    
-    if not empty_phone_bookings:
-        return jsonify({'status': 'ok', 'updated': 0}), 200
-    
-    updated_count = 0
+    """電話番号が空のBE予約をSalonBoardから補完（軽量版スクリプト実行）"""
+    import subprocess
     try:
-        cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
-        with open(cookie_file, 'r') as f:
-            cookies = json.load(f)
-        
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
-            context.add_cookies(cookies)
-            page = context.new_page()
-            
-            for booking in empty_phone_bookings:
-                booking_id = booking['booking_id']
-                customer_name = booking['customer_name']
-                try:
-                    # 予約詳細ページにアクセス
-                    url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
-                    page.goto(url, timeout=30000)
-                    page.wait_for_timeout(1000)
-                    
-                    # 「お客様情報詳細」リンクを探す
-                    customer_link = page.query_selector('a:has-text("お客様情報詳細")')
-                    if not customer_link:
-                        customer_link = page.query_selector('a[href*="customerDetail"]')
-                    
-                    if customer_link:
-                        customer_link.click()
-                        page.wait_for_timeout(1000)
-                        
-                        # 電話番号を取得
-                        page_content = page.content()
-                        phone_match = re.search(r'電話番号[^\d]*(\d{2,4}[-\s]?\d{2,4}[-\s]?\d{3,4})', page_content)
-                        if not phone_match:
-                            phone_match = re.search(r'0[789]0[-\s]?\d{4}[-\s]?\d{4}', page_content)
-                        if not phone_match:
-                            phone_match = re.search(r'0\d{9,10}', page_content.replace('-', '').replace(' ', ''))
-                        
-                        if phone_match:
-                            phone = re.sub(r'[-\s]', '', phone_match.group(1) if phone_match.lastindex else phone_match.group())
-                            # 8weeks_bookingsを更新
-                            update_res = requests.patch(
-                                f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}',
-                                headers=headers,
-                                json={'phone': phone}
-                            )
-                            if update_res.status_code in [200, 204]:
-                                print(f"[電話番号補完] {customer_name} → {phone}", flush=True)
-                                updated_count += 1
-                except Exception as e:
-                    print(f"[電話番号補完] エラー {booking_id}: {e}", flush=True)
-                    continue
-            
-            browser.close()
+        result = subprocess.run(['python3', 'scrape_phone_fill.py'], capture_output=True, text=True, timeout=600)
+        print(result.stdout)
+        if result.stderr:
+            print(f"[PHONE-FILL] stderr: {result.stderr}")
+        return jsonify({'status': 'ok', 'output': result.stdout}), 200
     except Exception as e:
-        print(f"[電話番号補完] 全体エラー: {e}", flush=True)
-    
-    return jsonify({'status': 'ok', 'updated': updated_count}), 200
+        print(f"[PHONE-FILL] エラー: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
