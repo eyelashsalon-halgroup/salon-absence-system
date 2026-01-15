@@ -74,10 +74,12 @@ def get_details_from_salonboard(page, booking_id):
         # BE予約で電話番号が取れなかった場合、お客様情報詳細から取得
         if not result['phone'] and booking_id.startswith('BE'):
             try:
+                print(f"[DETAIL-SB] {booking_id} BE予約の電話番号取得開始", flush=True)
                 customer_link = page.query_selector('a:has-text("お客様情報詳細")')
                 if not customer_link:
                     customer_link = page.query_selector('a[href*="customerDetail"]')
                 if customer_link:
+                    print(f"[DETAIL-SB] {booking_id} お客様情報詳細リンク発見", flush=True)
                     customer_link.click()
                     page.wait_for_timeout(1000)
                     cust_rows = page.query_selector_all('tr, .row, div')
@@ -89,8 +91,10 @@ def get_details_from_salonboard(page, booking_id):
                                 result['phone'] = phone_match.group()
                                 print(f"[DETAIL-SB] {booking_id} 電話(顧客詳細): {result['phone']}")
                                 break
+                else:
+                    print(f"[DETAIL-SB] {booking_id} お客様情報詳細リンクなし", flush=True)
             except Exception as e:
-                print(f"[DETAIL-SB] {booking_id} 顧客詳細エラー: {e}")
+                print(f"[DETAIL-SB] {booking_id} 顧客詳細エラー: {e}", flush=True)
         
         # メニューを取得（メニュー行のみから）
         try:
