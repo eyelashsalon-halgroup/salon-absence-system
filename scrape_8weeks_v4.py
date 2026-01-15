@@ -66,14 +66,19 @@ def get_details_from_salonboard(page, booking_id):
         
         # 電話番号を取得
         rows = page.query_selector_all('tr, .row, div')
+        phone_found = False
         for row in rows:
             text = row.inner_text()
             if '電話番号' in text:
+                print(f"[DETAIL-SB] {booking_id} 電話番号行発見: {text[:100]}", flush=True)
                 phone_match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
                 if phone_match:
                     result['phone'] = phone_match.group()
-                    print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}")
+                    print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}", flush=True)
+                    phone_found = True
                     break
+        if not phone_found:
+            print(f"[DETAIL-SB] {booking_id} 電話番号見つからず", flush=True)
         
         # BE予約で電話番号が取れなかった場合、お客様情報詳細から取得
         if not result['phone'] and booking_id.startswith('BE'):
