@@ -591,11 +591,33 @@ def main(days_limit=56):
         for kb in kambara_bookings:
             print(f"[神原予約] {kb['booking_id']} {kb['visit_datetime']}", flush=True)
     
-    # SalonBoardにない予約をDBから削除（一時的に無効化）
-    # TODO: 削除ロジックはスクレイピングの安定性が確認できてから再有効化
-    # if all_bookings:
-    #     scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
-    #     ...
+    # SalonBoardにない予約をDBから削除（未来の予約のみ対象）
+    if all_bookings and len(all_bookings) >= 10:  # 安全のため最低10件取得時のみ
+        scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
+        
+        # DBから未来の予約を取得
+        from datetime import datetime, timedelta
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        future_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{today_str}&select=booking_id"
+        try:
+            future_res = requests.get(future_url, headers=headers, timeout=30)
+            if future_res.status_code == 200:
+                db_future_bookings = future_res.json()
+                db_future_ids = set(b['booking_id'] for b in db_future_bookings)
+                
+                # スクレイピング結果にない予約を削除
+                to_delete = db_future_ids - scraped_booking_ids
+                if to_delete:
+                    print(f"[DELETE] 削除対象: {len(to_delete)}件", flush=True)
+                    for bid in to_delete:
+                        del_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{bid}"
+                        del_res = requests.delete(del_url, headers=headers, timeout=10)
+                        if del_res.status_code in [200, 204]:
+                            print(f"[DELETE] 削除完了: {bid}", flush=True)
+                        else:
+                            print(f"[DELETE] 削除失敗: {bid} - {del_res.status_code}", flush=True)
+        except Exception as e:
+            print(f"[DELETE] エラー: {e}", flush=True)
     
     # Phase 2: 詳細が必要な予約だけ取得（高速版はスキップ）
     needs_detail_bookings = [b for b in all_bookings if b.get('needs_detail', False)]
