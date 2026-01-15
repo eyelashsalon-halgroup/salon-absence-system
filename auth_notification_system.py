@@ -4959,7 +4959,8 @@ def cron_fill_phone_from_salonboard():
     def run_phone_fill():
         try:
             print("[PHONE-FILL] スクリプト開始", flush=True)
-            result = subprocess.run(['python3', 'scrape_phone_fill.py'], capture_output=True, text=True, timeout=600)
+            script_path = os.path.join(os.path.dirname(__file__), 'scrape_phone_fill.py')
+            result = subprocess.run(['python3', script_path], capture_output=True, text=True, timeout=600)
             print(result.stdout, flush=True)
             if result.stderr:
                 print(f"[PHONE-FILL] stderr: {result.stderr}", flush=True)
