@@ -54,7 +54,7 @@ def get_phone_from_customer_detail(page, booking_id):
 
 
 def main():
-    print(f"[PHONE-FILL] 開始: {datetime.now()}")
+    print(f"[PHONE-FILL] 開始: {datetime.now()}", flush=True)
     
     headers = {
         'apikey': SUPABASE_KEY,
@@ -68,7 +68,7 @@ def main():
         headers=headers
     )
     empty_phone_bookings = res.json() if res.status_code == 200 else []
-    print(f"[PHONE-FILL] 対象: {len(empty_phone_bookings)}件")
+    print(f"[PHONE-FILL] 対象: {len(empty_phone_bookings)}件", flush=True)
     
     if not empty_phone_bookings:
         print("[PHONE-FILL] 完了（対象なし）")
@@ -81,8 +81,11 @@ def main():
         with open(cookie_file, 'r') as f:
             cookies = json.load(f)
         
+        print("[PHONE-FILL] Playwright起動中...", flush=True)
         with sync_playwright() as p:
+            print("[PHONE-FILL] Chromium起動中...", flush=True)
             browser = p.chromium.launch(headless=True)
+            print("[PHONE-FILL] ブラウザ起動完了", flush=True)
             context = browser.new_context()
             context.add_cookies(cookies)
             page = context.new_page()
