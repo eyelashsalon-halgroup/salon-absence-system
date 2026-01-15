@@ -4958,8 +4958,10 @@ def cron_fill_phone_from_salonboard():
     
     def run_phone_fill():
         try:
-            print("[PHONE-FILL] スクリプト開始", flush=True)
-            script_path = os.path.join(os.path.dirname(__file__), 'scrape_phone_fill.py')
+            import os as os_inner
+            script_path = os_inner.path.join(os_inner.path.dirname(__file__), 'scrape_phone_fill.py')
+            print(f"[PHONE-FILL] スクリプトパス: {script_path}", flush=True)
+            print(f"[PHONE-FILL] ファイル存在: {os_inner.path.exists(script_path)}", flush=True)
             result = subprocess.run(['python3', script_path], capture_output=True, text=True, timeout=600)
             print(result.stdout, flush=True)
             if result.stderr:
