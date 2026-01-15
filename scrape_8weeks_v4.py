@@ -75,9 +75,9 @@ def get_details_from_salonboard(page, booking_id):
         if not result['phone'] and booking_id.startswith('BE'):
             try:
                 print(f"[DETAIL-SB] {booking_id} BE予約の電話番号取得開始", flush=True)
-                customer_link = page.query_selector('a:has-text("お客様情報詳細")')
+                customer_link = page.query_selector('a.btn_schedule_customer')
                 if not customer_link:
-                    customer_link = page.query_selector('a[href*="customerDetail"]')
+                    customer_link = page.query_selector('a:has-text("お客様情報")')
                 if customer_link:
                     print(f"[DETAIL-SB] {booking_id} お客様情報詳細リンク発見", flush=True)
                     customer_link.click()
