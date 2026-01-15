@@ -53,7 +53,11 @@ def get_details_from_salonboard(page, booking_id):
     result = {'phone': '', 'menu': '', 'booking_source': None}
     try:
         # 予約詳細ページにアクセス
-        url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
+        # BE予約とYF予約でURLが異なる
+        if booking_id.startswith('BE'):
+            url = f'https://salonboard.com/KLP/reserve/net/reserveDetail/?reserveId={booking_id}'
+        else:
+            url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
         page.goto(url, timeout=30000)
         page.wait_for_timeout(500)
         
