@@ -596,8 +596,8 @@ def main(days_limit=56):
         scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
         
         # DBから未来の予約を取得
-        from datetime import datetime, timedelta
-        today_str = datetime.now().strftime('%Y-%m-%d')
+        from datetime import datetime as dt_module
+        today_str = dt_module.now().strftime('%Y-%m-%d')
         future_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{today_str}&select=booking_id"
         try:
             future_res = requests.get(future_url, headers=headers, timeout=30)
