@@ -5,6 +5,16 @@ import json
 import re
 import requests
 from datetime import datetime
+
+# 仮想ディスプレイ（Railway用）
+try:
+    from pyvirtualdisplay import Display
+    display = Display(visible=0, size=(1920, 1080))
+    display.start()
+    print("[PHONE-FILL] Xvfb仮想ディスプレイ起動", flush=True)
+except Exception as e:
+    print(f"[PHONE-FILL] Xvfb起動スキップ: {e}", flush=True)
+
 from playwright.sync_api import sync_playwright
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
@@ -39,7 +49,6 @@ def main():
             cookies = json.load(f)
         
         with sync_playwright() as p:
-            # scrape_8weeks_v4.pyと同じ起動方法
             browser = p.chromium.launch(
                 headless=False,
                 args=['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-dev-shm-usage']
@@ -64,7 +73,6 @@ def main():
                 name = booking['customer_name']
                 
                 try:
-                    # BE予約詳細ページ
                     url = f'https://salonboard.com/KLP/reserve/net/reserveDetail/?reserveId={booking_id}'
                     page.goto(url, timeout=30000)
                     page.wait_for_timeout(1000)
@@ -108,7 +116,6 @@ def main():
                             print(f"[PHONE-FILL] {booking_id} お客様情報リンクなし", flush=True)
                     
                     if phone:
-                        # DB更新
                         update_res = requests.patch(
                             f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}',
                             headers=headers,
