@@ -4928,7 +4928,7 @@ def run_scrape_job_fast():
     try:
         import requests as req
         print(f"[SCHEDULER] 高速版スクレイピング開始: {datetime.now()}", flush=True)
-        res = req.post('http://localhost:10000/api/scrape_8weeks_v4?days_limit=14', timeout=300)
+        res = req.post('http://localhost:10000/api/scrape_8weeks_v4?days_limit=10', timeout=300)
         print(f"[SCHEDULER] 高速版結果: {res.status_code}", flush=True)
     except Exception as e:
         print(f"[SCHEDULER] 高速版エラー: {e}", flush=True)
