@@ -557,14 +557,14 @@ def main(days_limit=56):
     
     # days_limitに応じて分割
     if days_limit <= 14:
-        ranges = [(0, 3), (3, 5), (5, 8), (8, 10), (10, 12), (12, days_limit)]
+        ranges = [(0, 2), (2, 3), (3, 5), (5, 6), (6, 8), (8, 9), (9, 10), (10, days_limit)]
     else:
-        ranges = [(0, 10), (10, 19), (19, 28), (28, 37), (37, 46), (46, days_limit)]
+        ranges = [(0, 7), (7, 14), (14, 21), (21, 28), (28, 35), (35, 42), (42, 49), (49, days_limit)]
     
     print("[PARALLEL] 6ワーカーで並列実行開始", flush=True)
     start_time = datetime.now(JST)
     
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {
             executor.submit(scrape_date_range, i+1, start, end, existing_cache, headers, today): i
             for i, (start, end) in enumerate(ranges)
