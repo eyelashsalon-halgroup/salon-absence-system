@@ -29,12 +29,14 @@ def main():
         'Content-Type': 'application/json'
     }
     
-    # 電話番号が空のBE予約を取得
+    # 電話番号が空または不正（0005等）のBE予約を取得
     res = requests.get(
-        f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=like.BE*&phone=eq.&select=booking_id,customer_name',
+        f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=like.BE*&select=booking_id,customer_name,phone',
         headers=headers
     )
-    empty_phone = res.json() if res.status_code == 200 else []
+    all_be = res.json() if res.status_code == 200 else []
+    # 空または携帯番号パターン以外をフィルタ
+    empty_phone = [b for b in all_be if not b.get('phone') or not re.match(r'^0[789]0', b.get('phone', ''))]
     print(f"[PHONE-FILL] 対象: {len(empty_phone)}件", flush=True)
     
     if not empty_phone:
@@ -75,47 +77,22 @@ def main():
                 try:
                     url = f'https://salonboard.com/KLP/reserve/net/reserveDetail/?reserveId={booking_id}'
                     page.goto(url, timeout=30000)
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(2000)
                     
                     phone = None
                     
-                    # 1. ページ内で電話番号を直接検索
-                    rows = page.query_selector_all('tr, .row, div, td, span')
-                    for row in rows:
-                        try:
-                            text = row.inner_text()
-                            if '電話' in text:
-                                match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
-                                if match:
-                                    phone = match.group()
-                                    print(f"[PHONE-FILL] {booking_id} 電話発見: {phone}", flush=True)
-                                    break
-                        except:
-                            pass
+                    # ページ全体のテキストから携帯番号パターン(070/080/090)を検索
+                    page_text = page.content()
+                    # 携帯番号パターンのみ（070/080/090で始まる11桁）
+                    matches = re.findall(r'0[789]0[\-]?\d{4}[\-]?\d{4}', page_text)
+                    if matches:
+                        # ハイフン除去して最初のマッチを使用
+                        phone = matches[0].replace('-', '')
+                        print(f"[PHONE-FILL] {booking_id} 電話発見: {phone}", flush=True)
+                    else:
+                        print(f"[PHONE-FILL] {booking_id} 携帯番号見つからず", flush=True)
                     
-                    # 2. お客様情報リンクを探してクリック
-                    if not phone:
-                        customer_link = page.query_selector('a[href*="customer"], a:has-text("お客様"), a:has-text("顧客")')
-                        if customer_link:
-                            print(f"[PHONE-FILL] {booking_id} お客様情報リンク発見", flush=True)
-                            customer_link.click()
-                            page.wait_for_timeout(1500)
-                            cust_rows = page.query_selector_all('tr, .row, div, td, span')
-                            for row in cust_rows:
-                                try:
-                                    text = row.inner_text()
-                                    if '電話' in text or '携帯' in text:
-                                        match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
-                                        if match:
-                                            phone = match.group()
-                                            print(f"[PHONE-FILL] {booking_id} 顧客詳細から電話発見: {phone}", flush=True)
-                                            break
-                                except:
-                                    pass
-                        else:
-                            print(f"[PHONE-FILL] {booking_id} お客様情報リンクなし", flush=True)
-                    
-                    if phone:
+                    if phone and len(phone) == 11:
                         update_res = requests.patch(
                             f'{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{booking_id}',
                             headers=headers,
