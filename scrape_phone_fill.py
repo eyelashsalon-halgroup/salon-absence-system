@@ -11,7 +11,7 @@ SUPABASE_URL = os.environ.get('SUPABASE_URL')
 SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
 
 def main():
-    print(f"[PHONE-FILL] 開始: {datetime.now()}")
+    print(f"[PHONE-FILL] 開始: {datetime.now()}", flush=True)
     
     headers = {
         'apikey': SUPABASE_KEY,
@@ -25,10 +25,10 @@ def main():
         headers=headers
     )
     empty_phone = res.json() if res.status_code == 200 else []
-    print(f"[PHONE-FILL] 対象: {len(empty_phone)}件")
+    print(f"[PHONE-FILL] 対象: {len(empty_phone)}件", flush=True)
     
     if not empty_phone:
-        print("[PHONE-FILL] 完了（対象なし）")
+        print("[PHONE-FILL] 完了（対象なし）", flush=True)
         return
     
     updated = 0
@@ -39,8 +39,23 @@ def main():
             cookies = json.load(f)
         
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
+            # scrape_8weeks_v4.pyと同じ起動方法
+            browser = p.chromium.launch(
+                headless=False,
+                args=['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-dev-shm-usage']
+            )
+            
+            context = browser.new_context(
+                user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                viewport={'width': 1920, 'height': 1080},
+                locale='ja-JP',
+                timezone_id='Asia/Tokyo'
+            )
+            
+            context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            """)
+            
             context.add_cookies(cookies)
             page = context.new_page()
             
@@ -59,27 +74,38 @@ def main():
                     # 1. ページ内で電話番号を直接検索
                     rows = page.query_selector_all('tr, .row, div, td, span')
                     for row in rows:
-                        text = row.inner_text()
-                        if '電話' in text:
-                            match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
-                            if match:
-                                phone = match.group()
-                                break
+                        try:
+                            text = row.inner_text()
+                            if '電話' in text:
+                                match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
+                                if match:
+                                    phone = match.group()
+                                    print(f"[PHONE-FILL] {booking_id} 電話発見: {phone}", flush=True)
+                                    break
+                        except:
+                            pass
                     
                     # 2. お客様情報リンクを探してクリック
                     if not phone:
                         customer_link = page.query_selector('a[href*="customer"], a:has-text("お客様"), a:has-text("顧客")')
                         if customer_link:
+                            print(f"[PHONE-FILL] {booking_id} お客様情報リンク発見", flush=True)
                             customer_link.click()
                             page.wait_for_timeout(1500)
                             cust_rows = page.query_selector_all('tr, .row, div, td, span')
                             for row in cust_rows:
-                                text = row.inner_text()
-                                if '電話' in text or '携帯' in text:
-                                    match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
-                                    if match:
-                                        phone = match.group()
-                                        break
+                                try:
+                                    text = row.inner_text()
+                                    if '電話' in text or '携帯' in text:
+                                        match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
+                                        if match:
+                                            phone = match.group()
+                                            print(f"[PHONE-FILL] {booking_id} 顧客詳細から電話発見: {phone}", flush=True)
+                                            break
+                                except:
+                                    pass
+                        else:
+                            print(f"[PHONE-FILL] {booking_id} お客様情報リンクなし", flush=True)
                     
                     if phone:
                         # DB更新
@@ -89,19 +115,19 @@ def main():
                             json={'phone': phone}
                         )
                         if update_res.status_code in [200, 204]:
-                            print(f"[PHONE-FILL] 更新: {name} → {phone}")
+                            print(f"[PHONE-FILL] 更新: {name} → {phone}", flush=True)
                             updated += 1
                     else:
-                        print(f"[PHONE-FILL] 取得失敗: {name} ({booking_id})")
+                        print(f"[PHONE-FILL] 取得失敗: {name} ({booking_id})", flush=True)
                         
                 except Exception as e:
-                    print(f"[PHONE-FILL] エラー: {booking_id} - {e}")
+                    print(f"[PHONE-FILL] エラー: {booking_id} - {e}", flush=True)
             
             browser.close()
     except Exception as e:
-        print(f"[PHONE-FILL] 全体エラー: {e}")
+        print(f"[PHONE-FILL] 全体エラー: {e}", flush=True)
     
-    print(f"[PHONE-FILL] 完了: {updated}件更新")
+    print(f"[PHONE-FILL] 完了: {updated}件更新", flush=True)
 
 if __name__ == "__main__":
     main()
