@@ -4567,7 +4567,14 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             page.wait_for_timeout(5000)
             print(f'[予約変更] 現在のページタイトル: {page.title()}', flush=True)
             
-            current_date = page.query_selector('input[name="rsvDate"]').get_attribute('value')
+            print(f'[予約変更] 日付セレクタ検索中...', flush=True)
+            date_input = page.query_selector('input[name="rsvDate"]')
+            if not date_input:
+                print(f'[予約変更エラー] 日付入力欄が見つかりません', flush=True)
+                browser.close()
+                return
+            current_date = date_input.get_attribute('value')
+            print(f'[予約変更] 現在の日付: {current_date}, 新しい日付: {new_date}', flush=True)
             if current_date != new_date:
                 cal_input = page.query_selector('.calendar_readonly')
                 if cal_input:
