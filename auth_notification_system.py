@@ -4561,8 +4561,11 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             
             page = context.new_page()
             url = f'https://salonboard.com/KLP/reserve/ext/extReserveChange/?reserveId={booking_id}'
+            print(f'[予約変更] URL: {url}', flush=True)
             page.goto(url, timeout=60000)
+            print(f'[予約変更] ページ読み込み完了、URL: {page.url}', flush=True)
             page.wait_for_timeout(5000)
+            print(f'[予約変更] 現在のページタイトル: {page.title()}', flush=True)
             
             current_date = page.query_selector('input[name="rsvDate"]').get_attribute('value')
             if current_date != new_date:
