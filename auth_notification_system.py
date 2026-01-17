@@ -4523,6 +4523,15 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
     """バックグラウンドで予約変更を実行"""
     from playwright.sync_api import sync_playwright
     
+    # Xvfb仮想ディスプレイ（Railway用）
+    try:
+        from pyvirtualdisplay import Display
+        display = Display(visible=0, size=(1920, 1080))
+        display.start()
+        print("[予約変更] Xvfb仮想ディスプレイ起動", flush=True)
+    except Exception as e:
+        print(f"[予約変更] Xvfbスキップ: {e}", flush=True)
+    
     try:
         supabase_url = os.getenv('SUPABASE_URL')
         supabase_key = os.getenv('SUPABASE_KEY')
