@@ -4576,8 +4576,14 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             current_date = date_input.get_attribute('value')
             print(f'[予約変更] 現在の日付: {current_date}, 新しい日付: {new_date}', flush=True)
             if current_date != new_date:
+                print(f'[予約変更] カレンダー要素検索中...', flush=True)
                 cal_input = page.query_selector('.calendar_readonly')
+                print(f'[予約変更] .calendar_readonly: {cal_input}', flush=True)
+                if not cal_input:
+                    cal_input = page.query_selector('input.calendar, input[readonly], .hasDatepicker')
+                    print(f'[予約変更] 代替セレクタ: {cal_input}', flush=True)
                 if cal_input:
+                    print(f'[予約変更] カレンダークリック', flush=True)
                     cal_input.click()
                     page.wait_for_timeout(1000)
                     target_day = new_date[-2:]
