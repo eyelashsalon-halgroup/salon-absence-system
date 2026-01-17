@@ -4555,11 +4555,19 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             context = browser.new_context()
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
+            print(f'[予約変更] Cookie file: {cookie_file}', flush=True)
             with open(cookie_file, 'r') as f:
                 cookies = json.load(f)
-                context.add_cookies(cookies)
+            print(f'[予約変更] Cookie数: {len(cookies)}', flush=True)
+            context.add_cookies(cookies)
             
             page = context.new_page()
+            
+            # まずトップページにアクセスしてCookie確認
+            page.goto('https://salonboard.com/KLP/top/', timeout=60000)
+            print(f'[予約変更] トップページURL: {page.url}', flush=True)
+            page.wait_for_timeout(2000)
+            
             url = f'https://salonboard.com/KLP/reserve/ext/extReserveChange/?reserveId={booking_id}'
             print(f'[予約変更] URL: {url}', flush=True)
             page.goto(url, timeout=60000)
