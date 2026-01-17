@@ -2399,7 +2399,7 @@ def refresh_salonboard_cookie():
     print("[Cookie更新] 開始")
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             page = context.new_page()
             page.goto("https://salonboard.com/login/")
@@ -3028,7 +3028,7 @@ def scrape_8weeks():
     
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             
             # クッキー読み込み
@@ -3133,7 +3133,7 @@ def scrape_test_1day():
     
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
@@ -3189,7 +3189,7 @@ def scrape_test_1day_v2():
     
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
@@ -4324,7 +4324,7 @@ def cancel_booking_background(booking_id, line_user_id):
         print(f'[SalonBoardキャンセル開始] booking_id={booking_id}, visit_datetime={visit_datetime}', flush=True)
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                browser = p.chromium.launch(headless=False)
                 context = browser.new_context()
                 
                 cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
@@ -4494,7 +4494,7 @@ def api_liff_get_duration():
     
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             cookie_file = os.path.join(os.path.dirname(__file__), "session_cookies.json")
             cookies = None
@@ -4551,7 +4551,7 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
         customer_name = booking.get('customer_name', '')
         
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             
             cookie_file = os.path.join(os.path.dirname(__file__), 'session_cookies.json')
@@ -4789,7 +4789,7 @@ def api_liff_available_slots():
     
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             
             # Supabaseからクッキー取得を試みる
