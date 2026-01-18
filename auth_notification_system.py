@@ -4593,11 +4593,17 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
                 if cal_input:
                     print(f'[予約変更] カレンダークリック', flush=True)
                     cal_input.click()
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(2000)
+                    print(f'[予約変更] カレンダーポップアップ検索中...', flush=True)
                     target_day = new_date[-2:]
                     if target_day.startswith('0'):
                         target_day = target_day[1:]
+                    print(f'[予約変更] 選択する日: {target_day}', flush=True)
                     calendar = page.query_selector('.mod_popup_02.js_calendar')
+                    print(f'[予約変更] .mod_popup_02.js_calendar: {calendar}', flush=True)
+                    if not calendar:
+                        calendar = page.query_selector('.ui-datepicker, .calendar-popup, #ui-datepicker-div')
+                        print(f'[予約変更] 代替カレンダー: {calendar}', flush=True)
                     if calendar:
                         tds = calendar.query_selector_all('td')
                         for td in tds:
