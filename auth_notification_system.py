@@ -4622,9 +4622,22 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
                         if not clicked:
                             print(f'[予約変更] 日付{target_day}がクリックできなかった', flush=True)
             
+            print(f'[予約変更] 日付クリック後、時間設定開始', flush=True)
             hour, minute = new_time.split(':')
-            page.select_option('#rsvHour', hour)
-            page.select_option('#rsvMinute', minute)
+            print(f'[予約変更] hour={hour}, minute={minute}', flush=True)
+            
+            # rsvHour存在確認
+            rsv_hour = page.query_selector('#rsvHour')
+            print(f'[予約変更] #rsvHour: {rsv_hour}', flush=True)
+            if rsv_hour:
+                page.select_option('#rsvHour', hour)
+                print(f'[予約変更] rsvHour設定完了', flush=True)
+            
+            rsv_minute = page.query_selector('#rsvMinute')
+            print(f'[予約変更] #rsvMinute: {rsv_minute}', flush=True)
+            if rsv_minute:
+                page.select_option('#rsvMinute', minute)
+                print(f'[予約変更] rsvMinute設定完了', flush=True)
             page.wait_for_timeout(500)
             
             confirm_btn = page.query_selector('button:has-text("確定する"), a:has-text("確定する")')
