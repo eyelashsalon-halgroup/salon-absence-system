@@ -4606,11 +4606,21 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
                         print(f'[予約変更] 代替カレンダー: {calendar}', flush=True)
                     if calendar:
                         tds = calendar.query_selector_all('td')
-                        for td in tds:
-                            if td.is_visible() and td.inner_text().strip() == target_day:
-                                td.click()
-                                page.wait_for_timeout(1000)
-                                break
+                        print(f'[予約変更] td数: {len(tds)}', flush=True)
+                        clicked = False
+                        for i, td in enumerate(tds):
+                            text = td.inner_text().strip()
+                            visible = td.is_visible()
+                            if text == target_day:
+                                print(f'[予約変更] td[{i}] text={text} visible={visible}', flush=True)
+                                if visible:
+                                    td.click()
+                                    print(f'[予約変更] td[{i}]クリック実行', flush=True)
+                                    clicked = True
+                                    page.wait_for_timeout(1000)
+                                    break
+                        if not clicked:
+                            print(f'[予約変更] 日付{target_day}がクリックできなかった', flush=True)
             
             hour, minute = new_time.split(':')
             page.select_option('#rsvHour', hour)
