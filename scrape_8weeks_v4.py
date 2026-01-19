@@ -592,27 +592,30 @@ def main(days_limit=56):
             print(f"[神原予約] {kb['booking_id']} {kb['visit_datetime']}", flush=True)
     
     # SalonBoardにない予約をDBから削除（未来の予約のみ対象）
-    # 安全条件: 200件以上取得 & 削除対象30件以下の場合のみ実行
+    # 安全条件: 200件以上取得の場合のみ実行
     if all_bookings and len(all_bookings) >= 200:
         scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
         
-        # DBから未来の予約を取得
+        # スクレイピングした日付範囲を計算
         from datetime import datetime as dt_module
-        today_str = dt_module.now().strftime('%Y-%m-%d')
-        future_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{today_str}&select=booking_id"
-        try:
-            future_res = requests.get(future_url, headers=headers, timeout=30)
-            if future_res.status_code == 200:
-                db_future_bookings = future_res.json()
-                db_future_ids = set(b['booking_id'] for b in db_future_bookings)
-                
-                # スクレイピング結果にない予約を削除
-                to_delete = db_future_ids - scraped_booking_ids
-                if to_delete:
-                    print(f"[DELETE] 削除対象: {len(to_delete)}件", flush=True)
-                    if len(to_delete) > 100:
-                        print(f"[DELETE] 異常検知: 削除対象が30件超のためスキップ", flush=True)
-                    else:
+        scraped_dates = [b.get('visit_datetime', '')[:10] for b in all_bookings if b.get('visit_datetime')]
+        if scraped_dates:
+            min_date = min(scraped_dates)
+            max_date = max(scraped_dates)
+            print(f"[DELETE] スクレイピング範囲: {min_date} 〜 {max_date}", flush=True)
+            
+            # DBからスクレイピング範囲内の予約のみ取得
+            range_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{min_date}&visit_datetime=lte.{max_date} 23:59:59&select=booking_id"
+            try:
+                range_res = requests.get(range_url, headers=headers, timeout=30)
+                if range_res.status_code == 200:
+                    db_range_bookings = range_res.json()
+                    db_range_ids = set(b['booking_id'] for b in db_range_bookings)
+                    
+                    # スクレイピング結果にない予約を削除（範囲内のみ）
+                    to_delete = db_range_ids - scraped_booking_ids
+                    if to_delete:
+                        print(f"[DELETE] 削除対象: {len(to_delete)}件（範囲内）", flush=True)
                         for bid in to_delete:
                             del_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{bid}"
                             del_res = requests.delete(del_url, headers=headers, timeout=10)
@@ -620,8 +623,10 @@ def main(days_limit=56):
                                 print(f"[DELETE] 削除完了: {bid}", flush=True)
                             else:
                                 print(f"[DELETE] 削除失敗: {bid} - {del_res.status_code}", flush=True)
-        except Exception as e:
-            print(f"[DELETE] エラー: {e}", flush=True)
+                    else:
+                        print(f"[DELETE] 削除対象なし", flush=True)
+            except Exception as e:
+                print(f"[DELETE] エラー: {e}", flush=True)
     elif all_bookings:
         print(f"[DELETE] スキップ: 取得件数{len(all_bookings)}件 < 200件", flush=True)
     
