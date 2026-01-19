@@ -610,7 +610,7 @@ def main(days_limit=56):
                 to_delete = db_future_ids - scraped_booking_ids
                 if to_delete:
                     print(f"[DELETE] 削除対象: {len(to_delete)}件", flush=True)
-                    if len(to_delete) > 30:
+                    if len(to_delete) > 100:
                         print(f"[DELETE] 異常検知: 削除対象が30件超のためスキップ", flush=True)
                     else:
                         for bid in to_delete:
