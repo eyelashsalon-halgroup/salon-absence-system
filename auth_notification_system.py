@@ -4475,7 +4475,6 @@ def api_liff_cancel_request():
             global cancel_running
             proc.wait()
             cancel_running = False
-change_running = False
             print('[API] キャンセルフラグリセット', flush=True)
         threading.Thread(target=reset_flag, daemon=True).start()
     except Exception as e:
@@ -4657,7 +4656,6 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
             send_line_message(line_user_id, f'予約変更が完了しました。\n新しい日時: {new_datetime}')
         
         print(f'[予約変更完了] {customer_name} -> {new_datetime}')
-        global change_running
         change_running = False
         
     except Exception as e:
@@ -4666,7 +4664,6 @@ def execute_change_background(booking_id, new_date, new_time, line_user_id):
         traceback.print_exc()
         if line_user_id:
             send_line_message(line_user_id, '予約変更中にエラーが発生しました。サロンにお問い合わせください。')
-        global change_running
         change_running = False
 @app.route('/api/liff/execute-change', methods=['POST'])
 def api_liff_execute_change():
