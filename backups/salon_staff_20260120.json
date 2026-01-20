@@ -1,0 +1,5 @@
+[{"id":1,"name":"中林　香織","line_id":null,"active":true,"created_at":"2025-12-30T13:39:59.11463","receive_notification":false}, 
+ {"id":2,"name":"太田　由香利","line_id":"U2c097f177a2c96b0732f6d15152d0d68","active":true,"created_at":"2025-12-30T13:39:59.11463","receive_notification":true}, 
+ {"id":3,"name":"神原良祐","line_id":"U9022782f05526cf7632902acaed0cb08","active":true,"created_at":"2026-01-07T09:10:10.225116","receive_notification":true}, 
+ {"id":4,"name":"test沙織","line_id":"U1d1dfe1993f1857327678e37b607187a","active":true,"created_at":"2026-01-07T09:10:10.319604","receive_notification":true}, 
+ {"id":5,"name":"HAL本店１","line_id":"Ude9ef7ceb8f04d2e7a207aabec5591c5","active":true,"created_at":"2026-01-07T09:10:10.45493","receive_notification":true}]

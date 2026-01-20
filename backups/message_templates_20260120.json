@@ -1,0 +1,3 @@
+[{"id":1,"key":"absence_request","message":"{staff_name}が本日欠勤となりました。","updated_at":"2025-12-22T14:50:57.548166"}, 
+ {"id":2,"key":"substitute_confirmed","message":"{substitute_name}が出勤してくれることになりました。","updated_at":"2025-12-22T14:50:57.548166"}, 
+ {"id":3,"key":"absence_confirmed","message":"欠勤申請を受け付けました。","updated_at":"2025-12-22T14:50:57.548166"}]
