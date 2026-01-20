@@ -730,3 +730,56 @@ def main(days_limit=56):
 
 if __name__ == "__main__":
     main()
+
+def sync_customers_from_bookings():
+    """8weeks_bookingsから電話番号があるデータをcustomersに同期"""
+    import requests
+    headers = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': f'Bearer {SUPABASE_KEY}',
+        'Content-Type': 'application/json'
+    }
+    
+    # 8weeks_bookingsから電話番号がある予約を取得
+    book_res = requests.get(
+        f'{SUPABASE_URL}/rest/v1/8weeks_bookings?phone=not.is.null&select=customer_name,phone',
+        headers=headers
+    )
+    if book_res.status_code != 200:
+        print(f"[SYNC] 予約取得失敗: {book_res.status_code}")
+        return
+    
+    bookings = book_res.json()
+    
+    # 既存customers取得
+    cust_res = requests.get(
+        f'{SUPABASE_URL}/rest/v1/customers?select=phone',
+        headers=headers
+    )
+    existing_phones = set()
+    if cust_res.status_code == 200:
+        existing_phones = {c['phone'] for c in cust_res.json() if c.get('phone')}
+    
+    # 電話番号でユニーク化
+    phone_to_name = {}
+    for b in bookings:
+        phone = b.get('phone')
+        name = b.get('customer_name', '').split('\n')[0].replace('★', '').strip()
+        if phone and len(phone) >= 10 and name:
+            phone_to_name[phone] = name
+    
+    # 新規登録
+    new_count = 0
+    for phone, name in phone_to_name.items():
+        if phone not in existing_phones:
+            data = {
+                'name': name,
+                'phone': phone,
+                'registered_at': datetime.now().isoformat()
+            }
+            res = requests.post(f'{SUPABASE_URL}/rest/v1/customers', headers=headers, json=data)
+            if res.status_code == 201:
+                new_count += 1
+                print(f"[SYNC] 顧客登録: {name} ({phone})")
+    
+    print(f"[SYNC] 顧客同期完了: 新規{new_count}件")
