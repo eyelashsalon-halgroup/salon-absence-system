@@ -1732,6 +1732,11 @@ def webhook():
                         cleaned_name = clean_customer_name(text)
                         if cleaned_name and len(cleaned_name) >= 2:
                             result = save_mapping(cleaned_name, user_id)
+                            # 登録結果に応じて返信
+                            if result:
+                                reply_msg = f"{cleaned_name}様、ご登録ありがとうございます。\n\n画面下部のメニューから「予約確認」をタップすると、ご予約内容をご確認いただけます。"
+                                send_line_message(user_id, reply_msg)
+                                print(f"[WEBHOOK] 登録完了返信: {cleaned_name}")
                         
         return 'OK', 200
     except Exception as e:
