@@ -186,11 +186,20 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                 date_str = target_date.strftime('%Y%m%d')
                 url = f'https://salonboard.com/KLP/reserve/reserveList/searchDate?date={date_str}'
                 
-                try:
-                    page.goto(url, timeout=60000)
-                    page.wait_for_timeout(150)
-                except Exception as e:
-                    print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー: {e}", flush=True)
+                max_retries = 3
+                page_loaded = False
+                for retry in range(max_retries):
+                    try:
+                        page.goto(url, timeout=60000)
+                        page.wait_for_timeout(150)
+                        page_loaded = True
+                        break
+                    except Exception as e:
+                        print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー (試行{retry+1}/{max_retries}): {e}", flush=True)
+                        if retry < max_retries - 1:
+                            page.wait_for_timeout(2000)
+                
+                if not page_loaded:
                     continue
                 
                 # 初回のみログイン確認
