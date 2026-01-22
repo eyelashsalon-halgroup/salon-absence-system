@@ -186,20 +186,11 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                 date_str = target_date.strftime('%Y%m%d')
                 url = f'https://salonboard.com/KLP/reserve/reserveList/searchDate?date={date_str}'
                 
-                max_retries = 3
-                page_loaded = False
-                for retry in range(max_retries):
-                    try:
-                        page.goto(url, timeout=60000)
-                        page.wait_for_timeout(150)
-                        page_loaded = True
-                        break
-                    except Exception as e:
-                        print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー (試行{retry+1}/{max_retries}): {e}", flush=True)
-                        if retry < max_retries - 1:
-                            page.wait_for_timeout(2000)
-                
-                if not page_loaded:
+                try:
+                    page.goto(url, timeout=60000)
+                    page.wait_for_timeout(150)
+                except Exception as e:
+                    print(f"[W{worker_id}] {target_date.strftime('%Y-%m-%d')} エラー: {e}", flush=True)
                     continue
                 
                 # 初回のみログイン確認
@@ -566,7 +557,7 @@ def main(days_limit=56):
     
     # days_limitに応じて分割
     if days_limit <= 14:
-        ranges = [(0, 2), (2, 4), (4, 6), (6, 8), (8, 10), (10, 12), (12, 14), (14, days_limit)]
+        ranges = [(0, 2), (2, 3), (3, 5), (5, 6), (6, 8), (8, 9), (9, 10), (10, days_limit)]
     else:
         ranges = [(0, 7), (7, 14), (14, 21), (21, 28), (28, 35), (35, 42), (42, 49), (49, days_limit)]
     
@@ -601,30 +592,27 @@ def main(days_limit=56):
             print(f"[神原予約] {kb['booking_id']} {kb['visit_datetime']}", flush=True)
     
     # SalonBoardにない予約をDBから削除（未来の予約のみ対象）
-    # 安全条件: 200件以上取得の場合のみ実行
+    # 安全条件: 200件以上取得 & 削除対象30件以下の場合のみ実行
     if all_bookings and len(all_bookings) >= 200:
         scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
         
-        # スクレイピングした日付範囲を計算
+        # DBから未来の予約を取得
         from datetime import datetime as dt_module
-        scraped_dates = [b.get('visit_datetime', '')[:10] for b in all_bookings if b.get('visit_datetime')]
-        if scraped_dates:
-            min_date = min(scraped_dates)
-            max_date = max(scraped_dates)
-            print(f"[DELETE] スクレイピング範囲: {min_date} 〜 {max_date}", flush=True)
-            
-            # DBからスクレイピング範囲内の予約のみ取得
-            range_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{min_date}&visit_datetime=lte.{max_date} 23:59:59&select=booking_id"
-            try:
-                range_res = requests.get(range_url, headers=headers, timeout=30)
-                if range_res.status_code == 200:
-                    db_range_bookings = range_res.json()
-                    db_range_ids = set(b['booking_id'] for b in db_range_bookings)
-                    
-                    # スクレイピング結果にない予約を削除（範囲内のみ）
-                    to_delete = db_range_ids - scraped_booking_ids
-                    if to_delete:
-                        print(f"[DELETE] 削除対象: {len(to_delete)}件（範囲内）", flush=True)
+        today_str = dt_module.now().strftime('%Y-%m-%d')
+        future_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{today_str}&select=booking_id"
+        try:
+            future_res = requests.get(future_url, headers=headers, timeout=30)
+            if future_res.status_code == 200:
+                db_future_bookings = future_res.json()
+                db_future_ids = set(b['booking_id'] for b in db_future_bookings)
+                
+                # スクレイピング結果にない予約を削除
+                to_delete = db_future_ids - scraped_booking_ids
+                if to_delete:
+                    print(f"[DELETE] 削除対象: {len(to_delete)}件", flush=True)
+                    if len(to_delete) > 30:
+                        print(f"[DELETE] 異常検知: 削除対象が30件超のためスキップ", flush=True)
+                    else:
                         for bid in to_delete:
                             del_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{bid}"
                             del_res = requests.delete(del_url, headers=headers, timeout=10)
@@ -632,10 +620,8 @@ def main(days_limit=56):
                                 print(f"[DELETE] 削除完了: {bid}", flush=True)
                             else:
                                 print(f"[DELETE] 削除失敗: {bid} - {del_res.status_code}", flush=True)
-                    else:
-                        print(f"[DELETE] 削除対象なし", flush=True)
-            except Exception as e:
-                print(f"[DELETE] エラー: {e}", flush=True)
+        except Exception as e:
+            print(f"[DELETE] エラー: {e}", flush=True)
     elif all_bookings:
         print(f"[DELETE] スキップ: 取得件数{len(all_bookings)}件 < 200件", flush=True)
     
@@ -739,56 +725,3 @@ def main(days_limit=56):
 
 if __name__ == "__main__":
     main()
-
-def sync_customers_from_bookings():
-    """8weeks_bookingsから電話番号があるデータをcustomersに同期"""
-    import requests
-    headers = {
-        'apikey': SUPABASE_KEY,
-        'Authorization': f'Bearer {SUPABASE_KEY}',
-        'Content-Type': 'application/json'
-    }
-    
-    # 8weeks_bookingsから電話番号がある予約を取得
-    book_res = requests.get(
-        f'{SUPABASE_URL}/rest/v1/8weeks_bookings?phone=not.is.null&select=customer_name,phone',
-        headers=headers
-    )
-    if book_res.status_code != 200:
-        print(f"[SYNC] 予約取得失敗: {book_res.status_code}")
-        return
-    
-    bookings = book_res.json()
-    
-    # 既存customers取得
-    cust_res = requests.get(
-        f'{SUPABASE_URL}/rest/v1/customers?select=phone',
-        headers=headers
-    )
-    existing_phones = set()
-    if cust_res.status_code == 200:
-        existing_phones = {c['phone'] for c in cust_res.json() if c.get('phone')}
-    
-    # 電話番号でユニーク化
-    phone_to_name = {}
-    for b in bookings:
-        phone = b.get('phone')
-        name = b.get('customer_name', '').split('\n')[0].replace('★', '').strip()
-        if phone and len(phone) >= 10 and name:
-            phone_to_name[phone] = name
-    
-    # 新規登録
-    new_count = 0
-    for phone, name in phone_to_name.items():
-        if phone not in existing_phones:
-            data = {
-                'name': name,
-                'phone': phone,
-                'registered_at': datetime.now().isoformat()
-            }
-            res = requests.post(f'{SUPABASE_URL}/rest/v1/customers', headers=headers, json=data)
-            if res.status_code == 201:
-                new_count += 1
-                print(f"[SYNC] 顧客登録: {name} ({phone})")
-    
-    print(f"[SYNC] 顧客同期完了: 新規{new_count}件")
