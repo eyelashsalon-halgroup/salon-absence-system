@@ -5013,7 +5013,7 @@ def run_scrape_job_full():
 
 # スクレイピング用スケジューラー（高速版1分、通常版5分）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
-scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=30, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
+scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=1, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
 scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
