@@ -53,11 +53,7 @@ def get_details_from_salonboard(page, booking_id):
     result = {'phone': '', 'menu': '', 'booking_source': None}
     try:
         # 予約詳細ページにアクセス
-        # BE予約とYF予約でURLが異なる
-        if booking_id.startswith('BE'):
-            url = f'https://salonboard.com/KLP/reserve/net/reserveDetail/?reserveId={booking_id}'
-        else:
-            url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
+        url = f'https://salonboard.com/KLP/reserve/ext/extReserveDetail/?reserveId={booking_id}'
         page.goto(url, timeout=30000)
         page.wait_for_timeout(500)
         
@@ -66,53 +62,35 @@ def get_details_from_salonboard(page, booking_id):
         
         # 電話番号を取得
         rows = page.query_selector_all('tr, .row, div')
-        phone_found = False
         for row in rows:
             text = row.inner_text()
             if '電話番号' in text:
-                print(f"[DETAIL-SB] {booking_id} 電話番号行発見: {text[:100]}", flush=True)
                 phone_match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
                 if phone_match:
                     result['phone'] = phone_match.group()
-                    print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}", flush=True)
-                    phone_found = True
+                    print(f"[DETAIL-SB] {booking_id} 電話: {result['phone']}")
                     break
-        if not phone_found:
-            print(f"[DETAIL-SB] {booking_id} 電話番号見つからず", flush=True)
         
-        # BE予約で電話番号が取れなかった場合、お客様情報詳細から取得
-        if not result['phone'] and booking_id.startswith('BE'):
-            try:
-                print(f"[DETAIL-SB] {booking_id} BE予約の電話番号取得開始", flush=True)
-                customer_link = page.query_selector('a.btn_schedule_customer')
-                if not customer_link:
-                    customer_link = page.query_selector('a:has-text("お客様情報")')
-                if customer_link:
-                    print(f"[DETAIL-SB] {booking_id} お客様情報詳細リンク発見", flush=True)
-                    customer_link.click()
-                    page.wait_for_timeout(1000)
-                    cust_rows = page.query_selector_all('tr, .row, div')
-                    for row in cust_rows:
-                        text = row.inner_text()
-                        if '電話番号' in text or '携帯' in text:
-                            phone_match = re.search(r'0[0-9]{9,10}', text.replace('-', ''))
-                            if phone_match:
-                                result['phone'] = phone_match.group()
-                                print(f"[DETAIL-SB] {booking_id} 電話(顧客詳細): {result['phone']}")
-                                break
-                else:
-                    print(f"[DETAIL-SB] {booking_id} お客様情報詳細リンクなし", flush=True)
-            except Exception as e:
-                print(f"[DETAIL-SB] {booking_id} 顧客詳細エラー: {e}", flush=True)
-        
-        # メニューを取得（メニュー行のみから）
+        # メニューを取得（ページのテキストから抽出）
+        import re
         try:
-            menu_row = page.query_selector('tr:has(th:text("メニュー"))')
-            if menu_row:
-                menu_td = menu_row.query_selector('td')
-                if menu_td:
-                    result['menu'] = menu_td.inner_text().strip()[:300]
-                    print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:80]}...")
+            page_text = page.inner_text('body')
+            menu_patterns = [
+                r'【まつげエクステ】[^【\n]+',
+                r'【その他まつげメニュー】[^【\n]+',
+                r'【付替オフ】[^【\n]+',
+                r'【次回】[^【\n]+'
+            ]
+            menu_parts = []
+            for pattern in menu_patterns:
+                matches = re.findall(pattern, page_text)
+                for match in matches:
+                    clean = match.strip()
+                    if clean and len(clean) > 5 and clean not in menu_parts:
+                        menu_parts.append(clean)
+            if menu_parts:
+                result['menu'] = ' / '.join(menu_parts[:3])[:300]
+                print(f"[DETAIL-SB] {booking_id} メニュー: {result['menu'][:50]}...")
         except Exception as e:
             print(f"[DETAIL-SB] メニュー取得エラー: {e}")
         
@@ -557,14 +535,14 @@ def main(days_limit=56):
     
     # days_limitに応じて分割
     if days_limit <= 14:
-        ranges = [(0, 2), (2, 3), (3, 5), (5, 6), (6, 8), (8, 9), (9, 10), (10, days_limit)]
+        ranges = [(0, 3), (3, 5), (5, 8), (8, 10), (10, 12), (12, days_limit)]
     else:
-        ranges = [(0, 7), (7, 14), (14, 21), (21, 28), (28, 35), (35, 42), (42, 49), (49, days_limit)]
+        ranges = [(0, 10), (10, 19), (19, 28), (28, 37), (37, 46), (46, days_limit)]
     
     print("[PARALLEL] 6ワーカーで並列実行開始", flush=True)
     start_time = datetime.now(JST)
     
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {
             executor.submit(scrape_date_range, i+1, start, end, existing_cache, headers, today): i
             for i, (start, end) in enumerate(ranges)
@@ -591,39 +569,11 @@ def main(days_limit=56):
         for kb in kambara_bookings:
             print(f"[神原予約] {kb['booking_id']} {kb['visit_datetime']}", flush=True)
     
-    # SalonBoardにない予約をDBから削除（未来の予約のみ対象）
-    # 安全条件: 200件以上取得 & 削除対象30件以下の場合のみ実行
-    if all_bookings and len(all_bookings) >= 200:
-        scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
-        
-        # DBから未来の予約を取得
-        from datetime import datetime as dt_module
-        today_str = dt_module.now().strftime('%Y-%m-%d')
-        future_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{today_str}&select=booking_id"
-        try:
-            future_res = requests.get(future_url, headers=headers, timeout=30)
-            if future_res.status_code == 200:
-                db_future_bookings = future_res.json()
-                db_future_ids = set(b['booking_id'] for b in db_future_bookings)
-                
-                # スクレイピング結果にない予約を削除
-                to_delete = db_future_ids - scraped_booking_ids
-                if to_delete:
-                    print(f"[DELETE] 削除対象: {len(to_delete)}件", flush=True)
-                    if len(to_delete) > 30:
-                        print(f"[DELETE] 異常検知: 削除対象が30件超のためスキップ", flush=True)
-                    else:
-                        for bid in to_delete:
-                            del_url = f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{bid}"
-                            del_res = requests.delete(del_url, headers=headers, timeout=10)
-                            if del_res.status_code in [200, 204]:
-                                print(f"[DELETE] 削除完了: {bid}", flush=True)
-                            else:
-                                print(f"[DELETE] 削除失敗: {bid} - {del_res.status_code}", flush=True)
-        except Exception as e:
-            print(f"[DELETE] エラー: {e}", flush=True)
-    elif all_bookings:
-        print(f"[DELETE] スキップ: 取得件数{len(all_bookings)}件 < 200件", flush=True)
+    # SalonBoardにない予約をDBから削除（一時的に無効化）
+    # TODO: 削除ロジックはスクレイピングの安定性が確認できてから再有効化
+    # if all_bookings:
+    #     scraped_booking_ids = set(b['booking_id'] for b in all_bookings)
+    #     ...
     
     # Phase 2: 詳細が必要な予約だけ取得（高速版はスキップ）
     needs_detail_bookings = [b for b in all_bookings if b.get('needs_detail', False)]
