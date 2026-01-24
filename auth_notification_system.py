@@ -2345,33 +2345,39 @@ scheduler.add_job(
 
 scheduler.add_job(
     func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/update-menu-prices'),
-    trigger=CronTrigger(hour=12, minute=20, timezone='UTC'),  # JST 21:20 = UTC 12:20
+    trigger=CronTrigger(hour=18, minute=15, timezone='UTC'),  # JST 3:15 = UTC 18:15
     id='daily_menu_sync',
-    name='毎日21時メニュー金額同期'
+    name='毎日3時メニュー金額同期'
 )
 scheduler.add_job(
     func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/refresh-cookie'),
-    trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
+    trigger=CronTrigger(hour=18, minute=0, timezone='UTC'),  # JST 3:00 = UTC 18:00
     id='daily_cookie_refresh',
-    name='毎日21時Cookie更新'
+    name='毎日3時Cookie更新'
 )
 scheduler.add_job(
     func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/scrape-hotpepper'),
-    trigger=CronTrigger(hour=12, minute=10, timezone='UTC'),  # JST 21:10 = UTC 12:10
+    trigger=CronTrigger(hour=18, minute=10, timezone='UTC'),  # JST 3:10 = UTC 18:10
     id='daily_hotpepper_scrape',
-    name='毎日21時ホットペッパーメニュー取得'
+    name='毎日3時ホットペッパーメニュー取得'
 )
 scheduler.add_job(
     func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/fill-customer-phones'),
-    trigger=CronTrigger(hour=12, minute=30, timezone='UTC'),  # JST 21:30 = UTC 12:30
+    trigger=CronTrigger(hour=18, minute=20, timezone='UTC'),  # JST 3:20 = UTC 18:20
     id='daily_fill_phones',
-    name='毎日21時半電話番号補完'
+    name='毎日3時半電話番号補完'
 )
 scheduler.add_job(
     func=lambda: requests.post('http://localhost:' + str(os.getenv('PORT', 5000)) + '/api/cron/fill-phone-from-salonboard'),
-    trigger=CronTrigger(hour=12, minute=0, timezone='UTC'),  # JST 21:00 = UTC 12:00
+    trigger=CronTrigger(hour=18, minute=0, timezone='UTC'),  # JST 3:00 = UTC 18:00
     id='daily_fill_phone_salonboard',
-    name='毎日21時SalonBoard電話番号補完'
+    name='毎日3時SalonBoard電話番号補完'
+scheduler.add_job(
+    func=lambda: requests.post("http://localhost:" + str(os.getenv("PORT", 5000)) + "/api/cron/backup-customers"),
+    trigger=CronTrigger(hour=18, minute=25, timezone="UTC"),  # JST 3:25 = UTC 18:25
+    id="daily_backup_customers",
+    name="毎日3時25分顧客バックアップ"
+)
 )
 scheduler.start()
 
@@ -2422,7 +2428,7 @@ def cron_refresh_cookie():
 
 @app.route('/api/cron/update-menu-prices', methods=['POST'])
 def cron_update_menu_prices():
-    """毎日21時にsalonboard_menusの金額を更新（定期実行用）"""
+    """毎日3時にsalonboard_menusの金額を更新（定期実行用）"""
     import re
     
     def get_salonboard_menus():
@@ -5004,6 +5010,22 @@ scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=1, id='scrape_
 scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
+
+@app.route("/api/cron/backup-customers", methods=["POST"])
+def cron_backup_customers():
+    """customersをcustomers_backupに上書き"""
+    try:
+        headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}", "Content-Type": "application/json"}
+        customers = requests.get(f"{SUPABASE_URL}/rest/v1/customers?select=*", headers=headers).json()
+        requests.delete(f"{SUPABASE_URL}/rest/v1/customers_backup?id=neq.00000000-0000-0000-0000-000000000000", headers=headers)
+        for c in customers:
+            c["backup_at"] = datetime.now().isoformat()
+            requests.post(f"{SUPABASE_URL}/rest/v1/customers_backup", headers=headers, json=c)
+        print(f"[BACKUP] {len(customers)}件バックアップ完了")
+        return jsonify({"success": True, "count": len(customers)}), 200
+    except Exception as e:
+        print(f"[BACKUP] エラー: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/cron/fill-phone-from-salonboard', methods=['POST'])
 def cron_fill_phone_from_salonboard():
