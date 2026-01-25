@@ -380,16 +380,14 @@ def notify_shop_booking_change(customer_name, old_datetime, new_datetime, staff_
 
 ※お客様がLIFFから変更しました"""
     
-    # テストモード: 神原良祐とtest沙織のみに送信
-    TEST_STAFF_IDS = [
+    # 本番モード: 全スタッフに送信
+    STAFF_IDS = [
         "U9022782f05526cf7632902acaed0cb08",  # 神原良祐
         "U1d1dfe1993f1857327678e37b607187a",  # test沙織
-        # === 本番モード時は以下を有効化 ===
-        # "U1ad150fa84a287c095eb98186a8cdc45",  # Saori
-        # "U2c097f177a2c96b0732f6d15152d0d68",  # 太田由香利
-        # "XXXXXXXXX",  # 本店１（LINE ID取得後に追加）
+        "U2c097f177a2c96b0732f6d15152d0d68",  # 太田由香利
+        "Ude9ef7ceb8f04d2e7a207aabec5591c5",  # HAL本店1
     ]
-    for staff_id in TEST_STAFF_IDS:
+    for staff_id in STAFF_IDS:
         try:
             send_line_message(staff_id, message, LINE_BOT_TOKEN_STAFF)
         except:
@@ -2991,6 +2989,8 @@ def send_reminder_notifications(test_mode=True):
                 TEST_STAFF_IDS = [
                     "U9022782f05526cf7632902acaed0cb08",  # 神原良祐
                     "U1d1dfe1993f1857327678e37b607187a",  # test沙織
+                    "U2c097f177a2c96b0732f6d15152d0d68",  # 太田由香利
+                    "Ude9ef7ceb8f04d2e7a207aabec5591c5",  # HAL本店1
                 ]
                 for staff_id in TEST_STAFF_IDS:
                     try:
@@ -4417,6 +4417,8 @@ def cancel_booking_background(booking_id, line_user_id):
         staff_ids = [
             'U9022782f05526cf7632902acaed0cb08',  # 神原良祐
             'U1d1dfe1993f1857327678e37b607187a',  # test沙織
+            'U2c097f177a2c96b0732f6d15152d0d68',  # 太田由香利
+            'Ude9ef7ceb8f04d2e7a207aabec5591c5',  # HAL本店1
         ]
         
         for staff_id in staff_ids:
