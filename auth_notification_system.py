@@ -2325,6 +2325,30 @@ def get_result(task_id):
     with login_lock:
         return jsonify(login_results.get(task_id, {'status': 'processing'}))
 
+
+def check_null_phone_customers():
+    """24時間以上電話番号NULLの顧客を神原良祐に通知"""
+    try:
+        from datetime import datetime, timedelta
+        headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+        res = requests.get(f"{SUPABASE_URL}/rest/v1/customers?phone=is.null&select=name,registered_at", headers=headers)
+        null_customers = res.json()
+        now = datetime.now()
+        old_nulls = []
+        for c in null_customers:
+            reg_at = c.get("registered_at", "")
+            if reg_at:
+                reg_time = datetime.fromisoformat(reg_at.replace("Z", "+00:00").replace("+00:00", ""))
+                if (now - reg_time).total_seconds() > 86400:
+                    old_nulls.append(c.get("name", "不明"))
+        if old_nulls:
+            message = f"⚠️ 電話番号未取得（24時間以上）:\n" + "\n".join([f"・{name}" for name in old_nulls])
+            send_line_message("U9022782f05526cf7632902acaed0cb08", message, LINE_BOT_TOKEN_STAFF)
+            print(f"[NULL通知] {len(old_nulls)}件通知")
+        else:
+            print("[NULL通知] 該当なし")
+    except Exception as e:
+        print(f"[NULL通知エラー] {e}")
 # リマインド自動送信スケジューラー（毎朝9:00 JST、テストモード：神原良祐とtest沙織のみ）
 
 scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
@@ -2339,6 +2363,12 @@ scheduler.add_job(
 
     name='毎朝9時リマインド送信（テスト）'
 
+)
+scheduler.add_job(
+    func=check_null_phone_customers,
+    trigger=CronTrigger(hour=0, minute=10, timezone="UTC"),  # JST 9:10 = UTC 0:10
+    id="daily_null_phone_check",
+    name="毎朝9時10分電話番号NULL通知"
 )
 
 scheduler.add_job(
