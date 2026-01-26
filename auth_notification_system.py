@@ -2400,12 +2400,12 @@ scheduler.add_job(
     trigger=CronTrigger(hour=18, minute=5, timezone='UTC'),  # JST 3:05 = UTC 18:05
     id='daily_fill_phone_salonboard',
     name='毎日3時SalonBoard電話番号補完'
+)
 scheduler.add_job(
     func=lambda: requests.post("http://localhost:" + str(os.getenv("PORT", 5000)) + "/api/cron/backup-customers"),
     trigger=CronTrigger(hour=18, minute=25, timezone="UTC"),  # JST 3:25 = UTC 18:25
     id="daily_backup_customers",
     name="毎日3時25分顧客バックアップ"
-)
 )
 scheduler.start()
 
