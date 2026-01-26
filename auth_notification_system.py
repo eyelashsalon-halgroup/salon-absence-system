@@ -2939,6 +2939,7 @@ def send_reminder_notifications(test_mode=True):
 【本店】
 {formatted_dt}
 {cleaned_menu}
+{staff_line}
 
 下記はすべてのお客様に気持ちよくご利用いただくためのご案内です。
 ご理解とご協力をお願いいたします🙇‍♀️
@@ -2963,6 +2964,7 @@ def send_reminder_notifications(test_mode=True):
 ご予約日の【7日前】となりました🕊️
 {formatted_dt}
 {cleaned_menu}
+{staff_line}
 
 「マツエクが残っている」
 「カールが残っている」
@@ -3553,7 +3555,7 @@ def liff_booking():
                     data.bookings.forEach(booking => {{
                         const isNextBooking = booking.is_next_booking;
                         const statusText = isNextBooking ? '予約確定【次回予約分】' : '予約確定【ホットペッパー】';
-                        const staffDisplay = booking.staff ? booking.staff + '（￥300）' : '指名なし';
+                        const staffDisplay = booking.staff ? booking.staff + '（￥330）' : '指名なし';
                         html += `
                             <div class="booking-card" data-booking-id="${{booking.booking_id}}">
                                 <span class="booking-status">${{statusText}}</span>
