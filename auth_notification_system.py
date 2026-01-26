@@ -2862,6 +2862,7 @@ def send_reminder_notifications(test_mode=True):
             # visit_datetime形式: 2025-12-16 11:30:00
             time = visit_dt.split(' ')[1][:5] if visit_dt and ' ' in visit_dt else ''
             menu = booking.get('menu', '')
+            staff = booking.get('staff', '')
             
             # 顧客を検索
             customer = None
