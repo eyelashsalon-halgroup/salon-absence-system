@@ -704,6 +704,43 @@ def main(days_limit=56):
         except Exception as e:
             print(f"[DELETE] 削除処理エラー: {e}", flush=True)
     
+    # === 同一電話番号・同一日時の重複削除 ===
+    # 次回予約(YF)とホットペッパー(BE)が重複した場合、次回予約(YF)を優先
+    # 理由: ホットペッパー予約をキャンセル後、店舗で次回予約を入れるケースがある
+    try:
+        db_res = requests.get(
+            f"{SUPABASE_URL}/rest/v1/8weeks_bookings?select=booking_id,phone,visit_datetime",
+            headers=headers
+        )
+        if db_res.status_code == 200:
+            db_bookings = db_res.json()
+            seen = {}
+            duplicates_to_delete = []
+            for b in db_bookings:
+                key = f"{b['phone']}_{b['visit_datetime']}"
+                if key in seen:
+                    # 重複発見: ホットペッパー(BE)を削除、次回予約(YF)を残す
+                    existing = seen[key]
+                    if b['booking_id'].startswith('BE') and existing.startswith('YF'):
+                        duplicates_to_delete.append(b['booking_id'])
+                    elif b['booking_id'].startswith('YF') and existing.startswith('BE'):
+                        duplicates_to_delete.append(existing)
+                        seen[key] = b['booking_id']
+                else:
+                    seen[key] = b['booking_id']
+            
+            if duplicates_to_delete:
+                for bid in duplicates_to_delete:
+                    del_res = requests.delete(
+                        f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{bid}",
+                        headers=headers
+                    )
+                    if del_res.status_code in [200, 204]:
+                        print(f"[重複削除] {bid}（ホットペッパー）を削除", flush=True)
+                print(f"[重複削除] {len(duplicates_to_delete)}件削除完了", flush=True)
+    except Exception as e:
+        print(f"[重複削除] エラー: {e}", flush=True)
+    
     # 成功したのでカウンターリセット
     reset_failure_count()
     
