@@ -2912,6 +2912,7 @@ def send_reminder_notifications(test_mode=True):
                 m = re.sub(r'\(ｸｰﾎﾟﾝ\)', '', m)
                 m = re.sub(r'《[^》]*》', '', m)
                 m = re.sub(r'【[^】]*】', '', m)
+                m = re.sub(r'\s*/\s*', ' ', m)  # 「 / 」をスペースに置換
                 m = re.sub(r'◇エクステ.*', '', m)
                 m = re.sub(r'◇毛量調整.*', '', m)
                 m = re.sub(r'[¥￥][0-9,]+', '', m)
@@ -4291,6 +4292,7 @@ def api_liff_bookings_by_phone():
         m = re.sub(r'\(ｸｰﾎﾟﾝ\)', '', m)
         m = re.sub(r'《[^》]*》', '', m)
         m = re.sub(r'【[^】]*】', '', m)
+        m = re.sub(r'\s*/\s*', ' ', m)  # 「 / 」をスペースに置換
         m = re.sub(r'◇エクステ.*', '', m)
         m = re.sub(r'◇毛量調整.*', '', m)
         m = re.sub(r'[¥￥][0-9,]+', '', m)
