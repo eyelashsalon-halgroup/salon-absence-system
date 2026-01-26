@@ -2964,7 +2964,7 @@ def send_reminder_notifications(test_mode=True):
 当日変更：施術代金の100％"""
             else:
                 message = f"""{customer_name} 様
-ご予約日の【7日前】となりました🕊️
+ご予約日【7日前】　のお知らせ🕊️
 {formatted_dt}
 {cleaned_menu}
 {staff_line}

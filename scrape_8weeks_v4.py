@@ -667,6 +667,43 @@ def main(days_limit=56):
         except Exception as e:
             print(f"[SLOTS] 保存エラー: {e}", flush=True)
     
+    # === サロンボードにない予約をDBから削除 ===
+    if all_bookings:
+        try:
+            # スクレイピングで取得したbooking_idリスト
+            scraped_ids = set(b['booking_id'] for b in all_bookings)
+            
+            # 対象日付範囲のDB予約を取得
+            start_date = today.strftime('%Y-%m-%d')
+            end_date = (today + timedelta(days=days_limit)).strftime('%Y-%m-%d')
+            
+            db_res = requests.get(
+                f"{SUPABASE_URL}/rest/v1/8weeks_bookings?visit_datetime=gte.{start_date}&visit_datetime=lt.{end_date}&select=booking_id",
+                headers=headers
+            )
+            
+            if db_res.status_code == 200:
+                db_bookings = db_res.json()
+                db_ids = set(b['booking_id'] for b in db_bookings)
+                
+                # DBにあるがスクレイピング結果にない = 削除された予約
+                to_delete = db_ids - scraped_ids
+                
+                if to_delete:
+                    delete_headers = headers.copy()
+                    for bid in to_delete:
+                        del_res = requests.delete(
+                            f"{SUPABASE_URL}/rest/v1/8weeks_bookings?booking_id=eq.{bid}",
+                            headers=delete_headers
+                        )
+                        if del_res.status_code in [200, 204]:
+                            print(f"[DELETE] {bid} 削除（サロンボードに存在しない）", flush=True)
+                    print(f"[DELETE] {len(to_delete)}件の古い予約を削除", flush=True)
+                else:
+                    print("[DELETE] 削除対象なし", flush=True)
+        except Exception as e:
+            print(f"[DELETE] 削除処理エラー: {e}", flush=True)
+    
     # 成功したのでカウンターリセット
     reset_failure_count()
     
