@@ -2905,7 +2905,7 @@ def send_reminder_notifications(test_mode=True):
                 exclude = ['【全員】', '【次回】', '【リピーター様】', '【4週間以内】', '【ご新規】',
                     'オフあり+アイシャンプー', 'オフあり＋アイシャンプー', '次世代まつ毛パーマ', 'ダメージレス',
                     '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(アイシャンプー・トリートメント付)', '(SP・TR付)',
-                    '(コーティング・シャンプー・オフ込)', '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
+                    '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
                     '指名料', 'カラー変更', '束感★']
                 for w in exclude:
                     m = m.replace(w, '')
@@ -3553,7 +3553,7 @@ def liff_booking():
                     data.bookings.forEach(booking => {{
                         const isNextBooking = booking.is_next_booking;
                         const statusText = isNextBooking ? '予約確定【次回予約分】' : '予約確定【ホットペッパー】';
-                        const staffDisplay = booking.staff ? booking.staff + '（￥330）' : '指名なし';
+                        const staffDisplay = booking.staff ? booking.staff + '（￥300）' : '指名なし';
                         html += `
                             <div class="booking-card" data-booking-id="${{booking.booking_id}}">
                                 <span class="booking-status">${{statusText}}</span>
@@ -4285,7 +4285,7 @@ def api_liff_bookings_by_phone():
         exclude = ['【全員】', '【次回】', '【リピーター様】', '【4週間以内】', '【ご新規】',
             'オフあり+アイシャンプー', 'オフあり＋アイシャンプー', '次世代まつ毛パーマ', 'ダメージレス',
             '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(アイシャンプー・トリートメント付)', '(SP・TR付)',
-            '(コーティング・シャンプー・オフ込)', '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
+            '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
             '指名料', 'カラー変更', '束感★']
         for w in exclude:
             m = m.replace(w, '')
