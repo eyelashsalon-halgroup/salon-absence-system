@@ -3453,6 +3453,7 @@ def liff_booking():
 }}
         let userProfile = null;
         let lineUserId = null;
+        let currentPhone = null;
         
         async function initLiff() {{
             try {{
@@ -3540,6 +3541,7 @@ def liff_booking():
         let bookings = [];  // グローバル変数
         
         async function loadBookings(phone) {{
+            currentPhone = phone;  // グローバル変数に保存
             try {{
                 const response = await fetch(API_BASE + `/api/liff/bookings-by-phone?phone=${{phone}}`);
                 const data = await response.json();
@@ -3689,7 +3691,7 @@ def liff_booking():
                         <!-- 次へボタン -->
                         <button id="check-availability-btn" class="btn btn-primary" style="width:100%;padding:16px;font-size:16px;border-radius:8px;background:#E85298;border:none;color:#fff;font-weight:bold;cursor:pointer;" onclick="showCalendar()">この内容で次へ</button>
                         <div style="text-align:center;margin-top:15px;">
-                            <span style="color:#666;font-size:13px;cursor:pointer;text-decoration:underline;" onclick="location.reload()">← 予約一覧に戻る</span>
+                            <span style="color:#666;font-size:13px;cursor:pointer;text-decoration:underline;" onclick="loadBookings(currentPhone)">← 予約一覧に戻る</span>
                         </div>
                     </div>
                 </div>
@@ -3922,7 +3924,7 @@ def liff_booking():
                     </div>
                     
                     <div style="text-align:center;margin-top:20px;margin-bottom:40px;">
-                        <span style="color:#666;font-size:13px;cursor:pointer;" onclick="location.reload()">← 戻る</span>
+                        <span style="color:#666;font-size:13px;cursor:pointer;" onclick="loadBookings(currentPhone)">← 戻る</span>
                     </div>
                 </div>
             `;
@@ -4050,7 +4052,7 @@ def liff_booking():
                 }});
                 const data = await response.json();
                 alert(data.message || '変更リクエストを送信しました');
-                if (data.success) location.reload();
+                if (data.success) loadBookings(currentPhone);
             }}
         }}
         
@@ -4066,10 +4068,10 @@ def liff_booking():
                     }});
                     const data = await response.json();
                     alert(data.message || 'キャンセル処理が完了しました');
-                    location.reload();
+                    loadBookings(currentPhone);
                 }} catch (e) {{
                     alert('エラーが発生しました');
-                    location.reload();
+                    loadBookings(currentPhone);
                 }}
             }}
         }}
