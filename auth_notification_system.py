@@ -3292,6 +3292,21 @@ scrape_8weeks_started_at = None  # タイムアウト用
 cancel_running = False
 change_running = False
 
+@app.route('/api/flag_status', methods=['GET'])
+def api_flag_status():
+    """フラグ状態を確認"""
+    import time
+    elapsed = None
+    if scrape_8weeks_started_at:
+        elapsed = round(time.time() - scrape_8weeks_started_at, 1)
+    return jsonify({
+        'scrape_8weeks_running': scrape_8weeks_running,
+        'scrape_8weeks_started_at': scrape_8weeks_started_at,
+        'elapsed_seconds': elapsed,
+        'cancel_running': cancel_running,
+        'change_running': change_running
+    })
+
 @app.route('/api/reset_flags', methods=['POST'])
 def api_reset_flags():
     """フラグを強制リセット"""
