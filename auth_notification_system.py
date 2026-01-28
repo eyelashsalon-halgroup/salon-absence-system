@@ -3288,14 +3288,16 @@ def api_scrape_8weeks_v2():
 
 # 8週間スクレイピング実行中フラグ
 scrape_8weeks_running = False
+scrape_8weeks_started_at = None  # タイムアウト用
 cancel_running = False
 change_running = False
 
 @app.route('/api/reset_flags', methods=['POST'])
 def api_reset_flags():
     """フラグを強制リセット"""
-    global scrape_8weeks_running, cancel_running, change_running
+    global scrape_8weeks_running, scrape_8weeks_started_at, cancel_running, change_running
     scrape_8weeks_running = False
+    scrape_8weeks_started_at = None
     cancel_running = False
     change_running = False
     print('[RESET] 全フラグをリセットしました', flush=True)
@@ -3305,11 +3307,17 @@ def api_reset_flags():
 @app.route('/api/scrape_8weeks_v4', methods=['GET', 'POST'])
 def api_scrape_8weeks_v4():
     """8週間分の予約をスクレイピング（二重実行防止付き）"""
-    global scrape_8weeks_running
+    global scrape_8weeks_running, scrape_8weeks_started_at
+    import time
     
-    # 二重実行防止
+    # 二重実行防止（3分タイムアウト付き）
     if scrape_8weeks_running:
-        return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
+        if scrape_8weeks_started_at and (time.time() - scrape_8weeks_started_at) > 180:
+            print('[TIMEOUT] 3分経過のためフラグを強制リセット', flush=True)
+            scrape_8weeks_running = False
+            scrape_8weeks_started_at = None
+        else:
+            return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
     if cancel_running or change_running:
         print('[SCHEDULER] キャンセル処理中のためスキップ', flush=True)
         return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
@@ -3320,6 +3328,7 @@ def api_scrape_8weeks_v4():
     # スレッド開始前にdays_limitを取得
     days_limit = request.args.get('days_limit', '56')
     scrape_8weeks_running = True
+    scrape_8weeks_started_at = time.time()
     
     def run_scrape():
         global scrape_8weeks_running
@@ -3329,6 +3338,7 @@ def api_scrape_8weeks_v4():
             print(f"スクレイピングエラー: {e}")
         finally:
             scrape_8weeks_running = False
+            scrape_8weeks_started_at = None
     
     thread = threading.Thread(target=run_scrape)
     thread.start()
@@ -5058,7 +5068,7 @@ def run_scrape_job_full():
 
 # スクレイピング用スケジューラー（高速版1分、通常版5分）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
-scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=1, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
+scrape_scheduler.add_job(run_scrape_job_fast, 'interval', seconds=80, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
 scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
