@@ -3291,6 +3291,17 @@ scrape_8weeks_running = False
 cancel_running = False
 change_running = False
 
+@app.route('/api/reset_flags', methods=['POST'])
+def api_reset_flags():
+    """フラグを強制リセット"""
+    global scrape_8weeks_running, cancel_running, change_running
+    scrape_8weeks_running = False
+    cancel_running = False
+    change_running = False
+    print('[RESET] 全フラグをリセットしました', flush=True)
+    return jsonify({'success': True, 'message': '全フラグをリセットしました'})
+
+
 @app.route('/api/scrape_8weeks_v4', methods=['GET', 'POST'])
 def api_scrape_8weeks_v4():
     """8週間分の予約をスクレイピング（二重実行防止付き）"""
@@ -5047,7 +5058,7 @@ def run_scrape_job_full():
 
 # スクレイピング用スケジューラー（高速版1分、通常版5分）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
-scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=2, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
+scrape_scheduler.add_job(run_scrape_job_fast, 'interval', minutes=1, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
 scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
