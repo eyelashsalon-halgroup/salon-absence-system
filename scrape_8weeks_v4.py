@@ -235,7 +235,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         
                         # スタッフ取得（v3形式）
                         staff_text = cells[3].text_content().strip() if len(cells) > 3 else ''
-                        staff_name = re.sub(r'^\(指\)', '', staff_text).strip() if staff_text.startswith('(指)') else ''
+                        staff_name = re.sub(r'^\(指\)', '', staff_text).strip()
 
                         
                         cached = existing_cache.get(booking_id, {})
