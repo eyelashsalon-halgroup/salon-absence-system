@@ -3332,11 +3332,11 @@ def api_scrape_8weeks_v4():
             scrape_8weeks_running = False
             scrape_8weeks_started_at = None
         else:
-            # 429エラー時にLINE通知（神原良祐）
-            try:
-                send_line_message('U9022782f05526cf7632902acaed0cb08', f'[429エラー] スクレイピング二重実行検知\n経過時間: {round(time.time() - scrape_8weeks_started_at, 1)}秒')
-            except:
-                pass
+            # 429エラー時にLINE通知（神原良祐）- 一時停止
+            # try:
+            #     send_line_message('U9022782f05526cf7632902acaed0cb08', f'[429エラー] スクレイピング二重実行検知\n経過時間: {round(time.time() - scrape_8weeks_started_at, 1)}秒')
+            # except:
+            #     pass
             return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
     if cancel_running or change_running:
         print('[SCHEDULER] キャンセル処理中のためスキップ', flush=True)
@@ -5089,7 +5089,7 @@ def run_scrape_job_full():
 # スクレイピング用スケジューラー（高速版1分、通常版5分）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
 scrape_scheduler.add_job(run_scrape_job_fast, 'interval', seconds=80, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
-scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
+# scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
 
