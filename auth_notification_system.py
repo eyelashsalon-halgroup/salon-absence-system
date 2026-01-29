@@ -2859,10 +2859,20 @@ def send_reminder_notifications(test_mode=True):
             customer_name = booking.get('customer_name', '').split('\n')[0].replace('★', '').strip()
             phone = booking.get('phone', '')
             visit_dt = booking.get('visit_datetime', '')
-            # visit_datetime形式: 2025-12-16 11:30:00
             time = visit_dt.split(' ')[1][:5] if visit_dt and ' ' in visit_dt else ''
             menu = booking.get('menu', '')
             staff = booking.get('staff', '')
+            
+            # active=falseのスタッフ担当予約はスキップ
+            inactive_staff_res = requests.get(
+                f'{SUPABASE_URL}/rest/v1/salon_staff?active=eq.false&select=name',
+                headers=headers
+            )
+            inactive_staff_names = [s['name'].replace('　', ' ').replace(' ', '') for s in inactive_staff_res.json()] if inactive_staff_res.status_code == 200 else []
+            staff_normalized = staff.replace('　', ' ').replace(' ', '') if staff else ''
+            if staff_normalized and staff_normalized in inactive_staff_names:
+                print(f"[リマインド] スキップ: {customer_name}（担当: {staff} は非アクティブ）", flush=True)
+                continue
             
             # 顧客を検索
             customer = None
