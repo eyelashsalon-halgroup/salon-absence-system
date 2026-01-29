@@ -5088,7 +5088,9 @@ def run_scrape_job_full():
 
 # スクレイピング用スケジューラー（高速版1分、通常版5分）
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
-scrape_scheduler.add_job(run_scrape_job_fast, 'interval', seconds=80, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
+# 【元の設定-80秒間隔】scrape_scheduler.add_job(run_scrape_job_fast, 'interval', seconds=80, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
+# リマインド用：毎朝8:30(JST)に1回スクレイピング（UTC=-1なのでhour=23, minute=30で前日23:30UTC=当日8:30JST）
+scrape_scheduler.add_job(run_scrape_job_fast, 'cron', hour=23, minute=30, id='scrape_fast')
 # scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 scrape_scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
