@@ -619,6 +619,20 @@ def main(days_limit=56):
     for b in all_bookings:
         b.pop('needs_detail', None)
     
+    # スタッフ休日情報をマッチング（staff_on_duty設定）
+    # slots_listから日付+スタッフ名→is_day_offのマップを作成
+    day_off_map = {}
+    for slot in all_slots:
+        key = f"{slot['date']}_{slot['staff_name'].replace('　', '').replace(' ', '')}"
+        day_off_map[key] = slot.get('is_day_off', False)
+    
+    for b in all_bookings:
+        visit_date = b.get('visit_datetime', '')[:10]  # 2026-02-02
+        staff = b.get('staff', '').replace('　', '').replace(' ', '')
+        key = f"{visit_date.replace('-', '')}_{staff}"
+        is_day_off = day_off_map.get(key, False)
+        b['staff_on_duty'] = not is_day_off
+    
     # DBに一括保存（バッチ）
     total_saved = 0
     if all_bookings:
