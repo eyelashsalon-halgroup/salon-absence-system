@@ -626,12 +626,17 @@ def main(days_limit=56):
         key = f"{slot['date']}_{slot['staff_name'].replace('　', '').replace(' ', '')}"
         day_off_map[key] = slot.get('is_day_off', False)
     
+    print(f"[DEBUG] day_off_map keys: {list(day_off_map.keys())[:10]}", flush=True)
+    print(f"[DEBUG] day_off_map sample: {dict(list(day_off_map.items())[:5])}", flush=True)
+    
     for b in all_bookings:
         visit_date = b.get('visit_datetime', '')[:10]  # 2026-02-02
         staff = b.get('staff', '').replace('　', '').replace(' ', '')
         key = f"{visit_date.replace('-', '')}_{staff}"
         is_day_off = day_off_map.get(key, False)
         b['staff_on_duty'] = not is_day_off
+        if '與那城' in staff or '神原' in b.get('customer_name', ''):
+            print(f"[DEBUG] {b.get('customer_name')}: key={key}, is_day_off={is_day_off}, staff_on_duty={b['staff_on_duty']}", flush=True)
     
     # DBに一括保存（バッチ）
     total_saved = 0
