@@ -2862,6 +2862,7 @@ def send_reminder_notifications(test_mode=True):
             time = visit_dt.split(' ')[1][:5] if visit_dt and ' ' in visit_dt else ''
             menu = booking.get('menu', '')
             staff = booking.get('staff', '')
+            staff_on_duty = booking.get('staff_on_duty', True)
             
             # active=falseのスタッフ担当予約はスキップ
             inactive_staff_res = requests.get(
