@@ -3332,6 +3332,11 @@ def api_scrape_8weeks_v4():
             scrape_8weeks_running = False
             scrape_8weeks_started_at = None
         else:
+            # 429エラー時にLINE通知（神原良祐）
+            try:
+                send_line_message('U9022782f05526cf7632902acaed0cb08', f'[429エラー] スクレイピング二重実行検知\n経過時間: {round(time.time() - scrape_8weeks_started_at, 1)}秒')
+            except:
+                pass
             return jsonify({'success': False, 'message': '既に実行中です。しばらくお待ちください。'}), 429
     if cancel_running or change_running:
         print('[SCHEDULER] キャンセル処理中のためスキップ', flush=True)
