@@ -2409,6 +2409,28 @@ scheduler.add_job(
     id="daily_backup_customers",
     name="毎日3時25分顧客バックアップ"
 )
+
+# ヘルスチェック監視（5分ごと）
+def self_health_check():
+    """自己ヘルスチェック、異常時にLINE通知"""
+    KAMBARA_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
+    try:
+        import requests
+        res = requests.get("https://salon-absence-system-production.up.railway.app/health_check", timeout=10)
+        if res.status_code != 200:
+            send_line_message(KAMBARA_LINE_ID, f"⚠️ Railway異常: ステータス {res.status_code}")
+    except Exception as e:
+        # 自分自身がダウンしてる場合はここに来ない
+        pass
+
+scheduler.add_job(
+    func=self_health_check,
+    trigger='interval',
+    minutes=5,
+    id='health_check',
+    name='5分ごとヘルスチェック'
+)
+
 scheduler.start()
 
 print("[SCHEDULER] リマインド自動送信スケジューラー開始（毎朝9:00 JST、神原良祐とtest沙織のみ）", flush=True)
@@ -2913,26 +2935,29 @@ def send_reminder_notifications(test_mode=True):
             # メニュークリーンアップ
             def clean_menu(m):
                 has_off_shampoo = 'オフあり+アイシャンプー' in m or 'オフあり＋アイシャンプー' in m
+                # 金額・点数を先に削除
+                m = re.sub(r'[¥￥][0-9,]+\s*円?', '', m)
+                m = re.sub(r'\d+[,\d]*\s*円', '', m)
+                m = re.sub(r'\d+点\s*', '', m)
                 exclude = ['【全員】', '【次回】', '【リピーター様】', '【4週間以内】', '【ご新規】',
                     'オフあり+アイシャンプー', 'オフあり＋アイシャンプー', '次世代まつ毛パーマ', 'ダメージレス',
                     '(4週間以内 )', '(4週間以内)', '(アイシャンプー・トリートメント付き)', '(アイシャンプー・トリートメント付)', '(SP・TR付)',
                     '(まゆげパーマ)', '(眉毛Wax)', '＋メイク付', '+メイク付',
-                    '指名料', 'カラー変更', '束感★']
+                    'カラー変更', '束感★', '【まつげエクステ】', '【その他まつげメニュー】', '【付替オフ】', '◇']
                 for w in exclude:
                     m = m.replace(w, '')
                 m = re.sub(r'\(ｸｰﾎﾟﾝ\)', '', m)
                 m = re.sub(r'《[^》]*》', '', m)
                 m = re.sub(r'【[^】]*】', '', m)
-                m = re.sub(r'\s*/\s*', ' ', m)  # 「 / 」をスペースに置換
-                m = re.sub(r'◇エクステ.*', '', m)
-                m = re.sub(r'◇毛量調整.*', '', m)
-                m = re.sub(r'[¥￥][0-9,]+', '', m)
-                m = re.sub(r'^◇', '', m)
-                m = re.sub(r'◇$', '', m)
-                m = re.sub(r'◇\s*$', '', m)
-                parts = m.split('◇')
-                cleaned = [p.strip().strip('　') for p in parts if p.strip()]
-                m = '＋'.join(cleaned) if cleaned else ''
+                m = re.sub(r'◇', '', m)
+                # / で分割して重複削除
+                parts = re.split(r'\s*/\s*', m)
+                seen = []
+                for p in parts:
+                    p = p.strip().strip('　').strip()
+                    if p and p not in seen and len(p) > 2:
+                        seen.append(p)
+                m = seen[0] if seen else ''
                 m = re.sub(r'\s+', ' ', m).strip()
                 if has_off_shampoo and m:
                     m = f'{m}（オフあり+アイシャンプー）'
@@ -5129,7 +5154,29 @@ scrape_scheduler = BackgroundScheduler(timezone='UTC')
 # リマインド用：毎朝8:30(JST)に1回スクレイピング（UTC=-1なのでhour=23, minute=30で前日23:30UTC=当日8:30JST）
 scrape_scheduler.add_job(run_scrape_job_fast, 'cron', hour=23, minute=30, id='scrape_fast')
 # scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
-scrape_scheduler.start()
+scrape_
+# ヘルスチェック監視（5分ごと）
+def self_health_check():
+    """自己ヘルスチェック、異常時にLINE通知"""
+    KAMBARA_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
+    try:
+        import requests
+        res = requests.get("https://salon-absence-system-production.up.railway.app/health_check", timeout=10)
+        if res.status_code != 200:
+            send_line_message(KAMBARA_LINE_ID, f"⚠️ Railway異常: ステータス {res.status_code}")
+    except Exception as e:
+        # 自分自身がダウンしてる場合はここに来ない
+        pass
+
+scheduler.add_job(
+    func=self_health_check,
+    trigger='interval',
+    minutes=5,
+    id='health_check',
+    name='5分ごとヘルスチェック'
+)
+
+scheduler.start()
 print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
 
 @app.route("/api/cron/backup-customers", methods=["POST"])
