@@ -5177,8 +5177,9 @@ scheduler.add_job(
     replace_existing=True
 )
 
-scheduler.start()
-print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
+if not scheduler.running:
+    scheduler.start()
+    print("[SCHEDULER] スクレイピングスケジューラー開始（高速版1分、通常版5分）", flush=True)
 
 @app.route("/api/cron/backup-customers", methods=["POST"])
 def cron_backup_customers():
