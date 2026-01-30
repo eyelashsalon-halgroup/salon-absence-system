@@ -235,7 +235,8 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                         
                         # スタッフ取得（v3形式）
                         staff_text = cells[3].text_content().strip() if len(cells) > 3 else ''
-                        staff_name = re.sub(r'^\(指\)', '', staff_text).strip()
+                        is_designated = staff_text.startswith('(指)') or staff_text.startswith('（指）')
+                        staff_name = re.sub(r'^[\(（]指[\)）]', '', staff_text).strip()
 
                         
                         cached = existing_cache.get(booking_id, {})
@@ -266,6 +267,7 @@ def scrape_date_range(worker_id, start_day, end_day, existing_cache, headers, to
                             'phone': phone,
                             'status': '予約確定',
                             'booking_source': booking_source,
+                            'is_designated': is_designated,
                             'needs_detail': needs_detail
                         })
                     except Exception as e:

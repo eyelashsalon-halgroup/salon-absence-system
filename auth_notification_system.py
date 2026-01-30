@@ -2966,7 +2966,7 @@ def send_reminder_notifications(test_mode=True):
             formatted_dt = format_dt(visit_dt)
             cleaned_menu = clean_menu(menu)
             staff_surname = staff.split('　')[0].split(' ')[0] if staff else ''
-            staff_line = f"担当：{staff_surname}（指名料￥300）" if staff_surname else ""
+            staff_line = f"担当：{staff_surname}（指名料￥300）" if staff_surname and booking.get('is_designated', False) else (f"担当：{staff_surname}" if staff_surname else "")
             
             # staff_on_duty=falseの場合
             if not staff_on_duty:
