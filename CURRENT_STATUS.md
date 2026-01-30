@@ -1,4 +1,4 @@
-# 現状まとめ（2026-01-30 20:00時点）
+# 現状まとめ（2026-01-30 22:00時点）
 
 ## 1. 完了した作業
 
@@ -25,30 +25,29 @@
 - 対応：
   1. Supabaseで8weeks_bookingsにis_designatedカラム追加（boolean）
   2. scrape_8weeks_v4.py修正（238行目付近）
-```python
-     staff_text = cells[3].text_content().strip() if len(cells) > 3 else ''
-     is_designated = staff_text.startswith('(指)')  # 指名フラグ
-     staff_name = re.sub(r'^\(指\)', '', staff_text).strip()
-```
-  3. bookings_listに'is_designated': is_designatedを追加
-  4. auth_notification_system.pyのstaff_line生成を修正
-```python
-     staff_line = f"担当：{staff_surname}（指名料￥300）" if is_designated else f"担当：{staff_surname}"
-```
-
-### 未登録の顧客（Railwayダウン中にLINE送信）
-- 蔵前
-- 成田
-- 斉藤
-- 福森
-- 藤阪
-→ 再送信してもらう必要あり
+  3. auth_notification_system.pyのstaff_line生成を修正
 
 ### メッセージ内容確認事項
 - 7日前メッセージに「【本店】」がない → 追加必要？
 - 3日前メッセージのフォーマット確認
 
-## 3. 今後のルール
+## 3. 顧客登録状況
+
+### 未登録（Railwayダウン中 17:21〜19:30頃）
+- 蔵前
+- 成田沙羅（18:48にLINE送信）
+- 斉藤
+- 福森
+- 藤阪
+- 伊藤留満（19:19にLINE送信）
+- 宇野知恵美（20:11にLINE送信）
+
+→ 再送信してもらう必要あり
+
+### 登録済み確認
+- 上田智子: 登録済み
+
+## 4. 今後のルール
 
 ### コード変更時
 1. 変更後、必ず構文チェック実行
@@ -62,11 +61,11 @@
 - rollback.sh実行で1つ前のコミットに戻せる
 - ヘルスチェックで5分ごとに監視、異常時はLINE通知
 
-## 4. 本日の問題
+## 5. 本日の問題
 
 ### 構文エラーによるRailwayダウン（約2時間）
 - 原因：`# 一時停止`コメントをカンマの前に挿入
-- 結果：5名の顧客登録漏れ
+- 結果：7名の顧客登録漏れ
 - 対策：構文チェック必須化、ヘルスチェック追加
 
 ### リマインドメッセージの問題
@@ -74,26 +73,11 @@
 - 指名なしでも指名料表示 → 未対応
 - 金額・「1点」表示 → 修正済み
 
-## 5. 次のアクション
+## 6. 次のアクション
 
 1. [ ] Supabaseでis_designatedカラム追加
 2. [ ] scrape_8weeks_v4.py修正（指名フラグ取得）
 3. [ ] auth_notification_system.py修正（指名ありの場合のみ指名料表示）
 4. [ ] スクレイピング実行して指名フラグを取得
 5. [ ] リマインド本番化（test_mode=False）
-6. [ ] 未登録5名に再送信依頼
-
-
-## 6. 顧客登録状況確認
-
-### 確認済み
-- 伊藤るみ: （要確認）
-- 宇野ちえみ: （要確認）
-
-### 未登録（Railwayダウン中）
-- 蔵前
-- 成田
-- 斉藤
-- 福森
-- 藤阪
-
+6. [ ] 未登録7名に再送信依頼
