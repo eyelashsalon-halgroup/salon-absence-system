@@ -2428,7 +2428,8 @@ scheduler.add_job(
     trigger='interval',
     minutes=5,
     id='health_check',
-    name='5分ごとヘルスチェック'
+    name='5分ごとヘルスチェック',
+    replace_existing=True
 )
 
 scheduler.start()
@@ -5172,7 +5173,8 @@ scheduler.add_job(
     trigger='interval',
     minutes=5,
     id='health_check',
-    name='5分ごとヘルスチェック'
+    name='5分ごとヘルスチェック',
+    replace_existing=True
 )
 
 scheduler.start()
