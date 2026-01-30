@@ -1717,19 +1717,21 @@ def webhook():
                                 send_line_message(uid, notification)
                 
                 else:
-                    mapping = load_mapping()
-                    existing = None
-                    for name, data in mapping.items():
-                        stored_id = data['user_id'] if isinstance(data, dict) else data
-                        if stored_id == user_id:
-                            existing = name
-                            break
-                    
-                    # 新規でも既存でも名前更新を試みる
-                    if len(text) >= 2:
-                        cleaned_name = clean_customer_name(text)
-                        if cleaned_name and len(cleaned_name) >= 2:
-                            result = save_mapping(cleaned_name, user_id)
+                    # 何を送られても登録を試みる（上書きはsave_mapping内で防止）
+                    cleaned_name = clean_customer_name(text) if text else None
+                    if cleaned_name and len(cleaned_name) >= 2:
+                        result = save_mapping(cleaned_name, user_id)
+                    else:
+                        # 名前として認識できない場合はLINE表示名で仮登録
+                        try:
+                            profile_url = f"https://api.line.me/v2/bot/profile/{user_id}"
+                            profile_res = requests.get(profile_url, headers={'Authorization': f'Bearer {LINE_CHANNEL_ACCESS_TOKEN}'})
+                            if profile_res.status_code == 200:
+                                display_name = profile_res.json().get('displayName', '不明')
+                                result = save_mapping(display_name, user_id)
+                                print(f"[LINE] LINE表示名で仮登録: {display_name}", flush=True)
+                        except Exception as e:
+                            print(f"[LINE] 仮登録エラー: {e}", flush=True)
                         
         return 'OK', 200
     except Exception as e:
