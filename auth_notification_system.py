@@ -2351,13 +2351,13 @@ def check_null_phone_customers():
             print("[NULL通知] 該当なし")
     except Exception as e:
         print(f"[NULL通知エラー] {e}")
-# リマインド自動送信スケジューラー（毎朝9:00 JST、テストモード：神原良祐とtest沙織のみ）
+# リマインド自動送信スケジューラー（毎朝9:00 JST、本番モード）
 
 scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
 
 scheduler.add_job(
 
-    func=lambda: send_reminder_notifications(test_mode=True),
+    func=lambda: send_reminder_notifications(test_mode=False),
 
     trigger=CronTrigger(hour=0, minute=0, timezone='UTC'),  # JST 9:00 = UTC 0:00
 
