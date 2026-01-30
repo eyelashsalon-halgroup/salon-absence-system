@@ -5154,7 +5154,6 @@ scrape_scheduler = BackgroundScheduler(timezone='UTC')
 # リマインド用：毎朝8:30(JST)に1回スクレイピング（UTC=-1なのでhour=23, minute=30で前日23:30UTC=当日8:30JST）
 scrape_scheduler.add_job(run_scrape_job_fast, 'cron', hour=23, minute=30, id='scrape_fast')
 # scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
-scrape_
 # ヘルスチェック監視（5分ごと）
 def self_health_check():
     """自己ヘルスチェック、異常時にLINE通知"""
