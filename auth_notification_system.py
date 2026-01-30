@@ -2944,9 +2944,11 @@ def send_reminder_notifications(test_mode=True):
             staff_surname = staff.split('　')[0].split(' ')[0] if staff else ''
             staff_line = f"担当：{staff_surname}（指名料￥300）" if staff_surname else ""
             
-            # staff_on_duty=falseの場合は変更催促メッセージ
+            # staff_on_duty=falseの場合
             if not staff_on_duty:
-                message = f"""{customer_name} 様
+                if days == 3:
+                    # 3日前は変更催促メッセージを送信
+                    message = f"""{customer_name} 様
 ご予約変更の件でご連絡しました♪
 
 ご予約変更完了の期日は【本日中】となっております💦
@@ -2957,7 +2959,11 @@ def send_reminder_notifications(test_mode=True):
 お手数をおかけしますが、スムーズなご案内のためにも、お早めのご予約変更の完了されることをオススメしております。
 
 お手すきの際にご確認のほど、どうぞよろしくお願いいたします🙇‍♀️"""
-                print(f"[リマインド] 変更催促メッセージ: {customer_name}（担当: {staff} は休日）", flush=True)
+                    print(f"[リマインド] 変更催促メッセージ: {customer_name}（担当: {staff} は休日）", flush=True)
+                else:
+                    # 7日前はスキップ
+                    print(f"[リマインド] スキップ: {customer_name}（担当: {staff} は休日、7日前のため送信なし）", flush=True)
+                    continue
             elif days == 3:
                 # テストモード: 神原良祐のみに送信
                 KAMBARA_RYOSUKE_PHONE = "09015992055"
