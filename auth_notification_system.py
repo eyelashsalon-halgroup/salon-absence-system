@@ -2357,7 +2357,7 @@ scheduler = BackgroundScheduler(timezone='Asia/Tokyo')
 
 scheduler.add_job(
 
-    func=lambda: send_reminder_notifications(test_mode=False),
+    func=lambda: send_reminder_notifications(test_mode=True)  # 一時停止,
 
     trigger=CronTrigger(hour=0, minute=0, timezone='UTC'),  # JST 9:00 = UTC 0:00
 
