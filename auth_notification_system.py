@@ -2864,16 +2864,7 @@ def send_reminder_notifications(test_mode=True):
             staff = booking.get('staff', '')
             staff_on_duty = booking.get('staff_on_duty', True)
             
-            # active=falseのスタッフ担当予約はスキップ
-            inactive_staff_res = requests.get(
-                f'{SUPABASE_URL}/rest/v1/salon_staff?active=eq.false&select=name',
-                headers=headers
-            )
-            inactive_staff_names = [s['name'].replace('　', ' ').replace(' ', '') for s in inactive_staff_res.json()] if inactive_staff_res.status_code == 200 else []
-            staff_normalized = staff.replace('　', ' ').replace(' ', '') if staff else ''
-            if staff_normalized and staff_normalized in inactive_staff_names:
-                print(f"[リマインド] スキップ: {customer_name}（担当: {staff} は非アクティブ）", flush=True)
-                continue
+            # active=falseスタッフの判定はstaff_on_dutyで行うため、ここでは不要
             
             # 顧客を検索
             customer = None
