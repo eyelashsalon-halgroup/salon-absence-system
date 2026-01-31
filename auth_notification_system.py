@@ -2832,7 +2832,7 @@ def scrape_daily_test():
 def api_reminder_test_today():
     """今日の予約でリマインドテスト（全員分を神原良祐に送信）"""
     KAMBARA_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
-    results = send_reminder_notifications(test_mode=False, target_days=[0], force_recipient=KAMBARA_LINE_ID)
+    results = send_reminder_notifications(test_mode=False, target_days=[3], force_recipient=KAMBARA_LINE_ID)
     return jsonify({"success": True, "results": results})
 
 @app.route('/api/reminder_test', methods=['GET'])
