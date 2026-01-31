@@ -2854,6 +2854,12 @@ def api_reminder_send():
     results = send_reminder_notifications(test_mode=True)
     return jsonify({"success": True, "results": results})
 
+@app.route('/api/reminder_send_7days', methods=['GET'])
+def api_reminder_send_7days():
+    """7日前リマインド本番送信（全員）"""
+    results = send_reminder_notifications(test_mode=False, target_days=[7])
+    return jsonify({"success": True, "results": results})
+
 def send_reminder_notifications(test_mode=True, target_days=None, force_recipient=None):
     """3日後・7日後の予約にリマインド通知を送信"""
     import re
