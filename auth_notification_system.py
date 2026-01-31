@@ -3024,14 +3024,12 @@ def send_reminder_notifications(test_mode=True, target_days=None, force_recipien
                 # テストモード: 神原良祐のみに送信
                 KAMBARA_RYOSUKE_PHONE = "09015992055"
                 message = f"""{customer_name} 様
-
 ご予約【3日前】のお知らせ🕊️
 【本店】
 {formatted_dt}
 {cleaned_menu}
 {(staff_line + chr(10) + chr(10)) if staff_line else chr(10)}下記はすべてのお客様に気持ちよくご利用いただくためのご案内です。
 ご理解とご協力をお願いいたします🙇‍♀️
-
 
 ■ 遅刻について
 スタッフ判断でメニュー変更や日時変更となる場合があり
