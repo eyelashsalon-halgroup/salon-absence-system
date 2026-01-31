@@ -2945,7 +2945,8 @@ def send_reminder_notifications(test_mode=True, target_days=None, force_recipien
                     from datetime import date
                     weekdays = ["月", "火", "水", "木", "金", "土", "日"]
                     d = date(int(y), int(month), int(day))
-                    return f"{int(month)}月{int(day)}日({weekdays[d.weekday()]}){time_part}〜"
+                    time_part_formatted = time_part.lstrip("0") if time_part.startswith("0") else time_part
+                    return f"{int(month)}月{int(day)}日({weekdays[d.weekday()]}){time_part_formatted}〜"
                 # 旧形式: 12/16 11:30
                 m = re.match(r'(\d+)/(\d+)(\d{2}:\d{2})', dt_str)
                 if m:
