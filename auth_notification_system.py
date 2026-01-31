@@ -3029,9 +3029,7 @@ def send_reminder_notifications(test_mode=True, target_days=None, force_recipien
 【本店】
 {formatted_dt}
 {cleaned_menu}
-{staff_line}
-
-下記はすべてのお客様に気持ちよくご利用いただくためのご案内です。
+{(staff_line + chr(10) + chr(10)) if staff_line else chr(10)}下記はすべてのお客様に気持ちよくご利用いただくためのご案内です。
 ご理解とご協力をお願いいたします🙇‍♀️
 
 
