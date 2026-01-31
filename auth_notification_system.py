@@ -5153,7 +5153,15 @@ def run_scrape_job_full():
 scrape_scheduler = BackgroundScheduler(timezone='UTC')
 # 【元の設定-80秒間隔】scrape_scheduler.add_job(run_scrape_job_fast, 'interval', seconds=80, id='scrape_fast', next_run_time=datetime.now() + timedelta(seconds=30))
 # リマインド用：毎朝8:30(JST)に1回スクレイピング（UTC=-1なのでhour=23, minute=30で前日23:30UTC=当日8:30JST）
-scrape_scheduler.add_job(run_scrape_job_fast, 'cron', hour=23, minute=30, id='scrape_fast')
+# 1時間ごとスクレイピング（7-23時JST = UTC 22-14時）
+scrape_scheduler.add_job(
+    run_scrape_job_fast,
+    'cron',
+    hour='22-23,0-14',  # UTC: 22,23,0,1,...,14 = JST 7,8,9,...,23
+    minute=0,
+    id='scrape_hourly',
+    replace_existing=True
+)
 # scrape_scheduler.add_job(run_scrape_job_full, 'interval', minutes=5, id='scrape_full', next_run_time=datetime.now() + timedelta(seconds=60))
 # ヘルスチェック監視（5分ごと）
 def self_health_check():
