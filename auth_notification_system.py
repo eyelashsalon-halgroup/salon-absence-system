@@ -2828,6 +2828,13 @@ def scrape_daily_test():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/reminder_test_today', methods=['GET'])
+def api_reminder_test_today():
+    """今日の予約でリマインドテスト（全員分を神原良祐に送信）"""
+    KAMBARA_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
+    results = send_reminder_notifications(test_mode=False, target_days=[0], force_recipient=KAMBARA_LINE_ID)
+    return jsonify({"success": True, "results": results})
+
 @app.route('/api/reminder_test', methods=['GET'])
 def api_reminder_test():
     """リマインド送信テスト（神原良祐のみ、スクレイピングなし）"""
@@ -2840,14 +2847,22 @@ def api_reminder_send():
     results = send_reminder_notifications(test_mode=True)
     return jsonify({"success": True, "results": results})
 
-def send_reminder_notifications(test_mode=True):
+def send_reminder_notifications(test_mode=True, target_days=None, force_recipient=None):
     """3日後・7日後の予約にリマインド通知を送信"""
     import re
     from datetime import datetime, timedelta, timezone
     
     JST = timezone(timedelta(hours=9))
     today = datetime.now(JST)
-    results = {"3days": {"sent": 0, "failed": 0, "no_match": 0}, "7days": {"sent": 0, "failed": 0, "no_match": 0}}
+    # target_daysデフォルト設定
+    if target_days is None:
+        target_days = [3, 7]
+    
+    # 結果初期化
+    results = {}
+    for d in target_days:
+        label = f"{d}days" if d > 0 else "today"
+        results[label] = {"sent": 0, "failed": 0, "no_match": 0}
     
     # テストモード: 神原良祐のみに送信
     KAMBARA_PHONE = "09015992055"
@@ -2872,7 +2887,8 @@ def send_reminder_notifications(test_mode=True):
             normalized = c['name'].replace(" ", "").replace("　", "").replace("★", "").strip()
             name_to_customer[normalized] = c
     
-    for days, label in [(3, "3days"), (7, "7days")]:
+    for days in target_days:
+        label = f"{days}days" if days > 0 else "today"
         target_date = (today + timedelta(days=days))
         target_date_str = target_date.strftime("%Y-%m-%d")
         scrape_date_str = today.strftime("%Y-%m-%d")
@@ -3067,8 +3083,9 @@ def send_reminder_notifications(test_mode=True):
             if test_mode and phone not in TEST_PHONES:
                 continue
             
-            # LINE送信
-            if send_line_message(customer['line_user_id'], message):
+            # LINE送信（force_recipientがあればその宛先に送信）
+            recipient_id = force_recipient if force_recipient else customer['line_user_id']
+            if send_line_message(recipient_id, message):
                 results[label]["sent"] += 1
                 status = "sent"
             else:
@@ -5228,4 +5245,3 @@ def cron_fill_phone_from_salonboard():
     thread = threading.Thread(target=run_phone_fill)
     thread.start()
     return jsonify({'status': 'started'}), 200
-
