@@ -2828,11 +2828,18 @@ def scrape_daily_test():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/api/reminder_test_today', methods=['GET'])
-def api_reminder_test_today():
-    """今日の予約でリマインドテスト（全員分を神原良祐に送信）"""
+@app.route('/api/reminder_test_3days', methods=['GET'])
+def api_reminder_test_3days():
+    """3日後の予約でリマインドテスト（全員分を神原良祐に送信）"""
     KAMBARA_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
     results = send_reminder_notifications(test_mode=False, target_days=[3], force_recipient=KAMBARA_LINE_ID)
+    return jsonify({"success": True, "results": results})
+
+@app.route('/api/reminder_test_7days', methods=['GET'])
+def api_reminder_test_7days():
+    """7日後の予約でリマインドテスト（全員分を神原良祐に送信）"""
+    KAMBARA_LINE_ID = "U9022782f05526cf7632902acaed0cb08"
+    results = send_reminder_notifications(test_mode=False, target_days=[7], force_recipient=KAMBARA_LINE_ID)
     return jsonify({"success": True, "results": results})
 
 @app.route('/api/reminder_test', methods=['GET'])
@@ -2983,7 +2990,7 @@ def send_reminder_notifications(test_mode=True, target_days=None, force_recipien
             formatted_dt = format_dt(visit_dt)
             cleaned_menu = clean_menu(menu)
             staff_surname = staff.split('　')[0].split(' ')[0] if staff else ''
-            staff_line = f"担当：{staff_surname}（指名料￥300）" if staff_surname and booking.get('is_designated', False) else (f"担当：{staff_surname}" if staff_surname else "")
+            staff_line = f"担当：{staff_surname}（指名料￥300）" if staff_surname and booking.get('is_designated', False) else ""
             
             # staff_on_duty=falseの場合
             if not staff_on_duty:
