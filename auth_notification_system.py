@@ -3113,9 +3113,14 @@ def send_reminder_notifications(test_mode=True, target_days=None, force_recipien
                 json={'phone': phone, 'customer_name': customer_name, 'days_ahead': days, 'status': status}
             )
             
-            # テストモード: 神原良祐とtest沙織のみに送信通知
+            # 送信後3秒待機（レート制限対策）
+            time.sleep(3)
+            
+            # 送信結果を通知（成功・失敗両方）
             if status == "sent":
                 notify_message = f"✅ リマインド送信完了\n{customer_name}様（{days}日前）"
+            else:
+                notify_message = f"❌ リマインド送信失敗\n{customer_name}様（{days}日前）"
                 TEST_STAFF_IDS = [
                     "U9022782f05526cf7632902acaed0cb08",  # 神原良祐
                     "U1d1dfe1993f1857327678e37b607187a",  # test沙織
