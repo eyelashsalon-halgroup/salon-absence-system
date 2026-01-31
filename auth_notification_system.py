@@ -3053,8 +3053,7 @@ def send_reminder_notifications(test_mode=True, target_days=None, force_recipien
 ご予約日【7日前】のお知らせ🕊️
 {formatted_dt}
 {cleaned_menu}
-{(staff_line + chr(10)) if staff_line else ""}
-「マツエクが残っている」
+{(staff_line + chr(10) + chr(10)) if staff_line else chr(10)}「マツエクが残っている」
 「カールが残っている」
 「眉毛の手入れをした…」
 「仕事が入った」
